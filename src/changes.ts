@@ -110,46 +110,46 @@ function parseChanges(pr, parseOne, fallback): PullRequestChange[] {
 	return changes
 }
 /**
-       * @function parseSingleChange parses raw text entry to change object. Multi-line values are not supported.
-       * @param {{ url: string; }} pr
-       * @param {string} raw
-
-       * Input:
-       *
-       * `pr`:
-       *
-       * ```json
-       * pr = {
-       *   "url": "https://github.com/owner/repo/pulls/151"
-       * }
-       * ```
-       *
-       * `raw`:
-       *
-       * ```change
-       * module: module3
-       * type: fix
-       * description: what was fixed in 151
-       * resolves: #16, #32
-       * note: Network flap is expected, but no longer than 10 seconds
-       * ```
-       *
-       * Output:
-       * ```json
-       * {
-       *   "module": "module3",
-       *   "type": "fix",
-       *   "description": "what was fixed in 151",
-       *   "note": "Network flap is expected, but no longer than 10 seconds",
-       *   "resolves": [
-       *     "https://github.com/deckhouse/dekchouse/issues/16",
-       *     "https://github.com/deckhouse/dekchouse/issues/32"
-       *   ],
-       *   "pull_request": "https://github.com/deckhouse/dekchouse/pulls/151"
-       * }
-       * ```
-       *
-       */
+ * @function parseSingleChange parses raw text entry to change object. Multi-line values are not supported.
+ * @param {{ url: string; }} pr
+ * @param {string} raw
+ *
+ * Input:
+ *
+ * `pr`:
+ *
+ * ```json
+ * pr = {
+ *   "url": "https://github.com/owner/repo/pulls/151"
+ * }
+ * ```
+ *
+ * `raw`:
+ *
+ * ```change
+ * module: module3
+ * type: fix
+ * description: what was fixed in 151
+ * resolves: #16, #32
+ * note: Network flap is expected, but no longer than 10 seconds
+ * ```
+ *
+ * Output:
+ * ```json
+ * {
+ *   "module": "module3",
+ *   "type": "fix",
+ *   "description": "what was fixed in 151",
+ *   "note": "Network flap is expected, but no longer than 10 seconds",
+ *   "resolves": [
+ *     "https://github.com/deckhouse/dekchouse/issues/16",
+ *     "https://github.com/deckhouse/dekchouse/issues/32"
+ *   ],
+ *   "pull_request": "https://github.com/deckhouse/dekchouse/pulls/151"
+ * }
+ * ```
+ *
+ */
 function parseChange(pr, raw) {
 	const opts: PullRequestChangeOpts = {
 		module: "",
@@ -175,11 +175,10 @@ function parseChange(pr, raw) {
 
 	return new PullRequestChange(opts)
 }
-interface ChangeOpts {
-	description: string
-	pull_request: string
-	note?: string
-}
+
+/**
+ *  Change is the change entry to be included in changelog
+ */
 class Change {
 	description: string = ""
 	pull_request: string = ""
@@ -198,10 +197,15 @@ class Change {
 		return this.description && this.pull_request
 	}
 }
-interface PullRequestChangeOpts extends ChangeOpts {
-	module: string
-	type: string
+interface ChangeOpts {
+	description: string
+	pull_request: string
+	note?: string
 }
+
+/**
+ *  PullRequestChange is the change we expect to find in pull request
+ */
 class PullRequestChange extends Change {
 	module: string = ""
 	type: string = ""
@@ -217,7 +221,14 @@ class PullRequestChange extends Change {
 		return this.module && this.type && super.valid()
 	}
 }
+
+interface PullRequestChangeOpts extends ChangeOpts {
+	module: string
+	type: string
+}
+
 const CHANGE_TYPE_UNKNOWN = "unknown"
+
 function fallbackChange(pr: PullRequest): PullRequestChange {
 	return new PullRequestChange({
 		module: "UNKNOWN",
@@ -226,18 +237,20 @@ function fallbackChange(pr: PullRequest): PullRequestChange {
 		pull_request: pr.url,
 	})
 }
+
 function groupModules(acc: ChangesByModule, changes: PullRequestChange[]): ChangesByModule {
 	for (const c of changes) {
 		try {
 			addChange(acc, c)
 		} catch (e) {
-			//       console.log(`by module = ${JSON.stringify(acc, null, 2)}`)
-			//       console.error(`cannot add change ${JSON.stringify(c, null, 2)}`)
+			// console.log(`by module = ${JSON.stringify(acc, null, 2)}`)
+			// console.error(`cannot add change ${JSON.stringify(c, null, 2)}`)
 			throw e
 		}
 	}
 	return acc
 }
+
 function addChange(acc: ChangesByModule, change: PullRequestChange) {
 	// ensure module key:   { "module": {} }
 	acc[change.module] = acc[change.module] || {}
