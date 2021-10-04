@@ -1,0 +1,12 @@
+name: Changelog
+description: Parses changelog milestones
+inputs:
+  token:
+    description: Github token
+    required: true
+outputs:
+  json:
+    description: Changelog JSON
+runs:
+  using: "node12"
+  main: "dist/index.js"
