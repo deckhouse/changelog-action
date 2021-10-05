@@ -50,9 +50,9 @@ export interface ChangesByModule {
  * ModuleChanges describes changes in single module
  */
 interface ModuleChanges {
-	fixes: Change[]
-	features: Change[]
-	unknown: Change[]
+	fixes?: Change[]
+	features?: Change[]
+	unknown?: Change[]
 }
 // pull requests object => changes by modules
 export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
