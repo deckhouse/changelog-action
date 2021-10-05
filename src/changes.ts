@@ -22,10 +22,10 @@ export async function collectChanges(inputs: Inputs): Promise<Outputs> {
 
 	// Process
 	const milestone = pulls[0].milestone.title
-	const changesByModule = collectChangelog(pulls)
+	const changes = collectChangelog(pulls)
 
-	out.yaml = formatYaml(changesByModule)
-	out.markdown = formatMarkdown(milestone, out.yaml)
+	out.yaml = formatYaml(changes)
+	out.markdown = formatMarkdown(milestone, changes)
 
 	return out
 }
