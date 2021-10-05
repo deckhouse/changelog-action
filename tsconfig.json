@@ -1,10 +1,9 @@
 {
 	"compilerOptions": {
-		"target": "ESNext",
-		"module": "system",
+		"target": "es2015",
+		"module": "CommonJS",
 		"lib": ["es6"],
-		// "outDir": "./lib",
-		"outFile": "./dist/index.js",
+		"outDir": "./lib",
 		"rootDir": "./src",
 		"declaration": false,
 		"strict": true,
