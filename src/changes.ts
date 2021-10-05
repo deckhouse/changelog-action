@@ -165,6 +165,8 @@ export function parseSingleChange(pr: PullRequest, raw: string): PullRequestChan
 		pull_request: pr.url,
 	}
 
+	const fields = [...Object.keys(opts), "note"]
+
 	const lines = raw.split("\n")
 	for (const line of lines) {
 		if (!line.trim()) {
@@ -174,7 +176,7 @@ export function parseSingleChange(pr: PullRequest, raw: string): PullRequestChan
 		const [k, ...vs] = line.split(":")
 		const v = vs.join(":").trim()
 
-		if (!(k in opts)) {
+		if (!fields.includes(k)) {
 			continue // set only known keys
 		}
 		opts[k] = v
