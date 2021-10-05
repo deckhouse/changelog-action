@@ -49,7 +49,7 @@ export interface ChangesByModule {
 /**
  * ModuleChanges describes changes in single module
  */
-interface ModuleChanges {
+export interface ModuleChanges {
 	fixes?: Change[]
 	features?: Change[]
 	unknown?: Change[]

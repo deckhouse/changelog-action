@@ -62,17 +62,17 @@ describe("Markdown", () => {
 	const milestone = "v3.44.555"
 	const md = formatMarkdown(milestone, changes)
 
-	test("has milestone header", () => {
+	test("has milestone header as h2", () => {
 		const firstLine = md.split("\n")[0].trim()
 		expect(firstLine).toBe(`## Changelog v3.44.555`)
 	})
 
-	test("has second line empty", () => {
+	test("formats module name as h4 in square brackets", () => {
 		const subheaders = md
 			.split("\n")
 			.map((s) => s.trim())
-			.filter((s) => s.startsWith("### "))
+			.filter((s) => s.startsWith("###"))
 
-		expect(subheaders).toBe(["#### [UNKNOWN]", "#### [one]", "#### [two]"])
+		expect(subheaders).toStrictEqual(["#### [UNKNOWN]", "#### [one]", "#### [two]"])
 	})
 })
