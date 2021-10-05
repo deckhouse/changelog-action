@@ -1,12 +1,12 @@
 {
 	"compilerOptions": {
-		"target": "es6",
+		"target": "ESNext",
 		"module": "system",
 		"lib": ["es6"],
-		"outDir": "./lib",
-		// "outFile": "./dist/index.js",
+		// "outDir": "./lib",
+		"outFile": "./dist/index.js",
 		"rootDir": "./src",
-		"declaration": true,
+		"declaration": false,
 		"strict": true,
 		"noImplicitAny": false,
 		"esModuleInterop": true,
