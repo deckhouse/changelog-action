@@ -3,7 +3,7 @@
 
   [
     {
-      "body": "Pull reqeust containing changelog\r\n\r\n```changelog\r\n- module: upmeter\r\n  type: fix\r\n  description: correct group   uptime calculation\r\n  fixes_issues:\r\n    - 13\r\n```\r\n\r\nFollowing is extra comments.",
+      "body": "Pull reqeust containing changelog\r\n\r\n```changes\r\n- module: upmeter\r\n  type: fix\r\n  description: correct group   uptime calculation\r\n  fixes_issues:\r\n    - 13\r\n```\r\n\r\nFollowing is extra comments.",
       "milestone": {
         "number": 2,
         "title": "v1.40.0",
@@ -16,7 +16,7 @@
       "url": "..."
     },
     {
-      "body": "body\r\nbody\r\nbody\r\n\r\n```changelog\r\n- module: \"inexisting\"\r\n  type: bug\r\n  description: inexistence was not acknowledged\r\n  resolves: [ \"#6\" ]\r\n  will_restart: null\r\n```",
+      "body": "body\r\nbody\r\nbody\r\n\r\n```changes\r\n- module: \"inexisting\"\r\n  type: bug\r\n  description: inexistence was not acknowledged\r\n  resolves: [ \"#6\" ]\r\n  will_restart: null\r\n```",
       "milestone": {
         "number": 2,
         "title": "v1.40.0",
@@ -99,7 +99,7 @@ export function parsePullRequestChanges(
 	let rawChanges = ""
 
 	try {
-		rawChanges = pr.body.split("```changelog")[1].split("```")[0]
+		rawChanges = pr.body.split("```changes")[1].split("```")[0]
 	} catch (e) {
 		return [fallback(pr)]
 	}
@@ -111,6 +111,7 @@ export function parsePullRequestChanges(
 		.map((raw) => parseOne(pr, raw))
 
 	if (changes.length == 0 || changes.some((c) => !c.valid())) {
+		console.log("fallback under conditions")
 		return [fallback(pr)]
 	}
 
