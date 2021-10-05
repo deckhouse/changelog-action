@@ -1,26 +1,28 @@
 import * as yaml from "js-yaml"
-import { ChangesByModule } from "./parse"
+import { Change, ChangesByModule } from "./parse"
 
-export function formatMarkdown(milestone: string, body: ChangesByModule): string {
-	const header = `## Changelog ${milestone}`
-	return [header, formatYaml(body)].join("\r\n\r\n")
-}
 export function formatYaml(body: ChangesByModule): string {
-	// TODO 'UNKNOWN' module should come first to highlight errors: `sortKeys` can be a function
 	const opts = {
-		sortKeys: (a, b) => {
-			if (typeof a === "string" && a.toLowerCase() == "unknown") {
-				return -1
-			}
-			if (typeof b === "string" && b.toLowerCase() == "unknown") {
-				return 1
-			}
-			return b - a
-		},
+		sortKeys: unknownFirst,
 		lineWidth: 100,
 		forceQuotes: false,
 		quotingType: "'",
 	} as yaml.DumpOptions
 
 	return yaml.dump(body, opts)
+}
+
+function unknownFirst(a: string, b: string): number {
+	if (isUnknown(a) || a < b) return -1
+	if (isUnknown(b) || a > b) return 1
+	return 0
+}
+
+function isUnknown(a: string): boolean {
+	return typeof a === "string" && a.toLowerCase() == "unknown"
+}
+
+export function formatMarkdown(milestone: string, body: ChangesByModule): string {
+	const header = `## Changelog ${milestone}`
+	return [header, formatYaml(body)].join("\r\n\r\n")
 }
