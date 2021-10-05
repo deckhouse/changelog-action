@@ -180,8 +180,8 @@ function parseChange(pr, raw) {
  *  Change is the change entry to be included in changelog
  */
 class Change {
-	description: string = ""
-	pull_request: string = ""
+	description = ""
+	pull_request = ""
 	note?: string = undefined
 
 	constructor(o: ChangeOpts) {
@@ -207,8 +207,8 @@ interface ChangeOpts {
  *  PullRequestChange is the change we expect to find in pull request
  */
 class PullRequestChange extends Change {
-	module: string = ""
-	type: string = ""
+	module = ""
+	type = ""
 
 	constructor(o: PullRequestChangeOpts) {
 		super(o)
@@ -243,8 +243,8 @@ function groupModules(acc: ChangesByModule, changes: PullRequestChange[]): Chang
 		try {
 			addChange(acc, c)
 		} catch (e) {
-			// console.log(`by module = ${JSON.stringify(acc, null, 2)}`)
-			// console.error(`cannot add change ${JSON.stringify(c, null, 2)}`)
+			console.log(`by module = ${JSON.stringify(acc, null, 2)}`)
+			console.error(`cannot add change ${JSON.stringify(c, null, 2)}`)
 			throw e
 		}
 	}
@@ -253,7 +253,7 @@ function groupModules(acc: ChangesByModule, changes: PullRequestChange[]): Chang
 
 function addChange(acc: ChangesByModule, change: PullRequestChange) {
 	// ensure module key:   { "module": {} }
-	acc[change.module] = acc[change.module] || {}
+	acc[change.module] = acc[change.module] || ({} as ModuleChanges)
 	const mc = acc[change.module]
 	const ensure = (k) => {
 		mc[k] = mc[k] || []
