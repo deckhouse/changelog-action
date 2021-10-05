@@ -1,4 +1,3 @@
-import { channel } from "diagnostics_channel"
 import { formatYaml, formatMarkdown } from "./format"
 import { Change, ChangesByModule } from "./parse"
 
