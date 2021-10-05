@@ -83,23 +83,6 @@ note: we xpect some outage
 				pull_request: pr.url,
 			}),
 		},
-
-		// 		{
-		// 			title: "falls back when meets malformed input ",
-		// 			pr,
-		// 			input: `
-		// - module: modname
-		//   type: fix
-		//   description: something was done
-		//   note: we xpect some outage
-		//       `,
-		// 			want: new PullRequestChange({
-		// 				module: "unknown",
-		// 				type: "UNKNOWN",
-		// 				description: `${pr.title} (#${pr.number})`,
-		// 				pull_request: pr.url,
-		// 			}),
-		// 		},
 	]
 
 	test.each(cases)("$title", function (c) {

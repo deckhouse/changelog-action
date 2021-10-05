@@ -166,8 +166,6 @@ export function parseSingleChange(pr: PullRequest, raw: string): PullRequestChan
 		pull_request: pr.url,
 	}
 
-	const fields = [...Object.keys(opts), "note"]
-
 	const lines = raw.split("\n")
 	for (const line of lines) {
 		if (!line.trim()) {
@@ -177,7 +175,7 @@ export function parseSingleChange(pr: PullRequest, raw: string): PullRequestChan
 		const [k, ...vs] = line.split(":")
 		const v = vs.join(":").trim()
 
-		if (!fields.includes(k)) {
+		if (!prChangeFields.has(k)) {
 			continue // set only known keys
 		}
 		opts[k] = v
@@ -185,6 +183,8 @@ export function parseSingleChange(pr: PullRequest, raw: string): PullRequestChan
 
 	return new PullRequestChange(opts)
 }
+
+const prChangeFields = new Set(["module", "type", "description", "note", "pull_request"])
 
 /**
  *  Change is the change entry to be included in changelog
