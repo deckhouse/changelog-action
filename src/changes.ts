@@ -47,7 +47,7 @@ export interface Inputs {
 }
 
 // This function expects an array of pull requests belonging to single milestone
-export async function collectChanges(inputs: Inputs) {
+export async function collectChanges(inputs: Inputs): Promise<string> {
 	const { pulls } = inputs
 	if (pulls.length === 0) {
 		return ""
@@ -66,10 +66,13 @@ interface ChangesByModule {
 	[module: string]: ModuleChanges
 }
 
+/**
+ * ModuleChanges describes changes in single module
+ */
 interface ModuleChanges {
-	fixes: PullRequestChange[]
-	features: PullRequestChange[]
-	unknown: PullRequestChange[]
+	fixes: Change[]
+	features: Change[]
+	unknown: Change[]
 }
 
 function formatBody(milestone: string, changesByModule: ChangesByModule): string {
@@ -84,12 +87,15 @@ function formatBody(milestone: string, changesByModule: ChangesByModule): string
 function collectChangelog(pulls: PullRequest[]): ChangesByModule {
 	return pulls
 		.filter((pr) => pr.state == "MERGED")
-		.map((pr) => parseChanges(pr, parseChange, fallbackChange))
-		.reduce(groupModules, {})
+		.map((pr) => parsePullRequestChanges(pr, parseSingleChange, fallbackChange))
+		.reduce(groupByModule, {})
 }
 
-// TODO tests on various malformed changelogs
-function parseChanges(pr, parseOne, fallback): PullRequestChange[] {
+export function parsePullRequestChanges(
+	pr: PullRequest,
+	parseOne: (PullRequest, string) => PullRequestChange,
+	fallback: (PullRequest) => PullRequestChange,
+): PullRequestChange[] {
 	let rawChanges = ""
 
 	try {
@@ -98,6 +104,7 @@ function parseChanges(pr, parseOne, fallback): PullRequestChange[] {
 		return [fallback(pr)]
 	}
 
+	// TODO parse YAML docs
 	const changes = rawChanges
 		.split("---")
 		.filter((x) => !!x.trim()) // exclude empty strings
@@ -110,7 +117,7 @@ function parseChanges(pr, parseOne, fallback): PullRequestChange[] {
 	return changes
 }
 /**
- * @function parseSingleChange parses raw text entry to change object. Multi-line values are not supported.
+ * @function parseChange parses raw text entry to change object. Multi-line values are not supported.
  * @param {{ url: string; }} pr
  * @param {string} raw
  *
@@ -150,7 +157,7 @@ function parseChanges(pr, parseOne, fallback): PullRequestChange[] {
  * ```
  *
  */
-function parseChange(pr, raw) {
+export function parseSingleChange(pr: PullRequest, raw: string): PullRequestChange {
 	const opts: PullRequestChangeOpts = {
 		module: "",
 		type: "",
@@ -179,10 +186,10 @@ function parseChange(pr, raw) {
 /**
  *  Change is the change entry to be included in changelog
  */
-class Change {
+export class Change {
 	description = ""
 	pull_request = ""
-	note?: string = undefined
+	note?: string
 
 	constructor(o: ChangeOpts) {
 		this.description = o.description
@@ -193,8 +200,8 @@ class Change {
 	}
 
 	// All required fields should be filled
-	valid() {
-		return this.description && this.pull_request
+	valid(): boolean {
+		return !!this.description && !!this.pull_request
 	}
 }
 interface ChangeOpts {
@@ -206,7 +213,7 @@ interface ChangeOpts {
 /**
  *  PullRequestChange is the change we expect to find in pull request
  */
-class PullRequestChange extends Change {
+export class PullRequestChange extends Change {
 	module = ""
 	type = ""
 
@@ -217,8 +224,8 @@ class PullRequestChange extends Change {
 	}
 
 	// All required fields should be filled
-	valid() {
-		return this.module && this.type && super.valid()
+	valid(): boolean {
+		return !!this.module && !!this.type && super.valid()
 	}
 }
 
@@ -238,7 +245,7 @@ function fallbackChange(pr: PullRequest): PullRequestChange {
 	})
 }
 
-function groupModules(acc: ChangesByModule, changes: PullRequestChange[]): ChangesByModule {
+function groupByModule(acc: ChangesByModule, changes: PullRequestChange[]): ChangesByModule {
 	for (const c of changes) {
 		try {
 			addChange(acc, c)
