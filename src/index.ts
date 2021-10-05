@@ -1,5 +1,6 @@
 import * as core from "@actions/core"
-import { Inputs, PullRequest, collectChanges } from "./changes"
+import { Inputs, collectChanges } from "./changes"
+import { PullRequest } from "./parse"
 
 async function run(): Promise<void> {
 	try {
@@ -10,8 +11,9 @@ async function run(): Promise<void> {
 
 		// core.debug(`Inputs: ${inspect(inputs)}`)
 
-		const body = await collectChanges(inputs)
-		core.setOutput("body", body)
+		const o = await collectChanges(inputs)
+		core.setOutput("yaml", o.yaml)
+		core.setOutput("markdown", o.markdown)
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} catch (error: any) {

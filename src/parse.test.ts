@@ -1,4 +1,4 @@
-import { parsePullRequestChanges, parseSingleChange, PullRequest, PullRequestChange } from "./changes"
+import { parsePullRequestChanges, parseSingleChange, PullRequest, PullRequestChange } from "./parse"
 
 describe("parseSingleChange", function () {
 	const pr: PullRequest = {

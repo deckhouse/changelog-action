@@ -21,6 +21,7 @@
 	"devDependencies": {
 		"@types/chai": "^4.2.22",
 		"@types/jest": "^27.0.2",
+		"@types/js-yaml": "^4.0.3",
 		"@types/node": "^16.10.2",
 		"@typescript-eslint/parser": "^4.33.0",
 		"@vercel/ncc": "^0.31.1",

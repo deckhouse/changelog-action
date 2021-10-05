@@ -9,8 +9,10 @@ inputs:
       Pull requests JSON Array. Required fields: number, url, milestone, title, body, state.
     required: true
 outputs:
-  body:
-    description: Changelog body
+  yaml:
+    description: Changelog YAML
+  markdown:
+    description: Changelog markdown
 runs:
   using: "node12"
   main: "dist/index.js"
