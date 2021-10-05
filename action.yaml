@@ -4,9 +4,15 @@ inputs:
   token:
     description: Github token
     required: true
+  pull_requests:
+    description: |
+      Pull requests JSON
+
+      Required fields: number, url, milestone, title, state
+    required: true
 outputs:
-  json:
-    description: Changelog JSON
+  body:
+    description: Changelog body
 runs:
   using: "node12"
   main: "dist/index.js"
