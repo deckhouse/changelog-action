@@ -236,13 +236,15 @@ function parsePullRequestChanges(pr, rawChanges) {
         .map((doc) => convPullRequestChange(doc, pr.url) || fallbackConvChange(pr));
 }
 exports.parsePullRequestChanges = parsePullRequestChanges;
+const knownTypes = new Set(["fix", "feature"]);
 function convPullRequestChange(doc, url) {
     if (!instanceOfPullRequestChangeOpts(doc)) {
         return null;
     }
+    const typ = knownTypes.has(doc.type) ? doc.type : CHANGE_TYPE_UNKNOWN;
     const opts = {
         module: doc.module,
-        type: doc.type,
+        type: typ,
         description: doc.description.trim(),
         pull_request: url,
     };
@@ -321,11 +323,8 @@ function groupByModule(acc, change) {
         case "feature":
             list = ensure("features");
             break;
-        case CHANGE_TYPE_UNKNOWN:
-            list = ensure(CHANGE_TYPE_UNKNOWN);
-            break;
         default:
-            throw new Error(`unknown change type "${change.type}"`);
+            list = ensure(CHANGE_TYPE_UNKNOWN);
     }
     list.push(new Change({
         description: change.description,
