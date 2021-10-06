@@ -8,7 +8,7 @@ const changes: ChangesByModule = {
 		unknown: [new Change({ description: "d1u", pull_request: "pr1u" })],
 	},
 	two: {
-		fixes: [new Change({ description: "d21", pull_request: "pr21" })],
+		fixes: [new Change({ description: "d21", pull_request: "pr21", note: "Big news" })],
 		features: [new Change({ description: "d22", pull_request: "pr22" })],
 		unknown: [new Change({ description: "d2u", pull_request: "pr2u" })],
 	},
@@ -20,9 +20,7 @@ const changes: ChangesByModule = {
 }
 
 describe("YAML", () => {
-	test("places UNKNOWNs on the top", () => {
-		const expected = `
-UNKNOWN:
+	const expected = `UNKNOWN:
   unknown:
     - description: duu
       pull_request: pruu
@@ -51,9 +49,11 @@ two:
       pull_request: pr22
   fixes:
     - description: d21
+      note: Big news
       pull_request: pr21
 `
-		expect(formatYaml(changes)).toEqual(expected.replace("\n", ""))
+	test("formats right", () => {
+		expect(formatYaml(changes)).toEqual(expected)
 	})
 })
 
@@ -100,6 +100,7 @@ describe("Markdown", () => {
  - fixes
      - d21
          - [Pull request](pr21)
+         - **NOTE!** Big news
 `
 	test("has milestone header as h2", () => {
 		const firstLine = md.split("\n")[0].trim()
@@ -115,7 +116,7 @@ describe("Markdown", () => {
 		expect(subheaders).toStrictEqual(["#### [UNKNOWN]", "#### [one]", "#### [two]"])
 	})
 
-	test("markdown is of expected form", () => {
+	test("formats right", () => {
 		expect(md).toBe(expected)
 	})
 })
