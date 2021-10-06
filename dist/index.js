@@ -196,61 +196,78 @@ run();
 /***/ }),
 
 /***/ 5223:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PullRequestChange = exports.Change = exports.parseSingleChange = exports.parsePullRequestChanges = exports.collectChangelog = void 0;
+exports.PullRequestChange = exports.Change = exports.parsePullRequestChanges = exports.collectChangelog = void 0;
+const yaml = __importStar(__nccwpck_require__(1917));
 function collectChangelog(pulls) {
-    return pulls
+    return (pulls
         .filter((pr) => pr.state == "MERGED")
-        .map((pr) => parsePullRequestChanges(pr, parseSingleChange, fallbackChange))
-        .reduce(groupByModule, {});
+        .map((pr) => ({ pr, rawChanges: extractChangesBlock(pr.body) }))
+        .flatMap(({ pr, rawChanges }) => parsePullRequestChanges(pr, rawChanges))
+        .reduce(groupByModule, {}));
 }
 exports.collectChangelog = collectChangelog;
-function parsePullRequestChanges(pr, parseOne, fallback) {
-    let rawChanges = "";
-    try {
-        rawChanges = pr.body.split("```changes")[1].split("```")[0];
-    }
-    catch (e) {
-        return [fallback(pr)];
-    }
-    const changes = rawChanges
-        .split("---")
-        .filter((x) => !!x.trim())
-        .map((raw) => parseOne(pr, raw));
-    if (changes.length == 0 || changes.some((c) => !c.valid())) {
-        console.log("fallback under conditions");
-        return [fallback(pr)];
-    }
-    return changes;
+function parsePullRequestChanges(pr, rawChanges) {
+    return yaml
+        .loadAll(rawChanges)
+        .map((doc) => convPullRequestChange(doc, pr.url) || fallbackConvChange(pr));
 }
 exports.parsePullRequestChanges = parsePullRequestChanges;
-function parseSingleChange(pr, raw) {
-    const opts = {
-        module: "",
-        type: "",
-        description: "",
-        pull_request: pr.url,
-    };
-    const lines = raw.split("\n");
-    for (const line of lines) {
-        if (!line.trim()) {
-            continue;
-        }
-        const [k, ...vs] = line.split(":");
-        const v = vs.join(":").trim();
-        if (!prChangeFields.has(k)) {
-            continue;
-        }
-        opts[k] = v;
+function convPullRequestChange(doc, url) {
+    if (!instanceOfPullRequestChangeOpts(doc)) {
+        return null;
     }
+    const opts = {
+        module: doc.module,
+        type: doc.type,
+        description: doc.description.trim(),
+        pull_request: url,
+    };
+    if (doc.note)
+        opts.note = doc.note.trim();
     return new PullRequestChange(opts);
 }
-exports.parseSingleChange = parseSingleChange;
-const prChangeFields = new Set(["module", "type", "description", "note", "pull_request"]);
+function instanceOfPullRequestChangeOpts(x) {
+    if (typeof x !== "object" || x === null) {
+        return false;
+    }
+    return "module" in x && "type" in x && "description" in x;
+}
+function extractChangesBlock(body) {
+    const div1 = body.split("```changes");
+    if (div1.length != 2) {
+        return "";
+    }
+    const div2 = div1[1].split("```");
+    if (div1.length != 2) {
+        return "";
+    }
+    const raw = div2[0];
+    return raw.trim();
+}
 class Change {
     constructor(o) {
         this.description = "";
@@ -280,28 +297,16 @@ class PullRequestChange extends Change {
 }
 exports.PullRequestChange = PullRequestChange;
 const CHANGE_TYPE_UNKNOWN = "unknown";
-function fallbackChange(pr) {
+const MODULE_UNKNOWN = "UNKNOWN";
+function fallbackConvChange(pr) {
     return new PullRequestChange({
-        module: "UNKNOWN",
+        module: MODULE_UNKNOWN,
         type: CHANGE_TYPE_UNKNOWN,
         description: `${pr.title} (#${pr.number})`,
         pull_request: pr.url,
     });
 }
-function groupByModule(acc, changes) {
-    for (const c of changes) {
-        try {
-            addChange(acc, c);
-        }
-        catch (e) {
-            console.log(`by module = ${JSON.stringify(acc, null, 2)}`);
-            console.error(`cannot add change ${JSON.stringify(c, null, 2)}`);
-            throw e;
-        }
-    }
-    return acc;
-}
-function addChange(acc, change) {
+function groupByModule(acc, change) {
     acc[change.module] = acc[change.module] || {};
     const mc = acc[change.module];
     const ensure = (k) => {
@@ -317,7 +322,7 @@ function addChange(acc, change) {
             list = ensure("features");
             break;
         case CHANGE_TYPE_UNKNOWN:
-            list = ensure("UNKNOWN");
+            list = ensure(CHANGE_TYPE_UNKNOWN);
             break;
         default:
             throw new Error(`unknown change type "${change.type}"`);
@@ -327,6 +332,7 @@ function addChange(acc, change) {
         pull_request: change.pull_request,
         note: change.note,
     }));
+    return acc;
 }
 
 
