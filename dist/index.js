@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 654:
+/***/ 8654:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -17,8 +17,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.collectChanges = void 0;
-const format_1 = __nccwpck_require__(610);
-const parse_1 = __nccwpck_require__(223);
+const format_1 = __nccwpck_require__(6610);
+const parse_1 = __nccwpck_require__(5223);
 function collectChanges(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         const { pulls } = inputs;
@@ -27,9 +27,9 @@ function collectChanges(inputs) {
             return out;
         }
         const milestone = pulls[0].milestone.title;
-        const changesByModule = (0, parse_1.collectChangelog)(pulls);
-        out.yaml = (0, format_1.formatYaml)(changesByModule);
-        out.markdown = (0, format_1.formatMarkdown)(milestone, out.yaml);
+        const changes = (0, parse_1.collectChangelog)(pulls);
+        out.yaml = (0, format_1.formatYaml)(changes);
+        out.markdown = (0, format_1.formatMarkdown)(milestone, changes);
         return out;
     });
 }
@@ -38,7 +38,7 @@ exports.collectChanges = collectChanges;
 
 /***/ }),
 
-/***/ 610:
+/***/ 6610:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -62,23 +62,74 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.formatYaml = exports.formatMarkdown = void 0;
-const yaml = __importStar(__nccwpck_require__(917));
-function formatMarkdown(milestone, body) {
-    const header = `## Changelog ${milestone}`;
-    return [header, body].join("\r\n\r\n");
-}
-exports.formatMarkdown = formatMarkdown;
-function formatYaml(changesByModule) {
-    return yaml.dump(changesByModule, { sortKeys: true, lineWidth: 100 });
+exports.formatMarkdown = exports.formatYaml = void 0;
+const yaml = __importStar(__nccwpck_require__(1917));
+const json2md_1 = __importDefault(__nccwpck_require__(8158));
+const MARKDOWN_HEADER_TAG = "h2";
+const MARKDOWN_MODULER_TAG = "h4";
+const MARKDOWN_NOTE_PREFIX = "*NOTE!*";
+function formatYaml(body) {
+    const opts = {
+        sortKeys: unknownFirst,
+        lineWidth: 100,
+        forceQuotes: false,
+        quotingType: "'",
+    };
+    return yaml.dump(body, opts);
 }
 exports.formatYaml = formatYaml;
+function unknownFirst(a, b) {
+    if (isUnknown(a) || a < b)
+        return -1;
+    if (isUnknown(b) || a > b)
+        return 1;
+    return 0;
+}
+function isUnknown(s) {
+    return typeof s === "string" && s.toLowerCase() === "unknown";
+}
+function formatMarkdown(milestone, body) {
+    const pairs = Object.entries(body).sort((a, b) => unknownFirst(a[0], b[0]));
+    const md = [{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }];
+    for (const [modnName, changes] of pairs) {
+        md.push({ [MARKDOWN_MODULER_TAG]: `[${modnName}]` });
+        md.push({ ul: moduleChangesMarkdown(changes) });
+    }
+    return (0, json2md_1.default)(md);
+}
+exports.formatMarkdown = formatMarkdown;
+function moduleChangesMarkdown(mc) {
+    const md = [];
+    if (mc.unknown) {
+        md.push("unknown");
+        md.push({ ul: mc.unknown.flatMap(changeMardown) });
+    }
+    if (mc.features) {
+        md.push("features");
+        md.push({ ul: mc.features.flatMap(changeMardown) });
+    }
+    if (mc.fixes) {
+        md.push("fixes");
+        md.push({ ul: mc.fixes.flatMap(changeMardown) });
+    }
+    return md;
+}
+function changeMardown(c) {
+    const detail = [{ link: { source: c.pull_request, title: "Pull request" } }];
+    if (c.note) {
+        detail.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`);
+    }
+    return [c.description, { ul: detail }];
+}
 
 
 /***/ }),
 
-/***/ 822:
+/***/ 4822:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -112,8 +163,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(186));
-const changes_1 = __nccwpck_require__(654);
+const core = __importStar(__nccwpck_require__(2186));
+const changes_1 = __nccwpck_require__(8654);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -135,7 +186,7 @@ run();
 
 /***/ }),
 
-/***/ 223:
+/***/ 5223:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -272,7 +323,7 @@ function addChange(acc, change) {
 
 /***/ }),
 
-/***/ 351:
+/***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -298,8 +349,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issue = exports.issueCommand = void 0;
-const os = __importStar(__nccwpck_require__(87));
-const utils_1 = __nccwpck_require__(278);
+const os = __importStar(__nccwpck_require__(2087));
+const utils_1 = __nccwpck_require__(5278);
 /**
  * Commands
  *
@@ -371,7 +422,7 @@ function escapeProperty(s) {
 
 /***/ }),
 
-/***/ 186:
+/***/ 2186:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -406,12 +457,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
-const command_1 = __nccwpck_require__(351);
+const command_1 = __nccwpck_require__(7351);
 const file_command_1 = __nccwpck_require__(717);
-const utils_1 = __nccwpck_require__(278);
-const os = __importStar(__nccwpck_require__(87));
-const path = __importStar(__nccwpck_require__(622));
-const oidc_utils_1 = __nccwpck_require__(41);
+const utils_1 = __nccwpck_require__(5278);
+const os = __importStar(__nccwpck_require__(2087));
+const path = __importStar(__nccwpck_require__(5622));
+const oidc_utils_1 = __nccwpck_require__(8041);
 /**
  * The code to exit an action
  */
@@ -719,9 +770,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__nccwpck_require__(747));
-const os = __importStar(__nccwpck_require__(87));
-const utils_1 = __nccwpck_require__(278);
+const fs = __importStar(__nccwpck_require__(5747));
+const os = __importStar(__nccwpck_require__(2087));
+const utils_1 = __nccwpck_require__(5278);
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
     if (!filePath) {
@@ -739,7 +790,7 @@ exports.issueCommand = issueCommand;
 
 /***/ }),
 
-/***/ 41:
+/***/ 8041:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -755,9 +806,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OidcClient = void 0;
-const http_client_1 = __nccwpck_require__(925);
-const auth_1 = __nccwpck_require__(702);
-const core_1 = __nccwpck_require__(186);
+const http_client_1 = __nccwpck_require__(9925);
+const auth_1 = __nccwpck_require__(3702);
+const core_1 = __nccwpck_require__(2186);
 class OidcClient {
     static createHttpClient(allowRetry = true, maxRetry = 10) {
         const requestOptions = {
@@ -823,7 +874,7 @@ exports.OidcClient = OidcClient;
 
 /***/ }),
 
-/***/ 278:
+/***/ 5278:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -870,7 +921,7 @@ exports.toCommandProperties = toCommandProperties;
 
 /***/ }),
 
-/***/ 702:
+/***/ 3702:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -936,15 +987,15 @@ exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHand
 
 /***/ }),
 
-/***/ 925:
+/***/ 9925:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const http = __nccwpck_require__(605);
-const https = __nccwpck_require__(211);
-const pm = __nccwpck_require__(443);
+const http = __nccwpck_require__(8605);
+const https = __nccwpck_require__(7211);
+const pm = __nccwpck_require__(6443);
 let tunnel;
 var HttpCodes;
 (function (HttpCodes) {
@@ -1363,7 +1414,7 @@ class HttpClient {
         if (useProxy) {
             // If using proxy, need tunnel
             if (!tunnel) {
-                tunnel = __nccwpck_require__(294);
+                tunnel = __nccwpck_require__(4294);
             }
             const agentOptions = {
                 maxSockets: maxSockets,
@@ -1481,7 +1532,7 @@ exports.HttpClient = HttpClient;
 
 /***/ }),
 
-/***/ 443:
+/***/ 6443:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -1546,15 +1597,41 @@ exports.checkBypass = checkBypass;
 
 /***/ }),
 
-/***/ 917:
+/***/ 393:
+/***/ ((module) => {
+
+"use strict";
+
+
+/**
+ * indento
+ * Indents the input string.
+ *
+ * @name indento
+ * @function
+ * @param {String} input The input string.
+ * @param {Number} width The indent width.
+ * @param {String} char The character to use for indentation (default: `" "`).
+ * @return {String} The indented string.
+ */
+function indento(input, width, char) {
+  char = typeof char !== "string" ? " " : char;
+  return String(input).replace(/^/gm, char.repeat(width));
+}
+
+module.exports = indento;
+
+/***/ }),
+
+/***/ 1917:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
 
-var loader = __nccwpck_require__(161);
-var dumper = __nccwpck_require__(866);
+var loader = __nccwpck_require__(1161);
+var dumper = __nccwpck_require__(8866);
 
 
 function renamed(from, to) {
@@ -1565,32 +1642,32 @@ function renamed(from, to) {
 }
 
 
-module.exports.Type = __nccwpck_require__(73);
-module.exports.Schema = __nccwpck_require__(82);
-module.exports.FAILSAFE_SCHEMA = __nccwpck_require__(562);
-module.exports.JSON_SCHEMA = __nccwpck_require__(35);
-module.exports.CORE_SCHEMA = __nccwpck_require__(11);
-module.exports.DEFAULT_SCHEMA = __nccwpck_require__(759);
+module.exports.Type = __nccwpck_require__(6073);
+module.exports.Schema = __nccwpck_require__(1082);
+module.exports.FAILSAFE_SCHEMA = __nccwpck_require__(8562);
+module.exports.JSON_SCHEMA = __nccwpck_require__(1035);
+module.exports.CORE_SCHEMA = __nccwpck_require__(2011);
+module.exports.DEFAULT_SCHEMA = __nccwpck_require__(8759);
 module.exports.load                = loader.load;
 module.exports.loadAll             = loader.loadAll;
 module.exports.dump                = dumper.dump;
-module.exports.YAMLException = __nccwpck_require__(179);
+module.exports.YAMLException = __nccwpck_require__(8179);
 
 // Re-export all types in case user wants to create custom schema
 module.exports.types = {
-  binary:    __nccwpck_require__(900),
-  float:     __nccwpck_require__(705),
-  map:       __nccwpck_require__(150),
+  binary:    __nccwpck_require__(7900),
+  float:     __nccwpck_require__(2705),
+  map:       __nccwpck_require__(6150),
   null:      __nccwpck_require__(721),
-  pairs:     __nccwpck_require__(860),
-  set:       __nccwpck_require__(548),
-  timestamp: __nccwpck_require__(212),
-  bool:      __nccwpck_require__(993),
-  int:       __nccwpck_require__(615),
-  merge:     __nccwpck_require__(104),
-  omap:      __nccwpck_require__(46),
-  seq:       __nccwpck_require__(283),
-  str:       __nccwpck_require__(619)
+  pairs:     __nccwpck_require__(6860),
+  set:       __nccwpck_require__(9548),
+  timestamp: __nccwpck_require__(9212),
+  bool:      __nccwpck_require__(4993),
+  int:       __nccwpck_require__(1615),
+  merge:     __nccwpck_require__(6104),
+  omap:      __nccwpck_require__(9046),
+  seq:       __nccwpck_require__(7283),
+  str:       __nccwpck_require__(3619)
 };
 
 // Removed functions from JS-YAML 3.0.x
@@ -1601,7 +1678,7 @@ module.exports.safeDump            = renamed('safeDump', 'dump');
 
 /***/ }),
 
-/***/ 829:
+/***/ 6829:
 /***/ ((module) => {
 
 "use strict";
@@ -1668,7 +1745,7 @@ module.exports.extend         = extend;
 
 /***/ }),
 
-/***/ 866:
+/***/ 8866:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -1676,9 +1753,9 @@ module.exports.extend         = extend;
 
 /*eslint-disable no-use-before-define*/
 
-var common              = __nccwpck_require__(829);
-var YAMLException       = __nccwpck_require__(179);
-var DEFAULT_SCHEMA      = __nccwpck_require__(759);
+var common              = __nccwpck_require__(6829);
+var YAMLException       = __nccwpck_require__(8179);
+var DEFAULT_SCHEMA      = __nccwpck_require__(8759);
 
 var _toString       = Object.prototype.toString;
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -2641,7 +2718,7 @@ module.exports.dump = dump;
 
 /***/ }),
 
-/***/ 179:
+/***/ 8179:
 /***/ ((module) => {
 
 "use strict";
@@ -2704,7 +2781,7 @@ module.exports = YAMLException;
 
 /***/ }),
 
-/***/ 161:
+/***/ 1161:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2712,10 +2789,10 @@ module.exports = YAMLException;
 
 /*eslint-disable max-len,no-use-before-define*/
 
-var common              = __nccwpck_require__(829);
-var YAMLException       = __nccwpck_require__(179);
-var makeSnippet         = __nccwpck_require__(975);
-var DEFAULT_SCHEMA      = __nccwpck_require__(759);
+var common              = __nccwpck_require__(6829);
+var YAMLException       = __nccwpck_require__(8179);
+var makeSnippet         = __nccwpck_require__(6975);
+var DEFAULT_SCHEMA      = __nccwpck_require__(8759);
 
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -4439,7 +4516,7 @@ module.exports.load    = load;
 
 /***/ }),
 
-/***/ 82:
+/***/ 1082:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4447,8 +4524,8 @@ module.exports.load    = load;
 
 /*eslint-disable max-len*/
 
-var YAMLException = __nccwpck_require__(179);
-var Type          = __nccwpck_require__(73);
+var YAMLException = __nccwpck_require__(8179);
+var Type          = __nccwpck_require__(6073);
 
 
 function compileList(schema, name) {
@@ -4568,7 +4645,7 @@ module.exports = Schema;
 
 /***/ }),
 
-/***/ 11:
+/***/ 2011:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4582,12 +4659,12 @@ module.exports = Schema;
 
 
 
-module.exports = __nccwpck_require__(35);
+module.exports = __nccwpck_require__(1035);
 
 
 /***/ }),
 
-/***/ 759:
+/***/ 8759:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4601,23 +4678,23 @@ module.exports = __nccwpck_require__(35);
 
 
 
-module.exports = __nccwpck_require__(11).extend({
+module.exports = __nccwpck_require__(2011).extend({
   implicit: [
-    __nccwpck_require__(212),
-    __nccwpck_require__(104)
+    __nccwpck_require__(9212),
+    __nccwpck_require__(6104)
   ],
   explicit: [
-    __nccwpck_require__(900),
-    __nccwpck_require__(46),
-    __nccwpck_require__(860),
-    __nccwpck_require__(548)
+    __nccwpck_require__(7900),
+    __nccwpck_require__(9046),
+    __nccwpck_require__(6860),
+    __nccwpck_require__(9548)
   ]
 });
 
 
 /***/ }),
 
-/***/ 562:
+/***/ 8562:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4628,21 +4705,21 @@ module.exports = __nccwpck_require__(11).extend({
 
 
 
-var Schema = __nccwpck_require__(82);
+var Schema = __nccwpck_require__(1082);
 
 
 module.exports = new Schema({
   explicit: [
-    __nccwpck_require__(619),
-    __nccwpck_require__(283),
-    __nccwpck_require__(150)
+    __nccwpck_require__(3619),
+    __nccwpck_require__(7283),
+    __nccwpck_require__(6150)
   ]
 });
 
 
 /***/ }),
 
-/***/ 35:
+/***/ 1035:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4657,26 +4734,26 @@ module.exports = new Schema({
 
 
 
-module.exports = __nccwpck_require__(562).extend({
+module.exports = __nccwpck_require__(8562).extend({
   implicit: [
     __nccwpck_require__(721),
-    __nccwpck_require__(993),
-    __nccwpck_require__(615),
-    __nccwpck_require__(705)
+    __nccwpck_require__(4993),
+    __nccwpck_require__(1615),
+    __nccwpck_require__(2705)
   ]
 });
 
 
 /***/ }),
 
-/***/ 975:
+/***/ 6975:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
 
-var common = __nccwpck_require__(829);
+var common = __nccwpck_require__(6829);
 
 
 // get snippet for a single line, respecting maxLength
@@ -4778,13 +4855,13 @@ module.exports = makeSnippet;
 
 /***/ }),
 
-/***/ 73:
+/***/ 6073:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var YAMLException = __nccwpck_require__(179);
+var YAMLException = __nccwpck_require__(8179);
 
 var TYPE_CONSTRUCTOR_OPTIONS = [
   'kind',
@@ -4852,7 +4929,7 @@ module.exports = Type;
 
 /***/ }),
 
-/***/ 900:
+/***/ 7900:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4861,7 +4938,7 @@ module.exports = Type;
 /*eslint-disable no-bitwise*/
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 
 // [ 64, 65, 66 ] -> [ padding, CR, LF ]
@@ -4985,13 +5062,13 @@ module.exports = new Type('tag:yaml.org,2002:binary', {
 
 /***/ }),
 
-/***/ 993:
+/***/ 4993:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 function resolveYamlBoolean(data) {
   if (data === null) return false;
@@ -5028,14 +5105,14 @@ module.exports = new Type('tag:yaml.org,2002:bool', {
 
 /***/ }),
 
-/***/ 705:
+/***/ 2705:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var common = __nccwpck_require__(829);
-var Type   = __nccwpck_require__(73);
+var common = __nccwpck_require__(6829);
+var Type   = __nccwpck_require__(6073);
 
 var YAML_FLOAT_PATTERN = new RegExp(
   // 2.5e4, 2.5 and integers
@@ -5133,14 +5210,14 @@ module.exports = new Type('tag:yaml.org,2002:float', {
 
 /***/ }),
 
-/***/ 615:
+/***/ 1615:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var common = __nccwpck_require__(829);
-var Type   = __nccwpck_require__(73);
+var common = __nccwpck_require__(6829);
+var Type   = __nccwpck_require__(6073);
 
 function isHexCode(c) {
   return ((0x30/* 0 */ <= c) && (c <= 0x39/* 9 */)) ||
@@ -5297,13 +5374,13 @@ module.exports = new Type('tag:yaml.org,2002:int', {
 
 /***/ }),
 
-/***/ 150:
+/***/ 6150:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 module.exports = new Type('tag:yaml.org,2002:map', {
   kind: 'mapping',
@@ -5313,13 +5390,13 @@ module.exports = new Type('tag:yaml.org,2002:map', {
 
 /***/ }),
 
-/***/ 104:
+/***/ 6104:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 function resolveYamlMerge(data) {
   return data === '<<' || data === null;
@@ -5339,7 +5416,7 @@ module.exports = new Type('tag:yaml.org,2002:merge', {
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 function resolveYamlNull(data) {
   if (data === null) return true;
@@ -5376,13 +5453,13 @@ module.exports = new Type('tag:yaml.org,2002:null', {
 
 /***/ }),
 
-/***/ 46:
+/***/ 9046:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
 var _toString       = Object.prototype.toString;
@@ -5428,13 +5505,13 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
 
 /***/ }),
 
-/***/ 860:
+/***/ 6860:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 var _toString = Object.prototype.toString;
 
@@ -5489,13 +5566,13 @@ module.exports = new Type('tag:yaml.org,2002:pairs', {
 
 /***/ }),
 
-/***/ 283:
+/***/ 7283:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 module.exports = new Type('tag:yaml.org,2002:seq', {
   kind: 'sequence',
@@ -5505,13 +5582,13 @@ module.exports = new Type('tag:yaml.org,2002:seq', {
 
 /***/ }),
 
-/***/ 548:
+/***/ 9548:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -5542,13 +5619,13 @@ module.exports = new Type('tag:yaml.org,2002:set', {
 
 /***/ }),
 
-/***/ 619:
+/***/ 3619:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 module.exports = new Type('tag:yaml.org,2002:str', {
   kind: 'scalar',
@@ -5558,13 +5635,13 @@ module.exports = new Type('tag:yaml.org,2002:str', {
 
 /***/ }),
 
-/***/ 212:
+/***/ 9212:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var Type = __nccwpck_require__(73);
+var Type = __nccwpck_require__(6073);
 
 var YAML_DATE_REGEXP = new RegExp(
   '^([0-9][0-9][0-9][0-9])'          + // [1] year
@@ -5654,27 +5731,422 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 
 /***/ }),
 
-/***/ 294:
+/***/ 1072:
+/***/ ((module) => {
+
+"use strict";
+
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var converters = module.exports = {};
+
+var generateHeader = function generateHeader(repeat) {
+    return function (input, json2md) {
+        return "#".repeat(repeat) + " " + json2md(input);
+    };
+};
+
+var indent = function indent(content, spaces, ignoreFirst) {
+    var lines = content;
+
+    if (typeof content === "string") {
+        lines = content.split("\n");
+    }
+
+    if (ignoreFirst) {
+        if (lines.length <= 1) {
+            return lines.join("\n");
+        }
+        return lines[0] + "\n" + indent(lines.slice(1), spaces, false);
+    }
+
+    return lines.map(function (c) {
+        return " ".repeat(spaces) + c;
+    }).join("\n");
+};
+
+var parseTextFormat = function parseTextFormat(text) {
+
+    var formats = {
+        strong: "**",
+        italic: "*",
+        underline: "_",
+        strikethrough: "~~"
+    };
+
+    return text.replace(/<\/?strong\>/gi, formats.strong).replace(/<\/?bold\>/gi, formats.strong).replace(/<\/?em\>/gi, formats.italic).replace(/<\/?italic\>/gi, formats.italic).replace(/<\/?u\>/gi, formats.underline).replace(/<\/?strike\>/gi, formats.strikethrough);
+};
+
+// Headings
+converters.h1 = generateHeader(1);
+converters.h2 = generateHeader(2);
+converters.h3 = generateHeader(3);
+converters.h4 = generateHeader(4);
+converters.h5 = generateHeader(5);
+converters.h6 = generateHeader(6);
+
+converters.blockquote = function (input, json2md) {
+    return json2md(input, "> ");
+};
+
+converters.img = function (input, json2md) {
+    if (Array.isArray(input)) {
+        return json2md(input, "", "img");
+    }
+    if (typeof input === "string") {
+        return converters.img({ source: input, title: "", alt: "" });
+    }
+    input.title = input.title || "";
+    input.alt = input.alt || "";
+    return "![" + input.alt + "](" + input.source + " \"" + input.title + "\")";
+};
+
+converters.ul = function (input, json2md) {
+    var c = "";
+    for (var i = 0; i < input.length; ++i) {
+        var marker = "";
+
+        var type = Object.keys(input[i])[0];
+        if (type !== "ul" && type !== "ol" && type !== 'taskLists') {
+            marker += "\n - ";
+        }
+
+        c += marker + parseTextFormat(indent(json2md(input[i]), 4, true));
+    }
+    return c;
+};
+
+converters.ol = function (input, json2md) {
+    var c = "";
+    var jumpCount = 0;
+    for (var i = 0; i < input.length; ++i) {
+        var marker = "";
+        var type = Object.keys(input[i])[0];
+        if (type !== "ul" && type !== "ol" && type !== 'taskLists') {
+            marker = "\n " + (i + 1 - jumpCount) + ". ";
+        } else {
+            jumpCount++;
+        }
+
+        c += marker + parseTextFormat(indent(json2md(input[i]), 4, true));
+    }
+    return c;
+};
+
+converters.taskLists = function (input, json2md) {
+    var c = "";
+    for (var i = 0; i < input.length; ++i) {
+        var marker = "";
+
+        var type = Object.keys(input[i])[0];
+        if (type !== "ul" && type !== "ol" && type !== 'taskLists') {
+            marker += input[i].isDone ? "\n - [x] " : "\n - [ ] ";
+        }
+
+        c += marker + parseTextFormat(indent(json2md(input[i].title || input[i]), 4, true));
+    }
+    return c;
+};
+
+converters.code = function (input, json2md) {
+    var c = "```" + (input.language || "") + "\n";
+    if (Array.isArray(input.content)) {
+        c += input.content.join("\n");
+    } else {
+        c += input.content;
+    }
+    c += "\n```";
+    return c;
+};
+
+converters.p = function (input, json2md) {
+    return parseTextFormat(json2md(input, "\n"));
+};
+
+converters.table = function (input, json2md) {
+    var _PREFERRED_LENGTH_PER;
+
+    var ALIGNMENT = {
+        CENTER: 'center',
+        RIGHT: 'right',
+        LEFT: 'left',
+        NONE: 'none'
+    };
+
+    var PREFERRED_LENGTH_PER_ALIGNMENT = (_PREFERRED_LENGTH_PER = {}, _defineProperty(_PREFERRED_LENGTH_PER, ALIGNMENT.CENTER, 3), _defineProperty(_PREFERRED_LENGTH_PER, ALIGNMENT.RIGHT, 2), _defineProperty(_PREFERRED_LENGTH_PER, ALIGNMENT.LEFT, 2), _defineProperty(_PREFERRED_LENGTH_PER, ALIGNMENT.NONE, 1), _PREFERRED_LENGTH_PER);
+
+    if ((typeof input === "undefined" ? "undefined" : _typeof(input)) !== "object" || !input.hasOwnProperty("headers") || !input.hasOwnProperty("rows")) {
+        return "";
+    }
+
+    var alignment = input.headers.map(function (_, index) {
+        return input.aligns && input.aligns[index] ? input.aligns[index] : ALIGNMENT.NONE;
+    });
+
+    // try to match the space the column name and the dashes (and colons) take up. Minimum depends on alignment
+    var preferred_lengths = input.headers.map(function (header, index) {
+        return Math.max(PREFERRED_LENGTH_PER_ALIGNMENT[alignment[index]], header.length - 2);
+    });
+
+    if (input.pretty === true) {
+        // update preferred_lengths considering rows' cells length
+        input.rows.forEach(function (row) {
+            (Array.isArray(row) ? row : input.headers.map(function (col_id) {
+                return row[col_id];
+            })).forEach(function (cell, index) {
+                preferred_lengths[index] = Math.max(preferred_lengths[index], cell.length - 2);
+            });
+        });
+    }
+
+    var fill_right = function fill_right(diff, header) {
+        return " ".repeat(diff) + header;
+    };
+    var fill_left = function fill_left(diff, header) {
+        return header + " ".repeat(diff);
+    };
+    var fill_center = function fill_center(diff, header) {
+        return " ".repeat(Math.floor(diff / 2)) + header + " ".repeat(Math.ceil(diff / 2));
+    };
+
+    var fill_th = function fill_th(header, index) {
+        var diff = preferred_lengths[index] + 2 - header.length;
+        switch (alignment[index]) {
+            case ALIGNMENT.RIGHT:
+                return fill_right(diff, header);
+            case ALIGNMENT.LEFT:
+                return fill_left(diff, header);
+            case ALIGNMENT.CENTER:
+            case ALIGNMENT.NONE:
+            default:
+                return fill_center(diff, header);
+        }
+    };
+
+    var fill_td = function fill_td(header, index) {
+        var diff = preferred_lengths[index] + 2 - header.length;
+        switch (alignment[index]) {
+            case ALIGNMENT.RIGHT:
+                return fill_right(diff, header);
+            case ALIGNMENT.NONE:
+            case ALIGNMENT.LEFT:
+                return fill_left(diff, header);
+            case ALIGNMENT.CENTER:
+            default:
+                return fill_center(diff, header);
+        }
+    };
+
+    // add spaces around column name if necessary (side(s) depends on alignment)
+    var column_names = input.headers.map(fill_th);
+
+    var header = "| " + column_names.join(" | ") + " |";
+
+    var spaces = "| " + input.headers.map(function (_, index) {
+        var inner = "-".repeat(preferred_lengths[index]);
+        switch (alignment[index]) {
+            case ALIGNMENT.CENTER:
+                return ":" + inner + ":";
+            case ALIGNMENT.RIGHT:
+                return "-" + inner + ":";
+            case ALIGNMENT.LEFT:
+                return ":" + inner + "-";
+            case ALIGNMENT.NONE:
+            default:
+                return "-" + inner + "-";
+        }
+    }).join(" | ") + " |";
+
+    var fill_tbody_cell = function fill_tbody_cell(cell, index) {
+        if (input.pretty !== true) return cell;
+        return fill_td(cell, index);
+    };
+
+    var data = input.rows.map(function (row) {
+        return "| " + (Array.isArray(row) ? row : input.headers.map(function (col_id) {
+            return row[col_id];
+        })).map(function (cell) {
+            return json2md(cell);
+        }).map(function (cell) {
+            return parseTextFormat(cell);
+        }).map(function (cell) {
+            return cell.replace(/([^\\])\|/, "$1\\|");
+        }).map(fill_tbody_cell).join(" | ") + " |";
+    }).join("\n");
+
+    return [header, spaces, data].join("\n");
+};
+
+converters.link = function (input, json2md) {
+    if (Array.isArray(input)) {
+        return json2md(input, "", "link");
+    }
+    if (typeof input === "string") {
+        return converters.link({ source: input, title: "" });
+    }
+    return "[" + input.title + "](" + input.source + ")";
+};
+
+converters.hr = function (input, json2md) {
+    return '---';
+};
+
+/***/ }),
+
+/***/ 8158:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-module.exports = __nccwpck_require__(219);
+"use strict";
+
+
+var converters = __nccwpck_require__(1072),
+    indento = __nccwpck_require__(393);
+
+/**
+ * json2md
+ * Converts a JSON input to markdown.
+ *
+ * **Supported elements**
+ *
+ * | Type         | Element            | Data                                                                                                                     | Example                                                                                                                                          |
+ * |--------------|--------------------|--------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+ * | `h1`         | Heading 1          | The heading text as string.                                                                                              | `{ h1: "heading 1" }`                                                                                                                            |
+ * | `h2`         | Heading 2          | The heading text as string.                                                                                              | `{ h2: "heading 2" }`                                                                                                                            |
+ * | `h3`         | Heading 3          | The heading text as string.                                                                                              | `{ h3: "heading 3" }`                                                                                                                            |
+ * | `h4`         | Heading 4          | The heading text as string.                                                                                              | `{ h4: "heading 4" }`                                                                                                                            |
+ * | `h5`         | Heading 5          | The heading text as string.                                                                                              | `{ h5: "heading 5" }`                                                                                                                            |
+ * | `h6`         | Heading 6          | The heading text as string.                                                                                              | `{ h6: "heading 6" }`                                                                                                                            |
+ * | `p`          | Paragraphs         | The paragraph text as string or array (multiple paragraphs).                                                             | `{ p: "Hello World"}` or multiple paragraphs: `{ p: ["Hello", "World"] }`                                                                        |
+ * | `blockquote` | Blockquote         | The blockquote as string or array (multiple blockquotes)                                                                 | `{ blockquote: "Hello World"}` or multiple blockquotes: `{ blockquote: ["Hello", "World"] }`                                                     |
+ * | `img`        | Image              | An object or an array of objects containing the `title`, `source` and `alt`  fields.                                     | `{ img: { title: "My image title", source: "http://example.com/image.png", alt: "My image alt" } }`                                              |
+ * | `ul`         | Unordered list     | An array of strings or lists representing the items.                                                                     | `{ ul: ["item 1", "item 2"] }`                                                                                                                   |
+ * | `ol`         | Ordered list       | An array of strings or lists representing the items.                                                                     | `{ ol: ["item 1", "item 2"] }`                                                                                                                   |
+ * | `hr`         | Separator          | None                                                                                                                     | `{ hr: "" }`                                                                                                                                     |
+ * | `code`       | Code block element | An object containing the `language` (`String`) and `content` (`Array` or `String`)  fields.                              | `{ code: { "language": "html", "content": "<script src='dummy.js'></script>" } }`                                                                |
+ * | `table`      | Table              | An object containing the `headers` (`Array` of `String`s) and `rows` (`Array` of `Array`s or `Object`s).                 | `{ table: { headers: ["a", "b"], rows: [{ a: "col1", b: "col2" }] } }` or `{ table: { headers: ["a", "b"], rows: [["col1", "col2"]] } }`         |
+ * | `link`       | Link               | An object containing the `title` and the `source` fields.                                                                | `{ title: 'hello', source: 'https://ionicabizau.net' }`                                                                                          |
+ *
+ *
+ * You can extend the `json2md.converters` object to support your custom types.
+ *
+ * ```js
+ * json2md.converters.sayHello = function (input, json2md) {
+ *    return "Hello " + input + "!"
+ * }
+ * ```
+ *
+ * Then you can use it:
+ *
+ * ```js
+ * json2md({ sayHello: "World" })
+ * // => "Hello World!"
+ * ```
+ *
+ * @name json2md
+ * @function
+ * @param {Array|Object|String} data The input JSON data.
+ * @param {String} prefix A snippet to add before each line.
+ * @return {String} The generated markdown result.
+ */
+function json2md(data, prefix, _type) {
+    prefix = prefix || "";
+    if (typeof data === "string" || typeof data === "number") {
+        return indento(data, 1, prefix);
+    }
+
+    var content = [];
+
+    // Handle arrays
+    if (Array.isArray(data)) {
+        for (var i = 0; i < data.length; ++i) {
+            content.push(indento(json2md(data[i], "", _type), 1, prefix));
+        }
+        return content.join("\n");
+    } else {
+        var type = Object.keys(data)[0],
+            func = converters[_type || type];
+
+        if (typeof func === "function") {
+            return indento(func(_type ? data : data[type], json2md), 1, prefix) + "\n";
+        }
+        throw new Error("There is no such converter: " + type);
+    }
+}
+
+/**
+ * @param {Array|Object|String} data The input JSON data.
+ * @param {String} prefix A snippet to add before each line.
+ * @return {Promise.<String, Error>} The generated markdown result.
+ */
+json2md.async = function (data, prefix, _type) {
+    return Promise.resolve().then(function () {
+        prefix = prefix || "";
+        if (typeof data === "string" || typeof data === "number") {
+            return indento(data, 1, prefix);
+        }
+
+        var content = [];
+
+        // Handle arrays
+        if (Array.isArray(data)) {
+            var promises = data.map(function (d, index) {
+                return Promise.resolve().then(function () {
+                    return json2md.async(d, "", _type);
+                }).then(function (result) {
+                    return indento(result, 1, prefix);
+                }).then(function (result) {
+                    content[index] = result;
+                });
+            });
+            return Promise.all(promises).then(function () {
+                return content.join("\n");
+            });
+        } else {
+            var type = Object.keys(data)[0],
+                func = converters[_type || type];
+
+            if (typeof func === "function") {
+                return Promise.resolve().then(function () {
+                    return func(_type ? data : data[type], json2md);
+                }).then(function (result) {
+                    return indento(result, 1, prefix) + "\n";
+                });
+            }
+            throw new Error("There is no such converter: " + type);
+        }
+    });
+};
+
+json2md.converters = converters;
+
+module.exports = json2md;
+
+/***/ }),
+
+/***/ 4294:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(4219);
 
 
 /***/ }),
 
-/***/ 219:
+/***/ 4219:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var net = __nccwpck_require__(631);
-var tls = __nccwpck_require__(16);
-var http = __nccwpck_require__(605);
-var https = __nccwpck_require__(211);
-var events = __nccwpck_require__(614);
-var assert = __nccwpck_require__(357);
-var util = __nccwpck_require__(669);
+var net = __nccwpck_require__(1631);
+var tls = __nccwpck_require__(4016);
+var http = __nccwpck_require__(8605);
+var https = __nccwpck_require__(7211);
+var events = __nccwpck_require__(8614);
+var assert = __nccwpck_require__(2357);
+var util = __nccwpck_require__(1669);
 
 
 exports.httpOverHttp = httpOverHttp;
@@ -5934,7 +6406,7 @@ exports.debug = debug; // for test
 
 /***/ }),
 
-/***/ 357:
+/***/ 2357:
 /***/ ((module) => {
 
 "use strict";
@@ -5942,7 +6414,7 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 614:
+/***/ 8614:
 /***/ ((module) => {
 
 "use strict";
@@ -5950,7 +6422,7 @@ module.exports = require("events");
 
 /***/ }),
 
-/***/ 747:
+/***/ 5747:
 /***/ ((module) => {
 
 "use strict";
@@ -5958,7 +6430,7 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 605:
+/***/ 8605:
 /***/ ((module) => {
 
 "use strict";
@@ -5966,7 +6438,7 @@ module.exports = require("http");
 
 /***/ }),
 
-/***/ 211:
+/***/ 7211:
 /***/ ((module) => {
 
 "use strict";
@@ -5974,7 +6446,7 @@ module.exports = require("https");
 
 /***/ }),
 
-/***/ 631:
+/***/ 1631:
 /***/ ((module) => {
 
 "use strict";
@@ -5982,7 +6454,7 @@ module.exports = require("net");
 
 /***/ }),
 
-/***/ 87:
+/***/ 2087:
 /***/ ((module) => {
 
 "use strict";
@@ -5990,7 +6462,7 @@ module.exports = require("os");
 
 /***/ }),
 
-/***/ 622:
+/***/ 5622:
 /***/ ((module) => {
 
 "use strict";
@@ -5998,7 +6470,7 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 16:
+/***/ 4016:
 /***/ ((module) => {
 
 "use strict";
@@ -6006,7 +6478,7 @@ module.exports = require("tls");
 
 /***/ }),
 
-/***/ 669:
+/***/ 1669:
 /***/ ((module) => {
 
 "use strict";
@@ -6056,7 +6528,7 @@ module.exports = require("util");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(822);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(4822);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()
