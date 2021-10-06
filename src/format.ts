@@ -4,7 +4,7 @@ import json2md, { DataObject } from "json2md"
 
 const MARKDOWN_HEADER_TAG = "h2"
 const MARKDOWN_MODULER_TAG = "h4"
-const MARKDOWN_NOTE_PREFIX = "*NOTE!*"
+const MARKDOWN_NOTE_PREFIX = "**NOTE!**"
 
 /**
  * @function formatYaml returns changes formatted in YAML
@@ -40,13 +40,26 @@ function isUnknown(s: string): boolean {
 export function formatMarkdown(milestone: string, body: ChangesByModule): string {
 	const pairs = Object.entries(body).sort((a, b) => unknownFirst(a[0], b[0]))
 
-	const md: DataObject = [{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }]
+	const content: DataObject = [{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }]
 	for (const [modnName, changes] of pairs) {
-		md.push({ [MARKDOWN_MODULER_TAG]: `[${modnName}]` })
-		md.push({ ul: moduleChangesMarkdown(changes) })
+		content.push({ [MARKDOWN_MODULER_TAG]: `[${modnName}]` })
+		content.push({ ul: moduleChangesMarkdown(changes) })
 	}
 
-	return json2md(md)
+	const md = json2md(content)
+
+	// Workaround to omit excessive empty lines
+	// https://github.com/IonicaBizau/json2md/issues/53
+	return fixLineBreaks(md)
+}
+
+function fixLineBreaks(md: string): string {
+	const fixed = md
+		.split("\n")
+		.filter((s) => s.trim() != "")
+		.map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
+		.join("\n")
+	return fixed + "\n"
 }
 
 function moduleChangesMarkdown(mc: ModuleChanges) {
@@ -63,6 +76,7 @@ function moduleChangesMarkdown(mc: ModuleChanges) {
 		md.push("fixes")
 		md.push({ ul: mc.fixes.flatMap(changeMardown) })
 	}
+	// console.log("mc", JSON.stringify(md, null, 2))
 	return md
 }
 

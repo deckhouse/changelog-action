@@ -61,6 +61,44 @@ describe("Markdown", () => {
 	const milestone = "v3.44.555"
 	const md = formatMarkdown(milestone, changes)
 
+	const expected = `## Changelog v3.44.555
+
+#### [UNKNOWN]
+
+ - unknown
+     - duu
+         - [Pull request](pruu)
+ - features
+     - du2
+         - [Pull request](pru2)
+ - fixes
+     - du1
+         - [Pull request](pru1)
+
+#### [one]
+
+ - unknown
+     - d1u
+         - [Pull request](pr1u)
+ - features
+     - d12
+         - [Pull request](pr12)
+ - fixes
+     - d11
+         - [Pull request](pr11)
+
+#### [two]
+
+ - unknown
+     - d2u
+         - [Pull request](pr2u)
+ - features
+     - d22
+         - [Pull request](pr22)
+ - fixes
+     - d21
+         - [Pull request](pr21)
+`
 	test("has milestone header as h2", () => {
 		const firstLine = md.split("\n")[0].trim()
 		expect(firstLine).toBe(`## Changelog v3.44.555`)
@@ -73,5 +111,9 @@ describe("Markdown", () => {
 			.filter((s) => s.startsWith("###"))
 
 		expect(subheaders).toStrictEqual(["#### [UNKNOWN]", "#### [one]", "#### [two]"])
+	})
+
+	test("markdown is of expected form", () => {
+		expect(md).toBe(expected)
 	})
 })
