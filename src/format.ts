@@ -41,8 +41,8 @@ export function formatMarkdown(milestone: string, body: ChangesByModule): string
 	const pairs = Object.entries(body).sort((a, b) => unknownFirst(a[0], b[0]))
 
 	const content: DataObject = [{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }]
-	for (const [modnName, changes] of pairs) {
-		content.push({ [MARKDOWN_MODULER_TAG]: `[${modnName}]` })
+	for (const [modName, changes] of pairs) {
+		content.push({ [MARKDOWN_MODULER_TAG]: `[${modName}]` })
 		content.push({ ul: moduleChangesMarkdown(changes) })
 	}
 
