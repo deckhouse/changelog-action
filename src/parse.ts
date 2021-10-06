@@ -1,3 +1,5 @@
+import * as yaml from "js-yaml"
+
 /*
   pullRequests example:
 
@@ -54,111 +56,94 @@ export interface ModuleChanges {
 	features?: Change[]
 	unknown?: Change[]
 }
-// pull requests object => changes by modules
+
 export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
-	return pulls
-		.filter((pr) => pr.state == "MERGED")
-		.map((pr) => parsePullRequestChanges(pr, parseSingleChange, fallbackChange))
-		.reduce(groupByModule, {})
+	return (
+		pulls
+			.filter((pr) => pr.state == "MERGED")
+			// parse changes in PR body
+			.map((pr) => ({ pr, rawChanges: extractChangesBlock(pr.body) }))
+			// collect change units
+			.flatMap(({ pr, rawChanges }) => parsePullRequestChanges(pr, rawChanges))
+			.reduce(groupByModule, {})
+	)
 }
 
-export function parsePullRequestChanges(
-	pr: PullRequest,
-	parseOne: (PullRequest, string) => PullRequestChange,
-	fallback: (PullRequest) => PullRequestChange,
-): PullRequestChange[] {
-	let rawChanges = ""
-
-	try {
-		rawChanges = pr.body.split("```changes")[1].split("```")[0]
-	} catch (e) {
-		return [fallback(pr)]
-	}
-
-	// TODO parse YAML docs
-	const changes = rawChanges
-		.split("---")
-		.filter((x) => !!x.trim()) // exclude empty strings
-		.map((raw) => parseOne(pr, raw))
-
-	if (changes.length == 0 || changes.some((c) => !c.valid())) {
-		console.log("fallback under conditions")
-		return [fallback(pr)]
-	}
-
-	return changes
-}
 /**
- * @function parseChange parses raw text entry to change object. Multi-line values are not supported.
- * @param {{ url: string; }} pr
- * @param {string} raw
  *
- * Input:
+ * rawChanges example:
  *
- * `pr`:
- *
- * ```json
- * pr = {
- *   "url": "https://github.com/owner/repo/pulls/151"
- * }
- * ```
- *
- * `raw`:
- *
- * ```change
+ * ```changes
  * module: module3
  * type: fix
  * description: what was fixed in 151
- * resolves: #16, #32
  * note: Network flap is expected, but no longer than 10 seconds
+ * ---
+ * module: module3
+ * type: feature
+ * description: added big thing to enhance security
  * ```
  *
- * Output:
- * ```json
+ */
+
+export function parsePullRequestChanges(pr: PullRequest, rawChanges: string): PullRequestChange[] {
+	return yaml //
+		.loadAll(rawChanges)
+		.map((doc) => convPullRequestChange(doc, pr.url) || fallbackConvChange(pr))
+}
+
+/**
+ *
+ * doc is an object with YAML doc, e.g.
+ *
  * {
  *   "module": "module3",
  *   "type": "fix",
  *   "description": "what was fixed in 151",
  *   "note": "Network flap is expected, but no longer than 10 seconds",
- *   "resolves": [
- *     "https://github.com/deckhouse/dekchouse/issues/16",
- *     "https://github.com/deckhouse/dekchouse/issues/32"
- *   ],
- *   "pull_request": "https://github.com/deckhouse/dekchouse/pulls/151"
  * }
- * ```
- *
  */
-export function parseSingleChange(pr: PullRequest, raw: string): PullRequestChange {
+function convPullRequestChange(doc: unknown, url: string): PullRequestChange | null {
+	if (!instanceOfPullRequestChangeOpts(doc)) {
+		return null
+	}
+
 	const opts: PullRequestChangeOpts = {
-		module: "",
-		type: "",
-		description: "",
-		pull_request: pr.url,
+		module: doc.module,
+		type: doc.type,
+		description: doc.description.trim(),
+		pull_request: url,
 	}
 
-	const lines = raw.split("\n")
-	for (const line of lines) {
-		if (!line.trim()) {
-			continue
-		}
-
-		const [k, ...vs] = line.split(":")
-		const v = vs.join(":").trim()
-
-		if (!prChangeFields.has(k)) {
-			continue // set only known keys
-		}
-		opts[k] = v
-	}
+	if (doc.note) opts.note = doc.note.trim()
 
 	return new PullRequestChange(opts)
 }
-const prChangeFields = new Set(["module", "type", "description", "note", "pull_request"])
+
+function instanceOfPullRequestChangeOpts(x: unknown): x is PullRequestChangeOpts {
+	if (typeof x !== "object" || x === null) {
+		return false
+	}
+	return "module" in x && "type" in x && "description" in x
+}
+
+function extractChangesBlock(body: string): string {
+	const div1 = body.split("```changes")
+	if (div1.length != 2) {
+		return ""
+	}
+
+	const div2 = div1[1].split("```") // TODO test it, PRs can have many blocks
+	if (div1.length != 2) {
+		return ""
+	}
+	const raw = div2[0]
+	return raw.trim()
+}
+
 /**
  *  Change is the change entry to be included in changelog
  */
-
 export class Change {
 	description = ""
 	pull_request = ""
@@ -205,32 +190,24 @@ interface PullRequestChangeOpts extends ChangeOpts {
 	module: string
 	type: string
 }
+
 const CHANGE_TYPE_UNKNOWN = "unknown"
-function fallbackChange(pr: PullRequest): PullRequestChange {
+const MODULE_UNKNOWN = "UNKNOWN"
+
+function fallbackConvChange(pr: PullRequest): PullRequestChange {
 	return new PullRequestChange({
-		module: "UNKNOWN",
+		module: MODULE_UNKNOWN,
 		type: CHANGE_TYPE_UNKNOWN,
 		description: `${pr.title} (#${pr.number})`,
 		pull_request: pr.url,
 	})
 }
-function groupByModule(acc: ChangesByModule, changes: PullRequestChange[]): ChangesByModule {
-	for (const c of changes) {
-		try {
-			addChange(acc, c)
-		} catch (e) {
-			console.log(`by module = ${JSON.stringify(acc, null, 2)}`)
-			console.error(`cannot add change ${JSON.stringify(c, null, 2)}`)
-			throw e
-		}
-	}
-	return acc
-}
-function addChange(acc: ChangesByModule, change: PullRequestChange) {
+
+function groupByModule(acc: ChangesByModule, change: PullRequestChange) {
 	// ensure module key:   { "module": {} }
 	acc[change.module] = acc[change.module] || ({} as ModuleChanges)
 	const mc = acc[change.module]
-	const ensure = (k) => {
+	const ensure = (k: string) => {
 		mc[k] = mc[k] || []
 		return mc[k]
 	}
@@ -246,7 +223,7 @@ function addChange(acc: ChangesByModule, change: PullRequestChange) {
 			list = ensure("features")
 			break
 		case CHANGE_TYPE_UNKNOWN:
-			list = ensure("UNKNOWN")
+			list = ensure(CHANGE_TYPE_UNKNOWN)
 			break
 		default:
 			throw new Error(`unknown change type "${change.type}"`)
@@ -260,4 +237,6 @@ function addChange(acc: ChangesByModule, change: PullRequestChange) {
 			note: change.note,
 		}),
 	)
+
+	return acc
 }

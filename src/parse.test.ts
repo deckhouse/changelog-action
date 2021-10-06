@@ -1,13 +1,13 @@
-import { parsePullRequestChanges, parseSingleChange, PullRequest, PullRequestChange } from "./parse"
+import { parsePullRequestChanges, PullRequest, PullRequestChange } from "./parse"
 
-describe("parseSingleChange", function () {
+describe("parsePullRequestChanges", function () {
 	const pr: PullRequest = {
 		url: "https://github.com/owner/repo/pulls/13",
 		title: "Shmoo",
 		number: 13,
 		state: "",
 		body: "",
-		milestone: { title: "v1", number: 2 },
+		milestone: { title: "v1.23.456", number: 2 },
 	}
 
 	const cases = [
@@ -19,28 +19,36 @@ module: mod
 type: fix
 description: something was done
       `,
-			want: new PullRequestChange({
-				module: "mod",
-				type: "fix",
-				description: "something was done",
-				pull_request: pr.url,
-			}),
+			want: [
+				new PullRequestChange({
+					module: "mod",
+					type: "fix",
+					description: "something was done",
+					pull_request: pr.url,
+				}),
+			],
 		},
 
 		{
-			title: "parses input with colons in values",
+			title: "parses multi-line text field",
 			pr,
 			input: `
-module: mod:tech
+module: multiline
 type: fix
-description: something was done: parses input with colons in values
-      `,
-			want: new PullRequestChange({
-				module: "mod:tech",
-				type: "fix",
-				description: "something was done: parses input with colons in values",
-				pull_request: pr.url,
-			}),
+description: |
+  something was done:
+
+  parses input with colons in values
+
+`,
+			want: [
+				new PullRequestChange({
+					module: "multiline",
+					type: "fix",
+					description: "something was done:\n\nparses input with colons in values",
+					pull_request: pr.url,
+				}),
+			],
 		},
 
 		{
@@ -52,13 +60,15 @@ type: fix
 description: something was done
 note: parses note field
       `,
-			want: new PullRequestChange({
-				module: "modname",
-				type: "fix",
-				description: "something was done",
-				note: "parses note field",
-				pull_request: pr.url,
-			}),
+			want: [
+				new PullRequestChange({
+					module: "modname",
+					type: "fix",
+					description: "something was done",
+					note: "parses note field",
+					pull_request: pr.url,
+				}),
+			],
 		},
 
 		{
@@ -75,53 +85,87 @@ description: something was done
 note: we xpect some outage
 
       `,
-			want: new PullRequestChange({
-				module: "modname",
-				type: "fix",
-				description: "something was done",
-				note: "we xpect some outage",
-				pull_request: pr.url,
-			}),
+			want: [
+				new PullRequestChange({
+					module: "modname",
+					type: "fix",
+					description: "something was done",
+					note: "we xpect some outage",
+					pull_request: pr.url,
+				}),
+			],
+		},
+
+		{
+			title: "parses multiple docs",
+			pr,
+			input: `
+
+module: mod1
+type: fix
+description: modification1
+---
+module: mod2
+type: fix
+description: modification2
+      `,
+			want: [
+				new PullRequestChange({
+					module: "mod1",
+					type: "fix",
+					description: "modification1",
+					pull_request: pr.url,
+				}),
+				new PullRequestChange({
+					module: "mod2",
+					type: "fix",
+					description: "modification2",
+					pull_request: pr.url,
+				}),
+			],
+		},
+
+		{
+			title: "returns fallback change for malformed docs",
+			pr,
+			input: `
+
+module: mod1
+type: fix
+description: modification1
+---
+x: y
+---
+module: mod2
+type: fix
+description: modification2
+      `,
+			want: [
+				new PullRequestChange({
+					module: "mod1",
+					type: "fix",
+					description: "modification1",
+					pull_request: pr.url,
+				}),
+
+				new PullRequestChange({
+					module: "UNKNOWN",
+					type: "unknown",
+					description: `${pr.title} (#${pr.number})`,
+					pull_request: pr.url,
+				}),
+				new PullRequestChange({
+					module: "mod2",
+					type: "fix",
+					description: "modification2",
+					pull_request: pr.url,
+				}),
+			],
 		},
 	]
 
 	test.each(cases)("$title", function (c) {
-		const change = parseSingleChange(pr, c.input)
-		expect(change).toEqual(c.want)
+		const change = parsePullRequestChanges(pr, c.input)
+		expect(change).toStrictEqual(c.want)
 	})
-})
-
-describe("parseChanges", function () {
-	const pr = {
-		number: 43,
-		url: "https://github.com/owner/repo/pulls/43",
-		title: "Zoo",
-		body: "```changes\n\rmodule:zzoooo\n\rtype:fix\n\rdescription:d\n\r```",
-	} as PullRequest
-
-	it("parses input with given parser", function () {
-		const parsed = new PullRequestChange({
-			module: "parsed",
-			type: "parsed",
-			description: "parsed",
-			pull_request: pr.url,
-		})
-
-		const fallbacked = new PullRequestChange({
-			module: "fallback",
-			type: "fallback",
-			description: "fallback",
-			pull_request: pr.url,
-		})
-
-		const changes = parsePullRequestChanges(
-			pr,
-			() => parsed,
-			() => fallbacked,
-		)
-		expect(changes).toEqual([parsed])
-	})
-	it.todo("falls back when pr body does not contain `changes` block")
-	it.todo("falls back when at least of one change is invalid")
-	it.todo("falls back when no changes parsed")
 })
