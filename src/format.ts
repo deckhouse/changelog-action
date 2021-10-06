@@ -56,9 +56,13 @@ export function formatMarkdown(milestone: string, body: ChangesByModule): string
 function fixLineBreaks(md: string): string {
 	const fixed = md
 		.split("\n")
+		// remove empty lines
 		.filter((s) => s.trim() != "")
+		// wrap subheaders with empty lines
 		.map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
 		.join("\n")
+
+	// add empty line to the end
 	return fixed + "\n"
 }
 

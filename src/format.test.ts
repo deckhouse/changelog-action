@@ -61,6 +61,8 @@ describe("Markdown", () => {
 	const milestone = "v3.44.555"
 	const md = formatMarkdown(milestone, changes)
 
+	// This markdown formatting is implementation-dependant. The test only check that everything
+	// is in place.
 	const expected = `## Changelog v3.44.555
 
 #### [UNKNOWN]
