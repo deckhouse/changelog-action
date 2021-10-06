@@ -92,6 +92,7 @@ export function parsePullRequestChanges(pr: PullRequest, rawChanges: string): Pu
 		.map((doc) => convPullRequestChange(doc, pr.url) || fallbackConvChange(pr))
 }
 
+const knownTypes = new Set(["fix", "feature"])
 /**
  *
  * doc is an object with YAML doc, e.g.
@@ -108,9 +109,11 @@ function convPullRequestChange(doc: unknown, url: string): PullRequestChange | n
 		return null
 	}
 
+	const typ = knownTypes.has(doc.type) ? doc.type : CHANGE_TYPE_UNKNOWN
+
 	const opts: PullRequestChangeOpts = {
 		module: doc.module,
-		type: doc.type,
+		type: typ,
 		description: doc.description.trim(),
 		pull_request: url,
 	}
@@ -222,11 +225,8 @@ function groupByModule(acc: ChangesByModule, change: PullRequestChange) {
 		case "feature":
 			list = ensure("features")
 			break
-		case CHANGE_TYPE_UNKNOWN:
-			list = ensure(CHANGE_TYPE_UNKNOWN)
-			break
 		default:
-			throw new Error(`unknown change type "${change.type}"`)
+			list = ensure(CHANGE_TYPE_UNKNOWN)
 	}
 
 	// add the change

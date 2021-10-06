@@ -162,6 +162,60 @@ description: modification2
 				}),
 			],
 		},
+
+		{
+			title: "returns fallback change for missing description",
+			pr,
+			input: `
+
+module: mod1
+type: fix
+      `,
+			want: [
+				new PullRequestChange({
+					module: "UNKNOWN",
+					type: "unknown",
+					description: `${pr.title} (#${pr.number})`,
+					pull_request: pr.url,
+				}),
+			],
+		},
+
+		{
+			title: "substitutes unknown type with `unknown`",
+			pr,
+			input: `
+
+module: mod1
+type: bigfix
+description: pewpew
+      `,
+			want: [
+				new PullRequestChange({
+					module: "mod1",
+					type: "unknown",
+					description: "pewpew",
+					pull_request: pr.url,
+				}),
+			],
+		},
+
+		{
+			title: "returns fallback change for missing `module`",
+			pr,
+			input: `
+type: fix
+description: pewpew
+      `,
+			want: [
+				new PullRequestChange({
+					module: "UNKNOWN",
+					type: "unknown",
+					description: `${pr.title} (#${pr.number})`,
+					pull_request: pr.url,
+				}),
+			],
+		},
 	]
 
 	test.each(cases)("$title", function (c) {
