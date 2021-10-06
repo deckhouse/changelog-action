@@ -71,7 +71,7 @@ const yaml = __importStar(__nccwpck_require__(1917));
 const json2md_1 = __importDefault(__nccwpck_require__(8158));
 const MARKDOWN_HEADER_TAG = "h2";
 const MARKDOWN_MODULER_TAG = "h4";
-const MARKDOWN_NOTE_PREFIX = "*NOTE!*";
+const MARKDOWN_NOTE_PREFIX = "**NOTE!**";
 function formatYaml(body) {
     const opts = {
         sortKeys: unknownFirst,
@@ -94,14 +94,23 @@ function isUnknown(s) {
 }
 function formatMarkdown(milestone, body) {
     const pairs = Object.entries(body).sort((a, b) => unknownFirst(a[0], b[0]));
-    const md = [{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }];
-    for (const [modnName, changes] of pairs) {
-        md.push({ [MARKDOWN_MODULER_TAG]: `[${modnName}]` });
-        md.push({ ul: moduleChangesMarkdown(changes) });
+    const content = [{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }];
+    for (const [modName, changes] of pairs) {
+        content.push({ [MARKDOWN_MODULER_TAG]: `[${modName}]` });
+        content.push({ ul: moduleChangesMarkdown(changes) });
     }
-    return (0, json2md_1.default)(md);
+    const md = (0, json2md_1.default)(content);
+    return fixLineBreaks(md);
 }
 exports.formatMarkdown = formatMarkdown;
+function fixLineBreaks(md) {
+    const fixed = md
+        .split("\n")
+        .filter((s) => s.trim() != "")
+        .map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
+        .join("\n");
+    return fixed + "\n";
+}
 function moduleChangesMarkdown(mc) {
     const md = [];
     if (mc.unknown) {
