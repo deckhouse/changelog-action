@@ -1,4 +1,4 @@
-import { parsePullRequestChanges, PullRequest, PullRequestChange } from "./parse"
+import { parsePullRequestChanges, PullRequest, PullRequestChange, extractChangesBlock } from "./parse"
 
 describe("parsePullRequestChanges", function () {
 	const pr: PullRequest = {
@@ -221,5 +221,54 @@ description: pewpew
 	test.each(cases)("$title", function (c) {
 		const change = parsePullRequestChanges(pr, c.input)
 		expect(change).toStrictEqual(c.want)
+	})
+})
+
+describe("extractChangesBlock", () => {
+	function block(content: string, type = "") {
+		const delim = "```"
+		const start = delim + type
+		const end = delim
+		return [start, content, end].join("\n")
+	}
+
+	test("parses empty line on empty input", () => {
+		expect(extractChangesBlock("")).toBe("")
+	})
+
+	test("parses single block", () => {
+		const input = block("module: one", "changes")
+		expect(extractChangesBlock(input)).toBe("module: one")
+	})
+
+	test("ignores all blocks except frist one", () => {
+		const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
+		const expected = ["module: one", "module: two"].join("\n---\n")
+		expect(extractChangesBlock(input)).toBe(expected)
+	})
+
+	test("ignores non-changes blocks ", () => {
+		const input = [
+			block("nothing"),
+			"",
+			block("yaml", "yaml"),
+			block("module: one", "changes"),
+			block("shell", "shell"),
+			"",
+			block("module: two", "changes"),
+			block("nothing2"),
+		].join("\n")
+		const expected = ["module: one", "module: two"].join("\n---\n")
+		expect(extractChangesBlock(input)).toBe(expected)
+	})
+
+	test("ignores blocks with malformed beginning", () => {
+		const input = ["````changes", "module: one", "```"].join("\n")
+		expect(extractChangesBlock(input)).toBe("")
+	})
+
+	test("ignores blocks with malformed ending", () => {
+		const input = ["```changes", "module: one", "````"].join("\n")
+		expect(extractChangesBlock(input)).toBe("")
 	})
 })

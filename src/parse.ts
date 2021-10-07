@@ -130,18 +130,26 @@ function instanceOfPullRequestChangeOpts(x: unknown): x is PullRequestChangeOpts
 	return "module" in x && "type" in x && "description" in x
 }
 
-function extractChangesBlock(body: string): string {
-	const div1 = body.split("```changes")
-	if (div1.length != 2) {
+// extractChangesBlock parses only first changes block it meets
+export function extractChangesBlock(body: string): string {
+	const delim = "```"
+	const start = new RegExp(`^${delim}changes\\s*$`, "m")
+	const end = new RegExp(`^${delim}\\s*$`, "m")
+
+	console.log({ start, end })
+
+	const [, ...contents] = body.split(start)
+	if (contents.length == 0) {
 		return ""
 	}
 
-	const div2 = div1[1].split("```") // TODO test it, PRs can have many blocks
-	if (div1.length != 2) {
-		return ""
-	}
-	const raw = div2[0]
-	return raw.trim()
+	return contents
+		.filter((c) => end.test(c)) //  filter by end presence
+		.map((c) => c.split(end)[0]) // pick block content
+		.filter((x) => !!x) //          filter undefined
+		.map((s) => s.trim()) //        find empty content
+		.filter((x) => !!x) //          filter empty content
+		.join("\n---\n") //             join YAML docs
 }
 
 /**
