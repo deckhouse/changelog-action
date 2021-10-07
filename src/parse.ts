@@ -89,7 +89,7 @@ export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
 export function parsePullRequestChanges(pr: PullRequest, rawChanges: string): PullRequestChange[] {
 	return yaml //
 		.loadAll(rawChanges)
-		.map((doc) => convPullRequestChange(doc, pr.url) || fallbackConvChange(pr))
+		.map((doc) => convPrChange(doc, pr.url) || fallbackConvPrChange(pr))
 }
 
 const knownTypes = new Set(["fix", "feature"])
@@ -104,7 +104,7 @@ const knownTypes = new Set(["fix", "feature"])
  *   "note": "Network flap is expected, but no longer than 10 seconds",
  * }
  */
-function convPullRequestChange(doc: unknown, url: string): PullRequestChange | null {
+function convPrChange(doc: unknown, url: string): PullRequestChange | null {
 	if (!instanceOfPullRequestChangeOpts(doc)) {
 		return null
 	}
@@ -197,7 +197,7 @@ interface PullRequestChangeOpts extends ChangeOpts {
 const CHANGE_TYPE_UNKNOWN = "unknown"
 const MODULE_UNKNOWN = "UNKNOWN"
 
-function fallbackConvChange(pr: PullRequest): PullRequestChange {
+function fallbackConvPrChange(pr: PullRequest): PullRequestChange {
 	return new PullRequestChange({
 		module: MODULE_UNKNOWN,
 		type: CHANGE_TYPE_UNKNOWN,
