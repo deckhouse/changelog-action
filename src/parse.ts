@@ -55,7 +55,7 @@ export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
 export function parsePrChanges(pr: PullRequest, rawChanges: string): PullRequestChange[] {
 	return yaml //
 		.loadAll(rawChanges)
-		.map((doc) => convPrChange(doc, pr.url) || fallbackConvPrChange(pr))
+		.map((doc) => convPrChange(doc as Partial<PullRequestChangeOpts>, pr))
 }
 
 const knownTypes = new Set(["fix", "feature"])
@@ -71,23 +71,36 @@ const knownTypes = new Set(["fix", "feature"])
  *   "note": "Network flap is expected, but no longer than 10 seconds",
  * }
  */
-function convPrChange(doc: unknown, url: string): PullRequestChange | null {
-	if (!instanceOfPullRequestChangeOpts(doc)) {
-		return null
-	}
+function convPrChange(doc: Partial<PullRequestChangeOpts>, pr: PullRequest): PullRequestChange {
+	const fallback = fallbackConvPrChange(pr)
 
-	const typ = knownTypes.has(doc.type) ? doc.type : CHANGE_TYPE_UNKNOWN
+	const module = doc.module || fallback.module
+	const type = doc.type && knownTypes.has(doc.type) ? doc.type : fallback.type
+	const description = (doc.description && doc.description.trim()) || fallback.description
 
 	const opts: PullRequestChangeOpts = {
-		module: doc.module,
-		type: typ,
-		description: doc.description.trim(),
-		pull_request: url,
+		module,
+		type,
+		description,
+		pull_request: pr.url,
 	}
 
-	if (doc.note) opts.note = doc.note.trim()
+	const note = doc.note?.trim()
+	if (note) opts.note = note
 
 	return new PullRequestChange(opts)
+}
+
+const CHANGE_TYPE_UNKNOWN = "unknown"
+const MODULE_UNKNOWN = "UNKNOWN"
+
+function fallbackConvPrChange(pr: PullRequest): PullRequestChange {
+	return new PullRequestChange({
+		module: MODULE_UNKNOWN,
+		type: CHANGE_TYPE_UNKNOWN,
+		description: `${pr.title} (#${pr.number})`,
+		pull_request: pr.url,
+	})
 }
 
 function instanceOfPullRequestChangeOpts(x: unknown): x is PullRequestChangeOpts {
@@ -165,18 +178,6 @@ export class PullRequestChange extends Change {
 interface PullRequestChangeOpts extends ChangeOpts {
 	module: string
 	type: string
-}
-
-const CHANGE_TYPE_UNKNOWN = "unknown"
-const MODULE_UNKNOWN = "UNKNOWN"
-
-function fallbackConvPrChange(pr: PullRequest): PullRequestChange {
-	return new PullRequestChange({
-		module: MODULE_UNKNOWN,
-		type: CHANGE_TYPE_UNKNOWN,
-		description: `${pr.title} (#${pr.number})`,
-		pull_request: pr.url,
-	})
 }
 
 function groupByModule(acc: ChangesByModule, change: PullRequestChange) {

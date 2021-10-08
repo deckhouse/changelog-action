@@ -3,6 +3,60 @@ import * as fs from "fs"
 import * as path from "path"
 import { parsePrChanges, PullRequest, PullRequestChange, extractChangesBlock } from "./../src/parse"
 
+describe("extractChangesBlock", () => {
+	function block(content: string, type = "") {
+		const delim = "```"
+		const start = delim + type
+		const end = delim
+		return [start, content, end].join("\n")
+	}
+
+	test("parses empty line on empty input", () => {
+		expect(extractChangesBlock("")).toBe("")
+	})
+
+	test("parses single block", () => {
+		const input = block("module: one", "changes")
+		expect(extractChangesBlock(input)).toBe("module: one")
+	})
+
+	test("ignores all blocks except frist one", () => {
+		const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
+		const expected = ["module: one", "module: two"].join("\n---\n")
+		expect(extractChangesBlock(input)).toBe(expected)
+	})
+
+	test("ignores non-changes blocks ", () => {
+		const input = [
+			block("nothing"),
+			"",
+			block("yaml", "yaml"),
+			block("module: one", "changes"),
+			block("shell", "shell"),
+			"",
+			block("module: two", "changes"),
+			block("nothing2"),
+		].join("\n")
+		const expected = ["module: one", "module: two"].join("\n---\n")
+		expect(extractChangesBlock(input)).toBe(expected)
+	})
+
+	test("ignores blocks with malformed beginning", () => {
+		const input = ["````changes", "module: one", "```"].join("\n")
+		expect(extractChangesBlock(input)).toBe("")
+	})
+
+	test("ignores blocks with malformed ending", () => {
+		const input = ["```changes", "module: one", "````"].join("\n")
+		expect(extractChangesBlock(input)).toBe("")
+	})
+
+	test("parses two blocks", () => {
+		const { input, expected } = getTwoBlocksBodyFixture()
+		expect(extractChangesBlock(input)).toBe(expected)
+	})
+})
+
 describe("parsePullRequestChanges", function () {
 	const delim = "---"
 	const emptyLine = ""
@@ -190,8 +244,8 @@ describe("parsePullRequestChanges", function () {
 			]),
 			want: [
 				new PullRequestChange({
-					module: "UNKNOWN",
-					type: "unknown",
+					module: "mod1",
+					type: "fix",
 					description: `${pr.title} (#${pr.number})`,
 					pull_request: pr.url,
 				}),
@@ -228,8 +282,48 @@ describe("parsePullRequestChanges", function () {
 			want: [
 				new PullRequestChange({
 					module: "UNKNOWN",
+					type: "fix",
+					description: "pewpew",
+					pull_request: pr.url,
+				}),
+			],
+		},
+
+		{
+			title: "fills all passed inputs in order",
+			pr,
+			input: extractChangesBlock(getTwoBlocksBodyFixture().input),
+			want: [
+				new PullRequestChange({
+					module: "cloud-provider-something",
+					type: "fix",
+					description: "inexistence was not acknowledged",
+					note: "restarts nothing",
+					pull_request: pr.url,
+				}),
+				new PullRequestChange({
+					module: "UNKNOWN",
+					type: "feature",
+					description: "no module hehehe",
+					pull_request: pr.url,
+				}),
+				new PullRequestChange({
+					module: "cloud-provider-something",
 					type: "unknown",
-					description: `${pr.title} (#${pr.number})`,
+					description: "error in type hehehe",
+					pull_request: pr.url,
+				}),
+				new PullRequestChange({
+					module: "cloud-provider-something",
+					type: "fix",
+					description: "Shmoo (#13)",
+					pull_request: pr.url,
+				}),
+				new PullRequestChange({
+					module: "cloud-provider-something",
+					type: "fix",
+					description: "better to be than no to be",
+					note: "from separate changes block",
 					pull_request: pr.url,
 				}),
 			],
@@ -242,67 +336,19 @@ describe("parsePullRequestChanges", function () {
 	})
 })
 
-describe("extractChangesBlock", () => {
-	function block(content: string, type = "") {
-		const delim = "```"
-		const start = delim + type
-		const end = delim
-		return [start, content, end].join("\n")
-	}
+function getTwoBlocksBodyFixture() {
+	const dir = "./test/fixtures"
+	const bodyFile = "pr_body_2_blocks.md"
+	const changeFile1 = "pr_body_2_blocks_change_1.md"
+	const changeFile2 = "pr_body_2_blocks_change_2.md"
 
-	test("parses empty line on empty input", () => {
-		expect(extractChangesBlock("")).toBe("")
-	})
+	const read = (name) => fs.readFileSync(path.join(dir, name), { encoding: "utf8" })
 
-	test("parses single block", () => {
-		const input = block("module: one", "changes")
-		expect(extractChangesBlock(input)).toBe("module: one")
-	})
+	const input = read(bodyFile)
+	const changes1 = read(changeFile1)
+	const changes2 = read(changeFile2)
 
-	test("ignores all blocks except frist one", () => {
-		const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
-		const expected = ["module: one", "module: two"].join("\n---\n")
-		expect(extractChangesBlock(input)).toBe(expected)
-	})
+	const expected = [changes1, changes2].join("\n---\n")
 
-	test("ignores non-changes blocks ", () => {
-		const input = [
-			block("nothing"),
-			"",
-			block("yaml", "yaml"),
-			block("module: one", "changes"),
-			block("shell", "shell"),
-			"",
-			block("module: two", "changes"),
-			block("nothing2"),
-		].join("\n")
-		const expected = ["module: one", "module: two"].join("\n---\n")
-		expect(extractChangesBlock(input)).toBe(expected)
-	})
-
-	test("ignores blocks with malformed beginning", () => {
-		const input = ["````changes", "module: one", "```"].join("\n")
-		expect(extractChangesBlock(input)).toBe("")
-	})
-
-	test("ignores blocks with malformed ending", () => {
-		const input = ["```changes", "module: one", "````"].join("\n")
-		expect(extractChangesBlock(input)).toBe("")
-	})
-
-	test("parses two blocks", () => {
-		const dir = "./test/fixtures"
-		const bodyFile = "pr_body_2_blocks.md"
-		const changeFile1 = "pr_body_2_blocks_change_1.md"
-		const changeFile2 = "pr_body_2_blocks_change_2.md"
-
-		const read = (name) => fs.readFileSync(path.join(dir, name), { encoding: "utf8" })
-		const body = read(bodyFile)
-		const changes1 = read(changeFile1)
-		const changes2 = read(changeFile2)
-
-		const expected = [changes1, changes2].join("\n---\n")
-		// console.log(expected)
-		expect(extractChangesBlock(body)).toBe(expected)
-	})
-})
+	return { input, expected }
+}
