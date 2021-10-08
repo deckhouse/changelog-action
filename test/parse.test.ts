@@ -1,6 +1,18 @@
-import { parsePullRequestChanges, PullRequest, PullRequestChange, extractChangesBlock } from "./parse"
+import exp from "constants"
+import * as fs from "fs"
+import * as path from "path"
+import { parsePrChanges, PullRequest, PullRequestChange, extractChangesBlock } from "./../src/parse"
 
 describe("parsePullRequestChanges", function () {
+	const delim = "---"
+	const emptyLine = ""
+	const column = (ss) => ss.join("\n") + "\n"
+	const kv = (k, v) => `${k}: ${v}`
+	const module = (x) => kv("module", x)
+	const type = (x) => kv("type", x)
+	const description = (x) => kv("description", x)
+	const note = (x) => kv("note", x)
+
 	const pr: PullRequest = {
 		url: "https://github.com/owner/repo/pulls/13",
 		title: "Shmoo",
@@ -14,11 +26,12 @@ describe("parsePullRequestChanges", function () {
 		{
 			title: "parses minimal input",
 			pr,
-			input: `
-module: mod
-type: fix
-description: something was done
-      `,
+			input: column([
+				//
+				module("mod"),
+				type("fix"),
+				description("something was done"),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "mod",
@@ -32,15 +45,20 @@ description: something was done
 		{
 			title: "parses multi-line text field",
 			pr,
-			input: `
-module: multiline
-type: fix
-description: |
-  something was done:
-
-  parses input with colons in values
-
-`,
+			input: column([
+				//
+				module("multiline"),
+				type("fix"),
+				description(
+					column([
+						//
+						"|",
+						"  something was done:",
+						emptyLine,
+						"  parses input with colons in values",
+					]),
+				),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "multiline",
@@ -54,12 +72,13 @@ description: |
 		{
 			title: "parses note field",
 			pr,
-			input: `
-module: modname
-type: fix
-description: something was done
-note: parses note field
-      `,
+			input: column([
+				//
+				module("modname"),
+				type("fix"),
+				description("something was done"),
+				note("parses note field"),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "modname",
@@ -74,17 +93,17 @@ note: parses note field
 		{
 			title: "tolerates empty lines",
 			pr,
-			input: `
-
-module: modname
-
-type: fix
-
-description: something was done
-
-note: we xpect some outage
-
-      `,
+			input: column([
+				emptyLine,
+				module("modname"),
+				emptyLine,
+				type("fix"),
+				emptyLine,
+				description("something was done"),
+				emptyLine,
+				note("we xpect some outage"),
+				emptyLine,
+			]),
 			want: [
 				new PullRequestChange({
 					module: "modname",
@@ -99,16 +118,15 @@ note: we xpect some outage
 		{
 			title: "parses multiple docs",
 			pr,
-			input: `
-
-module: mod1
-type: fix
-description: modification1
----
-module: mod2
-type: fix
-description: modification2
-      `,
+			input: column([
+				module("mod1"),
+				type("fix"),
+				description("modification1"),
+				delim,
+				module("mod2"),
+				type("fix"),
+				description("modification2"),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "mod1",
@@ -128,18 +146,17 @@ description: modification2
 		{
 			title: "returns fallback change for malformed docs",
 			pr,
-			input: `
-
-module: mod1
-type: fix
-description: modification1
----
-x: y
----
-module: mod2
-type: fix
-description: modification2
-      `,
+			input: column([
+				module("mod1"),
+				type("fix"),
+				description("modification1"),
+				delim,
+				kv("x", "y"),
+				delim,
+				module("mod2"),
+				type("fix"),
+				description("modification2"),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "mod1",
@@ -166,11 +183,11 @@ description: modification2
 		{
 			title: "returns fallback change for missing description",
 			pr,
-			input: `
-
-module: mod1
-type: fix
-      `,
+			input: column([
+				//
+				module("mod1"),
+				type("fix"),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "UNKNOWN",
@@ -184,12 +201,12 @@ type: fix
 		{
 			title: "substitutes unknown type with `unknown`",
 			pr,
-			input: `
-
-module: mod1
-type: bigfix
-description: pewpew
-      `,
+			input: column([
+				//
+				module("mod1"),
+				type("bigfix"),
+				description("pewpew"),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "mod1",
@@ -203,10 +220,11 @@ description: pewpew
 		{
 			title: "returns fallback change for missing `module`",
 			pr,
-			input: `
-type: fix
-description: pewpew
-      `,
+			input: column([
+				//
+				type("fix"),
+				description("pewpew"),
+			]),
 			want: [
 				new PullRequestChange({
 					module: "UNKNOWN",
@@ -219,7 +237,7 @@ description: pewpew
 	]
 
 	test.each(cases)("$title", function (c) {
-		const change = parsePullRequestChanges(pr, c.input)
+		const change = parsePrChanges(pr, c.input)
 		expect(change).toStrictEqual(c.want)
 	})
 })
@@ -270,5 +288,21 @@ describe("extractChangesBlock", () => {
 	test("ignores blocks with malformed ending", () => {
 		const input = ["```changes", "module: one", "````"].join("\n")
 		expect(extractChangesBlock(input)).toBe("")
+	})
+
+	test("parses two blocks", () => {
+		const dir = "./test/fixtures"
+		const bodyFile = "pr_body_2_blocks.md"
+		const changeFile1 = "pr_body_2_blocks_change_1.md"
+		const changeFile2 = "pr_body_2_blocks_change_2.md"
+
+		const read = (name) => fs.readFileSync(path.join(dir, name), { encoding: "utf8" })
+		const body = read(bodyFile)
+		const changes1 = read(changeFile1)
+		const changes2 = read(changeFile2)
+
+		const expected = [changes1, changes2].join("\n---\n")
+		// console.log(expected)
+		expect(extractChangesBlock(body)).toBe(expected)
 	})
 })

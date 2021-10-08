@@ -1,5 +1,5 @@
-import { formatYaml, formatMarkdown } from "./format"
-import { Change, ChangesByModule } from "./parse"
+import { formatYaml, formatMarkdown } from "../src/format"
+import { Change, ChangesByModule } from "../src/parse"
 
 const changes: ChangesByModule = {
 	one: {

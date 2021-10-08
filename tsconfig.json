@@ -12,6 +12,6 @@
 		"moduleResolution": "Node",
 		"removeComments": true
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["src/**/*.ts", "test/format.test.ts"],
 	"exclude": ["__test__", "lib", "node_modules", "**/*.test.ts"]
 }

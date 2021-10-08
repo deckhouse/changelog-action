@@ -31,7 +31,7 @@ export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
 			// parse changes in PR body
 			.map((pr) => ({ pr, rawChanges: extractChangesBlock(pr.body) }))
 			// collect change units
-			.flatMap(({ pr, rawChanges }) => parsePullRequestChanges(pr, rawChanges))
+			.flatMap(({ pr, rawChanges }) => parsePrChanges(pr, rawChanges))
 			.reduce(groupByModule, {})
 	)
 }
@@ -52,14 +52,14 @@ export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
  * ```
  *
  */
-
-export function parsePullRequestChanges(pr: PullRequest, rawChanges: string): PullRequestChange[] {
+export function parsePrChanges(pr: PullRequest, rawChanges: string): PullRequestChange[] {
 	return yaml //
 		.loadAll(rawChanges)
 		.map((doc) => convPrChange(doc, pr.url) || fallbackConvPrChange(pr))
 }
 
 const knownTypes = new Set(["fix", "feature"])
+
 /**
  *
  * doc is an object with YAML doc, e.g.
@@ -102,8 +102,6 @@ export function extractChangesBlock(body: string): string {
 	const delim = "```"
 	const start = new RegExp(`^${delim}changes\\s*$`, "m")
 	const end = new RegExp(`^${delim}\\s*$`, "m")
-
-	console.log({ start, end })
 
 	const [, ...contents] = body.split(start)
 	if (contents.length == 0) {
