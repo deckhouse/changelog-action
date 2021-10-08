@@ -1,38 +1,5 @@
 import * as yaml from "js-yaml"
 
-/*
-  pullRequests example:
-
-  [
-    {
-      "body": "Pull reqeust containing changelog\r\n\r\n```changes\r\n- module: upmeter\r\n  type: fix\r\n  description: correct group   uptime calculation\r\n  fixes_issues:\r\n    - 13\r\n```\r\n\r\nFollowing is extra comments.",
-      "milestone": {
-	"number": 2,
-	"title": "v1.40.0",
-	"description": "",
-	"dueOn": null
-      },
-      "number": 1,
-      "state": "MERGED",
-      "title": "WIP action draft",
-      "url": "..."
-    },
-    {
-      "body": "body\r\nbody\r\nbody\r\n\r\n```changes\r\n- module: \"inexisting\"\r\n  type: bug\r\n  description: inexistence was not acknowledged\r\n  resolves: [ \"#6\" ]\r\n  will_restart: null\r\n```",
-      "milestone": {
-	"number": 2,
-	"title": "v1.40.0",
-	"description": "",
-	"dueOn": null
-      },
-      "number": 3,
-      "state": "MERGED",
-      "title": "add two",
-      "url": "..."
-    }
-  ]
-*/
-
 export interface PullRequest {
 	state: string
 	number: number
