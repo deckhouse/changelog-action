@@ -103,20 +103,15 @@ function fallbackConvPrChange(pr: PullRequest): PullRequestChange {
 	})
 }
 
-function instanceOfPullRequestChangeOpts(x: unknown): x is PullRequestChangeOpts {
-	if (typeof x !== "object" || x === null) {
-		return false
-	}
-	return "module" in x && "type" in x && "description" in x
-}
-
 // extractChangesBlock parses only first changes block it meets
 export function extractChangesBlock(body: string): string {
 	const delim = "```"
 	const start = new RegExp(`^${delim}changes\\s*$`, "m")
 	const end = new RegExp(`^${delim}\\s*$`, "m")
 
-	const [, ...contents] = body.split(start)
+	// Fix new lines
+
+	const [, ...contents] = body.split("\r").join("").split(start)
 	if (contents.length == 0) {
 		return ""
 	}

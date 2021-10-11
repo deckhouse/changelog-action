@@ -1,4 +1,3 @@
-import exp from "constants"
 import * as fs from "fs"
 import * as path from "path"
 import { parsePrChanges, PullRequest, PullRequestChange, extractChangesBlock } from "./../src/parse"
@@ -338,13 +337,13 @@ describe("parsePullRequestChanges", function () {
 
 function getTwoBlocksBodyFixture() {
 	const dir = "./test/fixtures"
-	const bodyFile = "pr_body_2_blocks.md"
-	const changeFile1 = "pr_body_2_blocks_change_1.md"
-	const changeFile2 = "pr_body_2_blocks_change_2.md"
+	const bodyFile = "pr_body_2_blocks.json"
+	const changeFile1 = "pr_body_2_blocks_change_1.yml"
+	const changeFile2 = "pr_body_2_blocks_change_2.yml"
 
 	const read = (name) => fs.readFileSync(path.join(dir, name), { encoding: "utf8" })
 
-	const input = read(bodyFile)
+	const input = JSON.parse(read(bodyFile)).body
 	const changes1 = read(changeFile1)
 	const changes2 = read(changeFile2)
 

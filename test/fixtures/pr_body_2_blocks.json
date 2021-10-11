@@ -1,0 +1,3 @@
+{
+	"body": "```\r\nbody\r\nbody\r\nbody\r\n```\r\n\r\n```changes\r\nmodule: \"cloud-provider-something\"\r\ntype: fix\r\ndescription: inexistence was not acknowledged\r\nresolves: [ \"#6\" ]\r\nnote: restarts nothing\r\n---\r\ntype: feature\r\ndescription: no module hehehe\r\n---\r\nmodule: cloud-provider-something\r\ntype: grecha\r\ndescription: error in type hehehe\r\n---\r\nmodule: 'cloud-provider-something'\r\ntype: fix\r\n```\r\n\r\n```changes\r\nmodule: cloud-provider-something\r\ntype: fix\r\ndescription: better to be than no to be\r\nnote: from separate changes block\r\n```"
+}
