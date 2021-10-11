@@ -111,7 +111,7 @@ export function extractChangesBlock(body: string): string {
 
 	// Fix new lines
 
-	const [, ...contents] = body.split("\r").join("").split(start)
+	const [, ...contents] = body.replace(/\r/g, "").split(start)
 	if (contents.length == 0) {
 		return ""
 	}
