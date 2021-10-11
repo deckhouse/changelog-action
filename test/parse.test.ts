@@ -221,7 +221,7 @@ describe("parsePullRequestChanges", function () {
 				new PullRequestChange({
 					module: "UNKNOWN",
 					type: "unknown",
-					description: `${pr.title} (#${pr.number})`,
+					description: "Shmoo",
 					pull_request: pr.url,
 				}),
 				new PullRequestChange({
@@ -245,7 +245,7 @@ describe("parsePullRequestChanges", function () {
 				new PullRequestChange({
 					module: "mod1",
 					type: "fix",
-					description: `${pr.title} (#${pr.number})`,
+					description: "Shmoo",
 					pull_request: pr.url,
 				}),
 			],
@@ -315,7 +315,7 @@ describe("parsePullRequestChanges", function () {
 				new PullRequestChange({
 					module: "cloud-provider-something",
 					type: "fix",
-					description: "Shmoo (#13)",
+					description: "Shmoo",
 					pull_request: pr.url,
 				}),
 				new PullRequestChange({
