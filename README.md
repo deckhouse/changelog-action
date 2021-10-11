@@ -12,8 +12,6 @@ The action takes JSON array or pull requests. Pull requests objects are expected
 `number`, `url`, `title`, `body`, `state`, and `milestone`. All the pull requests in the array must
 share the same milestone.
 
-Change `@main` branch reference to a tag of your choice.
-
 ```yaml
     - name: Collect Changelog
       id: changelog
