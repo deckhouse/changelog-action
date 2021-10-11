@@ -260,7 +260,7 @@ function fallbackConvPrChange(pr) {
     return new PullRequestChange({
         module: MODULE_UNKNOWN,
         type: CHANGE_TYPE_UNKNOWN,
-        description: `${pr.title} (#${pr.number})`,
+        description: `${pr.title}`.trim() || `${pr.number} (description missing)`,
         pull_request: pr.url,
     });
 }
