@@ -2,11 +2,34 @@
 
 This action creates changelogs by merged PRs per milestone.
 
+## Example
+
+```yaml
+    - name: Find Merged Pull Requsts
+      id: merged_milestone
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      run: |
+        prs="$(gh pr list \
+          --repo '${{ github.repository }}' \
+          --search 'milestone:${{ steps.xxx.outputs.milestone_title }}' \
+          --state merged \
+          --json number,url,title,body,state,milestone)"
+        echo "::set-output name=prs::${prs}"
+
+    - name: Collect Changelog
+      id: changelog
+      uses: deckhouse/changelog-action@v1
+      with:
+        token: ${{ inputs.token }}
+        pull_requests: ${{ steps.merged_milestone.outputs.prs }}
+```
 
 ## Usage
 
 
-### Action
+### Using The Action
 
 The action takes JSON array or pull requests. Pull requests objects are expected to have fields
 `number`, `url`, `title`, `body`, `state`, and `milestone`. All the pull requests in the array must
@@ -17,13 +40,13 @@ share the same milestone.
       id: changelog
       uses: deckhouse/changelog-action@v1
       with:
-        token: ${{ gtihub access token }}
+        token: ${{ Github access token }}
         pull_requests: ${{ Pull requests JSON }}
 ```
 
-### Pull requests
+### Describing Changes
 
-To be mentioned in changelog, pull request body must contain `changes` block:
+To be mentioned in changelog, a pull request body must contain `changes` block:
 
 ~~~
 ```changes
@@ -34,9 +57,6 @@ note: <what to expect>
 ```
 ~~~
 
-`changes` block contains a list of YAML documents. It describes a changelog entry that is collected
-to a release changelog.
-
 Fields:
 
 - **`module`**: Required. Affected module in kebab case, e.g. "node-manager".
@@ -44,14 +64,16 @@ Fields:
 - **`description`**: Optional. The changelog entry. Omit to use pull request title.
 - **`note`**: Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.
 
-Since the syntax is YAML, `note` may contain multi-line text.
+`changes` block contains a list of YAML documents. It describes a changelog entries (one per doc)
+that are collected into a release changelog. The changes are grouped by module and then by type
+within a module. Since the syntax is YAML, fields values can contain multi-line text which us usefulr for `note`.
 
-There can be multiple docs in single `changes` block, and multiple `changes`
-blocks in the PR body.
+There can be multiple docs in single `changes` block, and/or multiple `changes`
+blocks in PR body.
 
-Consider this example. Let's say, this PR belongs to milestone `v1.39.0`
+Consider this example. Let's say, a PR belongs to milestone `v1.39.0` and describes these changes:
 
-
+~~~
 ```changes
 module: node-manager
 type: fix
@@ -67,9 +89,13 @@ type: feature
 description: "Node restarts can be avoided by pinning a checksum to a node group in config values."
 note: Recommended to use as a last resort.
 ```
+~~~
 
-### Generated pull request body
+### Output
 
+The action generates pull request with the changelog in its body (markdown) and its content in file `CHANGELOG/CHANGELOG-v1.39.0.yml`.
+
+#### Pull request body
 
 ```markdown
 
@@ -94,7 +120,7 @@ note: Recommended to use as a last resort.
 ```
 
 <details>
-  <summary>Preview</summary>
+  <summary>Markdown Preview</summary>
 
 ## Changelog v1.39.0
 
@@ -136,29 +162,6 @@ node-manager:
       pull_request: https://github.com/owner/repo/pull/1
 ```
 
-## Example
-
-```yaml
-    - name: Find Merged Pull Requsts
-      id: merged_milestone
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.token }}
-      run: |
-        prs="$(gh pr list \
-          --repo '${{ github.repository }}' \
-          --search 'milestone:${{ steps.args.outputs.milestone_title }}' \
-          --state merged \
-          --json number,url,title,body,state,milestone)"
-        echo "::set-output name=prs::${prs}"
-
-    - name: Collect Changelog
-      id: changelog
-      uses: deckhouse/changelog-action@v1
-      with:
-        token: ${{ inputs.token }}
-        pull_requests: ${{ steps.merged_milestone.outputs.prs }}
-```
 
 ## License
 
