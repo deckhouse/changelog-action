@@ -50,7 +50,7 @@ describe("extractChangesBlock", () => {
 		expect(extractChangesBlock(input)).toBe("")
 	})
 
-	test("parses two blocks", () => {
+	test("parses two blocks from GitHub JSON", () => {
 		const { input, expected } = getTwoBlocksBodyFixture()
 		expect(extractChangesBlock(input)).toBe(expected)
 	})
@@ -289,7 +289,7 @@ describe("parsePullRequestChanges", function () {
 		},
 
 		{
-			title: "fills all passed inputs in order",
+			title: "fills all passed inputs in order from Github JSON",
 			pr,
 			input: extractChangesBlock(getTwoBlocksBodyFixture().input),
 			want: [
