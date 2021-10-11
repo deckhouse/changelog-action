@@ -220,56 +220,67 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PullRequestChange = exports.Change = exports.parsePullRequestChanges = exports.collectChangelog = void 0;
+exports.PullRequestChange = exports.Change = exports.extractChangesBlock = exports.parsePrChanges = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 function collectChangelog(pulls) {
     return (pulls
         .filter((pr) => pr.state == "MERGED")
         .map((pr) => ({ pr, rawChanges: extractChangesBlock(pr.body) }))
-        .flatMap(({ pr, rawChanges }) => parsePullRequestChanges(pr, rawChanges))
+        .flatMap(({ pr, rawChanges }) => parsePrChanges(pr, rawChanges))
         .reduce(groupByModule, {}));
 }
 exports.collectChangelog = collectChangelog;
-function parsePullRequestChanges(pr, rawChanges) {
+function parsePrChanges(pr, rawChanges) {
     return yaml
         .loadAll(rawChanges)
-        .map((doc) => convPullRequestChange(doc, pr.url) || fallbackConvChange(pr));
+        .map((doc) => convPrChange(doc, pr));
 }
-exports.parsePullRequestChanges = parsePullRequestChanges;
+exports.parsePrChanges = parsePrChanges;
 const knownTypes = new Set(["fix", "feature"]);
-function convPullRequestChange(doc, url) {
-    if (!instanceOfPullRequestChangeOpts(doc)) {
-        return null;
-    }
-    const typ = knownTypes.has(doc.type) ? doc.type : CHANGE_TYPE_UNKNOWN;
+function convPrChange(doc, pr) {
+    var _a;
+    const fallback = fallbackConvPrChange(pr);
+    const module = doc.module || fallback.module;
+    const type = doc.type && knownTypes.has(doc.type) ? doc.type : fallback.type;
+    const description = (doc.description && doc.description.trim()) || fallback.description;
     const opts = {
-        module: doc.module,
-        type: typ,
-        description: doc.description.trim(),
-        pull_request: url,
+        module,
+        type,
+        description,
+        pull_request: pr.url,
     };
-    if (doc.note)
-        opts.note = doc.note.trim();
+    const note = (_a = doc.note) === null || _a === void 0 ? void 0 : _a.trim();
+    if (note)
+        opts.note = note;
     return new PullRequestChange(opts);
 }
-function instanceOfPullRequestChangeOpts(x) {
-    if (typeof x !== "object" || x === null) {
-        return false;
-    }
-    return "module" in x && "type" in x && "description" in x;
+const CHANGE_TYPE_UNKNOWN = "unknown";
+const MODULE_UNKNOWN = "UNKNOWN";
+function fallbackConvPrChange(pr) {
+    return new PullRequestChange({
+        module: MODULE_UNKNOWN,
+        type: CHANGE_TYPE_UNKNOWN,
+        description: `${pr.title} (#${pr.number})`,
+        pull_request: pr.url,
+    });
 }
 function extractChangesBlock(body) {
-    const div1 = body.split("```changes");
-    if (div1.length != 2) {
+    const delim = "```";
+    const start = new RegExp(`^${delim}changes\\s*$`, "m");
+    const end = new RegExp(`^${delim}\\s*$`, "m");
+    const [, ...contents] = body.replace(/\r/g, "").split(start);
+    if (contents.length == 0) {
         return "";
     }
-    const div2 = div1[1].split("```");
-    if (div1.length != 2) {
-        return "";
-    }
-    const raw = div2[0];
-    return raw.trim();
+    return contents
+        .filter((c) => end.test(c))
+        .map((c) => c.split(end)[0])
+        .filter((x) => !!x)
+        .map((s) => s.trim())
+        .filter((x) => !!x)
+        .join("\n---\n");
 }
+exports.extractChangesBlock = extractChangesBlock;
 class Change {
     constructor(o) {
         this.description = "";
@@ -298,16 +309,6 @@ class PullRequestChange extends Change {
     }
 }
 exports.PullRequestChange = PullRequestChange;
-const CHANGE_TYPE_UNKNOWN = "unknown";
-const MODULE_UNKNOWN = "UNKNOWN";
-function fallbackConvChange(pr) {
-    return new PullRequestChange({
-        module: MODULE_UNKNOWN,
-        type: CHANGE_TYPE_UNKNOWN,
-        description: `${pr.title} (#${pr.number})`,
-        pull_request: pr.url,
-    });
-}
 function groupByModule(acc, change) {
     acc[change.module] = acc[change.module] || {};
     const mc = acc[change.module];
