@@ -2,7 +2,7 @@
 
 This action creates changelogs by merged PRs per milestone.
 
-## Example
+## How to use
 
 ```yaml
     - name: Find Merged Pull Requsts
@@ -59,14 +59,19 @@ note: <what to expect>
 
 Fields:
 
-- **`module`**: Required. Affected module in kebab case, e.g. "node-manager".
-- **`type`**: Required. The change type: only "fix" and "feature" supported.
-- **`description`**: Optional. The changelog entry. Omit to use pull request title.
-- **`note`**: Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.
+- **`module`**: (Required.) Affected module, used for fist-level grouping.
+- **`type`**: (Required.) The change type: only `fix` and `feature` supported. Used for second-level
+  grouping.
+- **`description`**: (Optional.) The changelog entry. Omit to use pull request title.
+- **`note`**: (Optional.) Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.
 
-`changes` block contains a list of YAML documents. It describes a changelog entries (one per doc)
-that are collected into a release changelog. The changes are grouped by module and then by type
-within a module. Since the syntax is YAML, fields values can contain multi-line text which us usefulr for `note`.
+`changes` block expects a list of YAML documents. Each document describes a changelog entry. These
+changes are collected and grouped by the action. The changes are grouped by module and then by type
+within a module.
+
+Since the syntax is YAML, field values can contain multi-line text which might be useful for `note`. The
+result of the action is YAML and Markdown texts, which can be used to create file and changelog pull
+request body respectively.
 
 There can be multiple docs in single `changes` block, and/or multiple `changes`
 blocks in PR body.
