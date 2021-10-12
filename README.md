@@ -5,6 +5,10 @@ This action creates changelogs by merged PRs per milestone.
 ## How to use
 
 ```yaml
+    # Assume there is 'args' step which decides on milestone, so that
+    #   steps.args.outputs.milestone_title  = "v1.2.3"
+    #   steps.args.outputs.milestone_number = 42
+
     - name: Find Merged Pull Requsts
       id: merged_milestone
       shell: bash
@@ -13,7 +17,7 @@ This action creates changelogs by merged PRs per milestone.
       run: |
         prs="$(gh pr list \
           --repo '${{ github.repository }}' \
-          --search 'milestone:${{ steps.xxx.outputs.milestone_title }}' \
+          --search 'milestone:${{ steps.args.outputs.milestone_title }}' \
           --state merged \
           --json number,url,title,body,state,milestone)"
         echo "::set-output name=prs::${prs}"
@@ -24,6 +28,29 @@ This action creates changelogs by merged PRs per milestone.
       with:
         token: ${{ inputs.token }}
         pull_requests: ${{ steps.merged_milestone.outputs.prs }}
+
+    - name: Write Changelog File
+      id: file
+      shell: bash
+      run: |
+        mkdir -p ./CHANGELOG
+        filename='./CHANGELOG/CHANGELOG-${{ steps.args.outputs.milestone_title }}.yml'
+        cat > "$filename" <<EOBODYINACTION
+        ${{ steps.changelog.outputs.yaml }}
+        EOBODYINACTION
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3.10.1
+      with:
+        commit-message: Re-generate changelog
+        base: main
+        branch: changelog/${{ steps.args.outputs.milestone_title }}
+        milestone: ${{ steps.args.outputs.milestone_number }}
+        title: Changelog ${{ steps.args.outputs.milestone_title }}
+        body: ${{ steps.changelog.outputs.markdown }}
+        labels: changelog, auto
+        token: ${{ inputs.token }}
+        delete-branch: true
 ```
 
 ## Usage
@@ -98,9 +125,9 @@ note: Recommended to use as a last resort.
 
 ### Output
 
-The action generates pull request with the changelog in its body (markdown) and its content in file `CHANGELOG/CHANGELOG-v1.39.0.yml`.
+The action generates changelog in YAML and markdown.
 
-#### Pull request body
+#### Markdown output
 
 ```markdown
 
@@ -149,7 +176,7 @@ The action generates pull request with the changelog in its body (markdown) and 
 
 
 
-#### Generated changelog file in pull request
+#### YAML output
 
 ```yaml
 cloud-provider-aws:
