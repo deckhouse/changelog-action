@@ -220,26 +220,25 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PullRequestChange = exports.Change = exports.extractChangesBlock = exports.parsePrChanges = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.Change = exports.extractChanges = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 function collectChangelog(pulls) {
-    return (pulls
-        .filter((pr) => pr.state == "MERGED")
-        .map((pr) => ({ pr, rawChanges: extractChangesBlock(pr.body) }))
-        .flatMap(({ pr, rawChanges }) => parsePrChanges(pr, rawChanges))
-        .reduce(groupByModule, {}));
+    return pulls
+        .map((pr) => ({ pr, changesText: extractChanges(pr.body) }))
+        .flatMap(({ pr, changesText }) => parseChangeEntries(pr, changesText))
+        .reduce(groupByModule, {});
 }
 exports.collectChangelog = collectChangelog;
-function parsePrChanges(pr, rawChanges) {
+function parseChangeEntries(pr, changesText) {
     return yaml
-        .loadAll(rawChanges)
-        .map((doc) => convPrChange(doc, pr));
+        .loadAll(changesText)
+        .map((doc) => convChange(doc, pr));
 }
-exports.parsePrChanges = parsePrChanges;
+exports.parseChangeEntries = parseChangeEntries;
 const knownTypes = new Set(["fix", "feature"]);
-function convPrChange(doc, pr) {
+function convChange(doc, pr) {
     var _a;
-    const fallback = fallbackConvPrChange(pr);
+    const fallback = fallbackConvChange(pr);
     const module = doc.module || fallback.module;
     const type = doc.type && knownTypes.has(doc.type) ? doc.type : fallback.type;
     const description = (doc.description && doc.description.trim()) || fallback.description;
@@ -252,19 +251,19 @@ function convPrChange(doc, pr) {
     const note = (_a = doc.note) === null || _a === void 0 ? void 0 : _a.trim();
     if (note)
         opts.note = note;
-    return new PullRequestChange(opts);
+    return new ChangeEntry(opts);
 }
 const CHANGE_TYPE_UNKNOWN = "unknown";
 const MODULE_UNKNOWN = "UNKNOWN";
-function fallbackConvPrChange(pr) {
-    return new PullRequestChange({
+function fallbackConvChange(pr) {
+    return new ChangeEntry({
         module: MODULE_UNKNOWN,
         type: CHANGE_TYPE_UNKNOWN,
         description: `${pr.title}`.trim() || `${pr.number} (description missing)`,
         pull_request: pr.url,
     });
 }
-function extractChangesBlock(body) {
+function extractChanges(body) {
     const delim = "```";
     const start = new RegExp(`^${delim}changes\\s*$`, "m");
     const end = new RegExp(`^${delim}\\s*$`, "m");
@@ -280,7 +279,7 @@ function extractChangesBlock(body) {
         .filter((x) => !!x)
         .join("\n---\n");
 }
-exports.extractChangesBlock = extractChangesBlock;
+exports.extractChanges = extractChanges;
 class Change {
     constructor(o) {
         this.description = "";
@@ -296,7 +295,7 @@ class Change {
     }
 }
 exports.Change = Change;
-class PullRequestChange extends Change {
+class ChangeEntry extends Change {
     constructor(o) {
         super(o);
         this.module = "";
@@ -308,7 +307,7 @@ class PullRequestChange extends Change {
         return !!this.module && !!this.type && super.valid();
     }
 }
-exports.PullRequestChange = PullRequestChange;
+exports.ChangeEntry = ChangeEntry;
 function groupByModule(acc, change) {
     acc[change.module] = acc[change.module] || {};
     const mc = acc[change.module];
