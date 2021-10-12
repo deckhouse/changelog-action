@@ -1,8 +1,8 @@
 import * as fs from "fs"
 import * as path from "path"
-import { parsePrChanges, PullRequest, PullRequestChange, extractChangesBlock } from "./../src/parse"
+import { parseChangeEntries, PullRequest, ChangeEntry, extractChanges } from "./../src/parse"
 
-describe("extractChangesBlock", () => {
+describe("extracting raw changes", () => {
 	function block(content: string, type = "") {
 		const delim = "```"
 		const start = delim + type
@@ -11,18 +11,18 @@ describe("extractChangesBlock", () => {
 	}
 
 	test("parses empty line on empty input", () => {
-		expect(extractChangesBlock("")).toBe("")
+		expect(extractChanges("")).toBe("")
 	})
 
 	test("parses single block", () => {
 		const input = block("module: one", "changes")
-		expect(extractChangesBlock(input)).toBe("module: one")
+		expect(extractChanges(input)).toBe("module: one")
 	})
 
 	test("ignores all blocks except frist one", () => {
 		const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
 		const expected = ["module: one", "module: two"].join("\n---\n")
-		expect(extractChangesBlock(input)).toBe(expected)
+		expect(extractChanges(input)).toBe(expected)
 	})
 
 	test("ignores non-changes blocks ", () => {
@@ -37,26 +37,26 @@ describe("extractChangesBlock", () => {
 			block("nothing2"),
 		].join("\n")
 		const expected = ["module: one", "module: two"].join("\n---\n")
-		expect(extractChangesBlock(input)).toBe(expected)
+		expect(extractChanges(input)).toBe(expected)
 	})
 
 	test("ignores blocks with malformed beginning", () => {
 		const input = ["````changes", "module: one", "```"].join("\n")
-		expect(extractChangesBlock(input)).toBe("")
+		expect(extractChanges(input)).toBe("")
 	})
 
 	test("ignores blocks with malformed ending", () => {
 		const input = ["```changes", "module: one", "````"].join("\n")
-		expect(extractChangesBlock(input)).toBe("")
+		expect(extractChanges(input)).toBe("")
 	})
 
 	test("parses two blocks from GitHub JSON", () => {
 		const { input, expected } = getTwoBlocksBodyFixture()
-		expect(extractChangesBlock(input)).toBe(expected)
+		expect(extractChanges(input)).toBe(expected)
 	})
 })
 
-describe("parsePullRequestChanges", function () {
+describe("parsing change entries", function () {
 	const delim = "---"
 	const emptyLine = ""
 	const column = (ss) => ss.join("\n") + "\n"
@@ -86,7 +86,7 @@ describe("parsePullRequestChanges", function () {
 				description("something was done"),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "mod",
 					type: "fix",
 					description: "something was done",
@@ -113,7 +113,7 @@ describe("parsePullRequestChanges", function () {
 				),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "multiline",
 					type: "fix",
 					description: "something was done:\n\nparses input with colons in values",
@@ -133,7 +133,7 @@ describe("parsePullRequestChanges", function () {
 				note("parses note field"),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "modname",
 					type: "fix",
 					description: "something was done",
@@ -158,7 +158,7 @@ describe("parsePullRequestChanges", function () {
 				emptyLine,
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "modname",
 					type: "fix",
 					description: "something was done",
@@ -181,13 +181,13 @@ describe("parsePullRequestChanges", function () {
 				description("modification2"),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "mod1",
 					type: "fix",
 					description: "modification1",
 					pull_request: pr.url,
 				}),
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "mod2",
 					type: "fix",
 					description: "modification2",
@@ -211,20 +211,20 @@ describe("parsePullRequestChanges", function () {
 				description("modification2"),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "mod1",
 					type: "fix",
 					description: "modification1",
 					pull_request: pr.url,
 				}),
 
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "UNKNOWN",
 					type: "unknown",
 					description: "Shmoo",
 					pull_request: pr.url,
 				}),
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "mod2",
 					type: "fix",
 					description: "modification2",
@@ -242,7 +242,7 @@ describe("parsePullRequestChanges", function () {
 				type("fix"),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "mod1",
 					type: "fix",
 					description: "Shmoo",
@@ -261,7 +261,7 @@ describe("parsePullRequestChanges", function () {
 				description("pewpew"),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "mod1",
 					type: "unknown",
 					description: "pewpew",
@@ -279,7 +279,7 @@ describe("parsePullRequestChanges", function () {
 				description("pewpew"),
 			]),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "UNKNOWN",
 					type: "fix",
 					description: "pewpew",
@@ -291,34 +291,34 @@ describe("parsePullRequestChanges", function () {
 		{
 			title: "fills all passed inputs in order from Github JSON",
 			pr,
-			input: extractChangesBlock(getTwoBlocksBodyFixture().input),
+			input: extractChanges(getTwoBlocksBodyFixture().input),
 			want: [
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "cloud-provider-something",
 					type: "fix",
 					description: "inexistence was not acknowledged",
 					note: "restarts nothing",
 					pull_request: pr.url,
 				}),
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "UNKNOWN",
 					type: "feature",
 					description: "no module hehehe",
 					pull_request: pr.url,
 				}),
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "cloud-provider-something",
 					type: "unknown",
 					description: "error in type hehehe",
 					pull_request: pr.url,
 				}),
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "cloud-provider-something",
 					type: "fix",
 					description: "Shmoo",
 					pull_request: pr.url,
 				}),
-				new PullRequestChange({
+				new ChangeEntry({
 					module: "cloud-provider-something",
 					type: "fix",
 					description: "better to be than no to be",
@@ -330,7 +330,7 @@ describe("parsePullRequestChanges", function () {
 	]
 
 	test.each(cases)("$title", function (c) {
-		const change = parsePrChanges(pr, c.input)
+		const change = parseChangeEntries(pr, c.input)
 		expect(change).toStrictEqual(c.want)
 	})
 })
