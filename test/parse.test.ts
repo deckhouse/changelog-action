@@ -203,12 +203,14 @@ describe("parsing change entries", function () {
 				module("11"),
 				type("fix"),
 				description("-55"),
+				note("42"),
 			]),
 			want: [
 				new ChangeEntry({
 					module: "11",
 					type: "fix",
 					description: "-55",
+					note: "42",
 					pull_request: pr.url,
 				}),
 			],

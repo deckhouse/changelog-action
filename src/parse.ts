@@ -77,7 +77,7 @@ function convChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry
 		pull_request: pr.url,
 	}
 
-	const note = doc.note?.trim()
+	const note = sanitizeString(doc.note)
 	if (note) {
 		opts.note = note
 	}
@@ -86,12 +86,12 @@ function convChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry
 }
 
 function sanitizeString(x: unknown): string {
-	if (typeof x === "string" && x.length > 0) {
+	if (typeof x === "string") {
 		return x.trim()
 	}
 
 	if (Number.isFinite(x) || x) {
-		// not null, undefined, or empty string
+		// not null, not undefined, and not empty string
 		return `${x}`
 	}
 
