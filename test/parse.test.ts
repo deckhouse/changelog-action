@@ -195,6 +195,26 @@ describe("parsing change entries", function () {
 				}),
 			],
 		},
+		{
+			title: "returns numbers as strings",
+			pr,
+			input: column([
+				//
+				module("11"),
+				type("fix"),
+				description("-55"),
+				note("42"),
+			]),
+			want: [
+				new ChangeEntry({
+					module: "11",
+					type: "fix",
+					description: "-55",
+					note: "42",
+					pull_request: pr.url,
+				}),
+			],
+		},
 
 		{
 			title: "returns fallback change for malformed docs",
