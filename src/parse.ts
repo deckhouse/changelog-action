@@ -66,9 +66,9 @@ const knownTypes = new Set(["fix", "feature"])
 function convChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry {
 	const fallback = fallbackConvChange(pr)
 
-	const module = doc.module || fallback.module
+	const module = sanitizeString(doc.module) || fallback.module
+	const description = sanitizeString(doc.description) || fallback.description
 	const type = doc.type && knownTypes.has(doc.type) ? doc.type : fallback.type
-	const description = (doc.description && doc.description.trim()) || fallback.description
 
 	const opts: ChangeEntryOpts = {
 		module,
@@ -78,9 +78,24 @@ function convChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry
 	}
 
 	const note = doc.note?.trim()
-	if (note) opts.note = note
+	if (note) {
+		opts.note = note
+	}
 
 	return new ChangeEntry(opts)
+}
+
+function sanitizeString(x: unknown): string {
+	if (typeof x === "string" && x.length > 0) {
+		return x.trim()
+	}
+
+	if (Number.isFinite(x) || x) {
+		// not null, undefined, or empty string
+		return `${x}`
+	}
+
+	return ""
 }
 
 const CHANGE_TYPE_UNKNOWN = "unknown"
