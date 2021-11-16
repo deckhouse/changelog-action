@@ -237,21 +237,30 @@ function parseChangeEntries(pr, changesText) {
 exports.parseChangeEntries = parseChangeEntries;
 const knownTypes = new Set(["fix", "feature"]);
 function convChange(doc, pr) {
-    var _a;
     const fallback = fallbackConvChange(pr);
-    const module = doc.module || fallback.module;
+    const module = sanitizeString(doc.module) || fallback.module;
+    const description = sanitizeString(doc.description) || fallback.description;
     const type = doc.type && knownTypes.has(doc.type) ? doc.type : fallback.type;
-    const description = (doc.description && doc.description.trim()) || fallback.description;
     const opts = {
         module,
         type,
         description,
         pull_request: pr.url,
     };
-    const note = (_a = doc.note) === null || _a === void 0 ? void 0 : _a.trim();
-    if (note)
+    const note = sanitizeString(doc.note);
+    if (note) {
         opts.note = note;
+    }
     return new ChangeEntry(opts);
+}
+function sanitizeString(x) {
+    if (typeof x === "string") {
+        return x.trim();
+    }
+    if (Number.isFinite(x) || x) {
+        return `${x}`;
+    }
+    return "";
 }
 const CHANGE_TYPE_UNKNOWN = "unknown";
 const MODULE_UNKNOWN = "UNKNOWN";
