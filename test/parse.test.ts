@@ -54,6 +54,18 @@ describe("extracting raw changes", () => {
 		const { input, expected } = getTwoBlocksBodyFixture()
 		expect(extractChanges(input)).toBe(expected)
 	})
+
+	test("ignores HTML comments", () => {
+		const input = [
+			block("module: one", "changes"),
+			"<!--",
+			block("module: hidden", "changes"),
+			"-->",
+			block("module: two", "changes"),
+		].join("\n")
+		const expected = ["module: one", "module: two"].join("\n---\n")
+		expect(extractChanges(input)).toBe(expected)
+	})
 })
 
 describe("parsing change entries", function () {
