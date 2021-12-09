@@ -45,13 +45,25 @@ describe("extracting raw changes", () => {
 		expect(extractChanges(input)).toBe("")
 	})
 
-	test("ignores blocks with malformed ending", () => {
+	test("tolerates blocks with malformed ending due (the `marked` lib works so)", () => {
 		const input = ["```changes", "module: one", "````"].join("\n")
-		expect(extractChanges(input)).toBe("")
+		expect(extractChanges(input)).toBe("module: one")
 	})
 
 	test("parses two blocks from GitHub JSON", () => {
 		const { input, expected } = getTwoBlocksBodyFixture()
+		expect(extractChanges(input)).toBe(expected)
+	})
+
+	test("ignores HTML comments", () => {
+		const input = [
+			block("module: one", "changes"),
+			"<!--",
+			block("module: hidden", "changes"),
+			"-->",
+			block("module: two", "changes"),
+		].join("\n")
+		const expected = ["module: one", "module: two"].join("\n---\n")
 		expect(extractChanges(input)).toBe(expected)
 	})
 })

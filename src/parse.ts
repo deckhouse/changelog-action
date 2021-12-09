@@ -1,4 +1,5 @@
 import * as yaml from "js-yaml"
+import { marked } from "marked"
 
 export interface PullRequest {
 	state: string
@@ -110,25 +111,30 @@ function fallbackConvChange(pr: PullRequest): ChangeEntry {
 	})
 }
 
-// extractChangesBlock parses only first changes block it meets
+/*
+ * extractChangesBlock parses only first changes block it meets
+ *
+ *  Tokens we look for look like this
+ * {
+ *   "type": "code",
+ *   "raw": "```changes\nmodule: upmeter\ntype: feature\ndescription: Assign more specific nodes for the server pod\n```",
+ *   "lang": "changes",
+ *   "text": "module: upmeter\ntype: feature\ndescription: Assign more specific nodes for the server pod"
+ * }
+ *
+ */
 export function extractChanges(body: string): string {
-	const delim = "```"
-	const start = new RegExp(`^${delim}changes\\s*$`, "m")
-	const end = new RegExp(`^${delim}\\s*$`, "m")
+	// Turn on Github Flavored Markdown.
+	// See other options here: https://marked.js.org/using_advanced#options
+	const lexer = new marked.Lexer({ gfm: true })
 
-	// Remove return caret chars to work woth newlines
-	const [, ...contents] = body.replace(/\r/g, "").split(start)
-	if (contents.length == 0) {
-		return ""
-	}
-
-	return contents
-		.filter((c) => end.test(c)) //  filter by end presence
-		.map((c) => c.split(end)[0]) // pick block content
-		.filter((x) => !!x) //          avoid undefined
-		.map((s) => s.trim()) //        detect empty content
-		.filter((x) => !!x) //          avoid empty content
-		.join("\n---\n") //             join YAML docs
+	const parsed = lexer.lex(body)
+	const changeBlocks = parsed
+		.filter((t: marked.Token): t is marked.Tokens.Code => t.type == "code" && t.lang == "changes")
+		.map((t: marked.Tokens.Code) => t.text)
+	// console.log("PARSED", parsed)
+	// console.log("CHANGES/", changeBlocks)
+	return changeBlocks.join(`\n---\n`)
 }
 
 /**
