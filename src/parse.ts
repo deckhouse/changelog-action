@@ -22,14 +22,13 @@ export interface ChangesByModule {
 export interface ModuleChanges {
 	fixes?: Change[]
 	features?: Change[]
-	unknown?: Change[]
+	malformed?: Change[]
 }
 
-export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
+export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
 	return pulls
-		.map((pr) => ({ pr, changesText: extractChanges(pr.body) }))
-		.flatMap(({ pr, changesText }) => parseChangeEntries(pr, changesText))
-		.reduce(groupByModule, {})
+		.map((pr) => ({ pr, changesYAMLs: extractChanges(pr.body) }))
+		.flatMap(({ pr, changesYAMLs }) => parseChangeEntries(pr, changesYAMLs))
 }
 
 /**
@@ -45,10 +44,22 @@ export function collectChangelog(pulls: PullRequest[]): ChangesByModule {
  *   description: added big thing to enhance security
  *
  */
-export function parseChangeEntries(pr: PullRequest, changesText: string): ChangeEntry[] {
-	return yaml //
-		.loadAll(changesText)
-		.map((doc) => convChange(doc as Partial<ChangeEntryOpts>, pr))
+export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): ChangeEntry[] {
+	const entries = [] as ChangeEntry[]
+	for (const changeYAML of changesYAMLs) {
+		try {
+			const doc = yaml.load(changeYAML)
+			const change = parseChange(doc as Partial<ChangeEntryOpts>, pr)
+			entries.push(change)
+		} catch (e) {
+			if (!(e instanceof yaml.YAMLException)) {
+				throw e
+			}
+			const change = createEmptyChange(pr)
+			entries.push(change)
+		}
+	}
+	return entries
 }
 
 const knownTypes = new Set(["fix", "feature"])
@@ -64,17 +75,11 @@ const knownTypes = new Set(["fix", "feature"])
  *   "note": "Network flap is expected, but no longer than 10 seconds",
  * }
  */
-function convChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry {
-	const fallback = fallbackConvChange(pr)
-
-	const module = sanitizeString(doc.module) || fallback.module
-	const description = sanitizeString(doc.description) || fallback.description
-	const type = doc.type && knownTypes.has(doc.type) ? doc.type : fallback.type
-
+function parseChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry {
 	const opts: ChangeEntryOpts = {
-		module,
-		type,
-		description,
+		module: sanitizeString(doc.module) ?? "",
+		type: sanitizeString(doc.type) ?? "",
+		description: sanitizeString(doc.description) ?? "",
 		pull_request: pr.url,
 	}
 
@@ -99,14 +104,14 @@ function sanitizeString(x: unknown): string {
 	return ""
 }
 
-const CHANGE_TYPE_UNKNOWN = "unknown"
-const MODULE_UNKNOWN = "UNKNOWN"
+const CHANGE_TYPE_MALFORMED = "malformed"
+const MODULE_MALFORMED = "MALFORMED"
 
-function fallbackConvChange(pr: PullRequest): ChangeEntry {
+function createEmptyChange(pr: PullRequest): ChangeEntry {
 	return new ChangeEntry({
-		module: MODULE_UNKNOWN,
-		type: CHANGE_TYPE_UNKNOWN,
-		description: `${pr.title}`.trim() || `${pr.number} (description missing)`,
+		module: "",
+		type: "",
+		description: "",
 		pull_request: pr.url,
 	})
 }
@@ -123,7 +128,7 @@ function fallbackConvChange(pr: PullRequest): ChangeEntry {
  * }
  *
  */
-export function extractChanges(body: string): string {
+export function extractChanges(body: string): string[] {
 	// Turn on Github Flavored Markdown.
 	// See other options here: https://marked.js.org/using_advanced#options
 	const lexer = new marked.Lexer({ gfm: true })
@@ -132,9 +137,11 @@ export function extractChanges(body: string): string {
 	const changeBlocks = parsed
 		.filter((t: marked.Token): t is marked.Tokens.Code => t.type == "code" && t.lang == "changes")
 		.map((t: marked.Tokens.Code) => t.text)
+
 	// console.log("PARSED", parsed)
 	// console.log("CHANGES/", changeBlocks)
-	return changeBlocks.join(`\n---\n`)
+
+	return changeBlocks
 }
 
 /**
@@ -179,45 +186,10 @@ export class ChangeEntry extends Change {
 
 	// All required fields should be filled
 	valid(): boolean {
-		return !!this.module && !!this.type && super.valid()
+		return !!this.module && knownTypes.has(this.type) && super.valid()
 	}
 }
 interface ChangeEntryOpts extends ChangeOpts {
 	module: string
 	type: string
-}
-
-function groupByModule(acc: ChangesByModule, change: ChangeEntry) {
-	// ensure module key:   { "module": {} }
-	acc[change.module] = acc[change.module] || ({} as ModuleChanges)
-	const mc = acc[change.module]
-	const ensure = (k: string) => {
-		mc[k] = mc[k] || []
-		return mc[k]
-	}
-
-	// ensure module change list
-	// e.g. for fixes: { "module": { "fixes": [] } }
-	let list
-	switch (change.type) {
-		case "fix":
-			list = ensure("fixes")
-			break
-		case "feature":
-			list = ensure("features")
-			break
-		default:
-			list = ensure(CHANGE_TYPE_UNKNOWN)
-	}
-
-	// add the change
-	list.push(
-		new Change({
-			description: change.description,
-			pull_request: change.pull_request,
-			note: change.note,
-		}),
-	)
-
-	return acc
 }
