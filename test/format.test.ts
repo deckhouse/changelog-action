@@ -13,7 +13,9 @@ const changes: ChangeEntry[] = [
 		type: "fix",
 		description: "d21",
 		pull_request: "https://github.com/ow/re/210",
-		note: "x",
+		note: `Grafana will be restarted.
+Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.`,
 	}),
 	new ChangeEntry({
 		module: "chrony",
@@ -67,7 +69,16 @@ cloud-provider-yandex:
       pull_request: https://github.com/ow/re/220
   fixes:
     - description: d21
-      note: x
+      note: >-
+        Grafana will be restarted.
+
+        Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached),
+        because direct(browse) datasources type is depreated now. And alerts don't work with direct
+        data sources.
+
+        Provisioning datasources from secret instead configmap. Deckhouse datasources need client
+        certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while
+        terminating.
       pull_request: https://github.com/ow/re/210
     - description: d29
       pull_request: https://github.com/ow/re/290
@@ -106,7 +117,9 @@ describe("Markdown", () => {
 
  - **[chrony]** d11 [#110](https://github.com/ow/re/110)
  - **[cloud-provider-yandex]** d21 [#210](https://github.com/ow/re/210)
-    **NOTE!** x
+    **NOTE!** Grafana will be restarted.
+    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
  - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
  - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 `
