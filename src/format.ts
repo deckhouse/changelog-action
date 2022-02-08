@@ -43,7 +43,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 			list = getTypeList("features")
 			break
 		default:
-			throw new Error("invalid type")
+			throw new Error("invalid type: " + change.type)
 	}
 
 	// add the change
