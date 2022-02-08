@@ -22,7 +22,6 @@ export interface ChangesByModule {
 export interface ModuleChanges {
 	fixes?: Change[]
 	features?: Change[]
-	malformed?: Change[]
 }
 
 export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
@@ -32,13 +31,13 @@ export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
 }
 
 /**
- * changesText example:
+ * changesYAMLs example:
  *
  *   module: module3
  *   type: fix
  *   description: what was fixed in 151
  *   note: Network flap is expected, but no longer than 10 seconds
- *   ---
+ *   ,
  *   module: module3
  *   type: feature
  *   description: added big thing to enhance security
@@ -104,9 +103,6 @@ function sanitizeString(x: unknown): string {
 	return ""
 }
 
-const CHANGE_TYPE_MALFORMED = "malformed"
-const MODULE_MALFORMED = "MALFORMED"
-
 function createEmptyChange(pr: PullRequest): ChangeEntry {
 	return new ChangeEntry({
 		module: "",
@@ -117,7 +113,7 @@ function createEmptyChange(pr: PullRequest): ChangeEntry {
 }
 
 /*
- * extractChangesBlock parses only first changes block it meets
+ * extractChanges parses changes blocks from PR body
  *
  *  Tokens we look for look like this
  * {
@@ -170,10 +166,10 @@ interface ChangeOpts {
 	pull_request: string
 	note?: string
 }
-/**
- *  PullRequestChange is the change we expect to find in pull request
- */
 
+/**
+ *  ChangeEntry is the change we expect to find in pull request
+ */
 export class ChangeEntry extends Change {
 	module = ""
 	type = ""
