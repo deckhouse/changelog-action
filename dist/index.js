@@ -69,37 +69,55 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.formatMarkdown = exports.formatYaml = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const json2md_1 = __importDefault(__nccwpck_require__(8158));
-const MARKDOWN_HEADER_TAG = "h2";
-const MARKDOWN_MODULER_TAG = "h4";
-const MARKDOWN_NOTE_PREFIX = "**NOTE!**";
-function formatYaml(body) {
+const parse_1 = __nccwpck_require__(5223);
+function formatYaml(changes) {
     const opts = {
-        sortKeys: unknownFirst,
+        sortKeys: true,
         lineWidth: 100,
         forceQuotes: false,
         quotingType: "'",
     };
+    const body = changes
+        .filter((c) => c.valid())
+        .reduce(groupByModuleAndType, {});
     return yaml.dump(body, opts);
 }
 exports.formatYaml = formatYaml;
-function unknownFirst(a, b) {
-    if (isUnknown(a) || a < b)
-        return -1;
-    if (isUnknown(b) || a > b)
-        return 1;
-    return 0;
-}
-function isUnknown(s) {
-    return typeof s === "string" && s.toLowerCase() === "unknown";
-}
-function formatMarkdown(milestone, body) {
-    const pairs = Object.entries(body).sort((a, b) => unknownFirst(a[0], b[0]));
-    const content = [{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }];
-    for (const [modName, changes] of pairs) {
-        content.push({ [MARKDOWN_MODULER_TAG]: `[${modName}]` });
-        content.push({ ul: moduleChangesMarkdown(changes) });
+function groupByModuleAndType(acc, change) {
+    acc[change.module] = acc[change.module] || {};
+    const mc = acc[change.module];
+    const getTypeList = (k) => {
+        mc[k] = mc[k] || [];
+        return mc[k];
+    };
+    let list;
+    switch (change.type) {
+        case "fix":
+            list = getTypeList("fixes");
+            break;
+        case "feature":
+            list = getTypeList("features");
+            break;
+        default:
+            throw new Error("invalid type");
     }
-    const md = (0, json2md_1.default)(content);
+    list.push(new parse_1.Change({
+        description: change.description,
+        pull_request: change.pull_request,
+        note: change.note,
+    }));
+    return acc;
+}
+const MARKDOWN_HEADER_TAG = "h2";
+const MARKDOWN_MODULE_TAG = "h4";
+const MARKDOWN_NOTE_PREFIX = "**NOTE!**";
+function formatMarkdown(milestone, changes) {
+    const body = [
+        { [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` },
+        ...formatMalformedEntries(changes),
+        ...formatEntriesByModuleAndType(changes),
+    ];
+    const md = (0, json2md_1.default)(body);
     return fixLineBreaks(md);
 }
 exports.formatMarkdown = formatMarkdown;
@@ -108,31 +126,61 @@ function fixLineBreaks(md) {
         .split("\n")
         .filter((s) => s.trim() != "")
         .map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
+        .map((s) => (s.startsWith("**") && s.endsWith("**") ? `\n${s}\n` : s))
         .join("\n");
     return fixed + "\n";
 }
-function moduleChangesMarkdown(mc) {
+function formatEntriesByModuleAndType(changes) {
+    const body = [];
+    const validEntries = changes
+        .filter((c) => c.valid())
+        .reduce(groupByModuleAndType, {});
+    const pairs = Object.entries(validEntries).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+    for (const [modName, changes] of pairs) {
+        body.push({ [MARKDOWN_MODULE_TAG]: modName });
+        body.push(...moduleChangesMarkdown(changes));
+    }
+    return body;
+}
+function formatMalformedEntries(changes) {
+    const body = [];
+    const invalidEntries = changes
+        .filter((c) => !c.valid())
+        .sort((a, b) => (a.pull_request < b.pull_request ? -1 : 1));
+    if (invalidEntries.length > 0) {
+        body.push([{ [MARKDOWN_MODULE_TAG]: "[MALFORMED]" }]);
+        const ul = [];
+        for (const c of invalidEntries) {
+            const prNum = parsePullRequestNumberFromURL(c.pull_request);
+            ul.push(`[#${prNum}](${c.pull_request})`);
+        }
+        body.push({ ul: ul.sort() });
+    }
+    return body;
+}
+function moduleChangesMarkdown(moduleChanges) {
     const md = [];
-    if (mc.unknown) {
-        md.push("unknown");
-        md.push({ ul: mc.unknown.flatMap(changeMardown) });
+    if (moduleChanges.features) {
+        md.push({ p: "**features**" });
+        md.push({ ul: moduleChanges.features.flatMap(changeMardown) });
     }
-    if (mc.features) {
-        md.push("features");
-        md.push({ ul: mc.features.flatMap(changeMardown) });
-    }
-    if (mc.fixes) {
-        md.push("fixes");
-        md.push({ ul: mc.fixes.flatMap(changeMardown) });
+    if (moduleChanges.fixes) {
+        md.push({ p: "**fixes**" });
+        md.push({ ul: moduleChanges.fixes.flatMap(changeMardown) });
     }
     return md;
 }
+function parsePullRequestNumberFromURL(prUrl) {
+    const parts = prUrl.split("/");
+    return parts[parts.length - 1];
+}
 function changeMardown(c) {
-    const detail = [{ link: { source: c.pull_request, title: "Pull request" } }];
+    const pr = parsePullRequestNumberFromURL(c.pull_request);
+    const lines = [`${c.description} [#${pr}](${pr})`];
     if (c.note) {
-        detail.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`);
+        lines.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`);
     }
-    return [c.description, { ul: detail }];
+    return lines.join("\n");
 }
 
 
@@ -225,27 +273,36 @@ const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(9017);
 function collectChangelog(pulls) {
     return pulls
-        .map((pr) => ({ pr, changesText: extractChanges(pr.body) }))
-        .flatMap(({ pr, changesText }) => parseChangeEntries(pr, changesText))
-        .reduce(groupByModule, {});
+        .map((pr) => ({ pr, changesYAMLs: extractChanges(pr.body) }))
+        .flatMap(({ pr, changesYAMLs }) => parseChangeEntries(pr, changesYAMLs));
 }
 exports.collectChangelog = collectChangelog;
-function parseChangeEntries(pr, changesText) {
-    return yaml
-        .loadAll(changesText)
-        .map((doc) => convChange(doc, pr));
+function parseChangeEntries(pr, changesYAMLs) {
+    const entries = [];
+    for (const changeYAML of changesYAMLs) {
+        try {
+            const doc = yaml.load(changeYAML);
+            const change = parseChange(doc, pr);
+            entries.push(change);
+        }
+        catch (e) {
+            if (!(e instanceof yaml.YAMLException)) {
+                throw e;
+            }
+            const change = createEmptyChange(pr);
+            entries.push(change);
+        }
+    }
+    return entries;
 }
 exports.parseChangeEntries = parseChangeEntries;
 const knownTypes = new Set(["fix", "feature"]);
-function convChange(doc, pr) {
-    const fallback = fallbackConvChange(pr);
-    const module = sanitizeString(doc.module) || fallback.module;
-    const description = sanitizeString(doc.description) || fallback.description;
-    const type = doc.type && knownTypes.has(doc.type) ? doc.type : fallback.type;
+function parseChange(doc, pr) {
+    var _a, _b, _c;
     const opts = {
-        module,
-        type,
-        description,
+        module: (_a = sanitizeString(doc.module)) !== null && _a !== void 0 ? _a : "",
+        type: (_b = sanitizeString(doc.type)) !== null && _b !== void 0 ? _b : "",
+        description: (_c = sanitizeString(doc.description)) !== null && _c !== void 0 ? _c : "",
         pull_request: pr.url,
     };
     const note = sanitizeString(doc.note);
@@ -263,13 +320,11 @@ function sanitizeString(x) {
     }
     return "";
 }
-const CHANGE_TYPE_UNKNOWN = "unknown";
-const MODULE_UNKNOWN = "UNKNOWN";
-function fallbackConvChange(pr) {
+function createEmptyChange(pr) {
     return new ChangeEntry({
-        module: MODULE_UNKNOWN,
-        type: CHANGE_TYPE_UNKNOWN,
-        description: `${pr.title}`.trim() || `${pr.number} (description missing)`,
+        module: "",
+        type: "",
+        description: "",
         pull_request: pr.url,
     });
 }
@@ -279,7 +334,7 @@ function extractChanges(body) {
     const changeBlocks = parsed
         .filter((t) => t.type == "code" && t.lang == "changes")
         .map((t) => t.text);
-    return changeBlocks.join(`\n---\n`);
+    return changeBlocks;
 }
 exports.extractChanges = extractChanges;
 class Change {
@@ -306,35 +361,10 @@ class ChangeEntry extends Change {
         this.type = o.type;
     }
     valid() {
-        return !!this.module && !!this.type && super.valid();
+        return !!this.module && knownTypes.has(this.type) && super.valid();
     }
 }
 exports.ChangeEntry = ChangeEntry;
-function groupByModule(acc, change) {
-    acc[change.module] = acc[change.module] || {};
-    const mc = acc[change.module];
-    const ensure = (k) => {
-        mc[k] = mc[k] || [];
-        return mc[k];
-    };
-    let list;
-    switch (change.type) {
-        case "fix":
-            list = ensure("fixes");
-            break;
-        case "feature":
-            list = ensure("features");
-            break;
-        default:
-            list = ensure(CHANGE_TYPE_UNKNOWN);
-    }
-    list.push(new Change({
-        description: change.description,
-        pull_request: change.pull_request,
-        note: change.note,
-    }));
-    return acc;
-}
 
 
 /***/ }),
