@@ -80,6 +80,7 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	// Workaround to omit excessive empty lines
 	// https://github.com/IonicaBizau/json2md/issues/53
 	// return fixLineBreaks(md)
+	console.log(md)
 	return md
 }
 
@@ -111,15 +112,15 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 	const body: DataObject[] = []
 
 	// Collect malformed on the top for easier fixing
-	const invalidEntries = changes
+	const malformed = changes
 		.filter((c) => !c.valid())
 		.sort((a, b) => (a.pull_request < b.pull_request ? -1 : 1))
 
-	if (invalidEntries.length > 0) {
+	if (malformed.length > 0) {
 		body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }])
 
 		const ul: string[] = []
-		for (const c of invalidEntries) {
+		for (const c of malformed) {
 			const prNum = parsePullRequestNumberFromURL(c.pull_request)
 			ul.push(`[#${prNum}](${c.pull_request})`)
 		}
@@ -129,28 +130,14 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 	return body
 }
 
-function moduleChangesMarkdown(moduleChanges: ModuleChanges): DataObject[] {
-	const md: DataObject[] = []
-	if (moduleChanges.features) {
-		md.push({ p: "**features**" })
-		md.push({ ul: moduleChanges.features.flatMap(changeMardown) })
-	}
-	if (moduleChanges.fixes) {
-		md.push({ p: "**fixes**" })
-		md.push({ ul: moduleChanges.fixes.flatMap(changeMardown) })
-	}
-	// console.log("mc", JSON.stringify(md, null, 2))
-	return md
-}
-
 function parsePullRequestNumberFromURL(prUrl: string): string {
 	const parts = prUrl.split("/")
 	return parts[parts.length - 1]
 }
 
-function changeMardown(c: Change): string {
+function changeMardown(c: ChangeEntry): string {
 	const pr = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`${c.description} [#${pr}](${pr})`]
+	const lines = [`**[${c.module}]** ${c.description} [#${pr}](${pr})`]
 
 	if (c.note) {
 		lines.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`)
@@ -165,8 +152,7 @@ function fixLineBreaks(md: string): string {
 		// remove empty lines
 		.filter((s) => s.trim() != "")
 		// wrap subheaders with empty lines
-		.map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
-		.map((s) => (s.startsWith("**") && s.endsWith("**") ? `\n${s}\n` : s))
+		.map((s) => (s.startsWith("#") ? `${s}\n` : s))
 		.join("\n")
 
 	// add empty line to the end

@@ -48,15 +48,18 @@ describe("Markdown", () => {
 
 ## [MALFORMED]
 
+
  - [#prm1](prm1)
  - [#prm2](prm2)
 
 ## Features
 
+
  - **[one]** d12 [#pr12](pr12)
  - **[two]** d22 [#pr22](pr22)
 
 ## Fixes
+
 
  - **[one]** d11 [#pr11](pr11)
  - **[two]** d21 [#pr21](pr21)
