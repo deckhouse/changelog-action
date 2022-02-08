@@ -2,36 +2,79 @@ import { formatMarkdown, formatYaml } from "../src/format"
 import { ChangeEntry } from "../src/parse"
 
 const changes: ChangeEntry[] = [
-	new ChangeEntry({ module: "yyy", type: "", description: "dm2", pull_request: "prm2" }),
-	new ChangeEntry({ module: "two", type: "fix", description: "d21", pull_request: "pr21", note: "x" }),
-	new ChangeEntry({ module: "one", type: "feature", description: "d12", pull_request: "pr12" }),
-	new ChangeEntry({ module: "two", type: "feature", description: "d22", pull_request: "pr22" }),
-	new ChangeEntry({ module: "one", type: "fix", description: "d11", pull_request: "pr11" }),
-	new ChangeEntry({ module: "xxx", type: "", description: "dm1", pull_request: "prm1" }),
-	new ChangeEntry({ module: "two", type: "fix", description: "d28", pull_request: "pr28" }),
-	new ChangeEntry({ module: "two", type: "fix", description: "d29", pull_request: "pr29" }),
+	new ChangeEntry({
+		module: "yyy",
+		type: "",
+		description: "dm2",
+		pull_request: "https://github.com/ow/re/533",
+	}),
+	new ChangeEntry({
+		module: "cloud-provider-yandex",
+		type: "fix",
+		description: "d21",
+		pull_request: "https://github.com/ow/re/210",
+		note: "x",
+	}),
+	new ChangeEntry({
+		module: "chrony",
+		type: "feature",
+		description: "d12",
+		pull_request: "https://github.com/ow/re/120",
+	}),
+	new ChangeEntry({
+		module: "cloud-provider-yandex",
+		type: "feature",
+		description: "d22",
+		pull_request: "https://github.com/ow/re/220",
+	}),
+	new ChangeEntry({
+		module: "chrony",
+		type: "fix",
+		description: "d11",
+		pull_request: "https://github.com/ow/re/110",
+	}),
+	new ChangeEntry({
+		module: "xxx",
+		type: "",
+		description: "dm1",
+		pull_request: "https://github.com/ow/re/510",
+	}),
+	new ChangeEntry({
+		module: "kube-dns",
+		type: "fix",
+		description: "d48",
+		pull_request: "https://github.com/ow/re/480",
+	}),
+	new ChangeEntry({
+		module: "cloud-provider-yandex",
+		type: "fix",
+		description: "d29",
+		pull_request: "https://github.com/ow/re/290",
+	}),
 ]
 
 describe("YAML", () => {
-	const expected = `one:
+	const expected = `chrony:
   features:
     - description: d12
-      pull_request: pr12
+      pull_request: https://github.com/ow/re/120
   fixes:
     - description: d11
-      pull_request: pr11
-two:
+      pull_request: https://github.com/ow/re/110
+cloud-provider-yandex:
   features:
     - description: d22
-      pull_request: pr22
+      pull_request: https://github.com/ow/re/220
   fixes:
     - description: d21
       note: x
-      pull_request: pr21
-    - description: d28
-      pull_request: pr28
+      pull_request: https://github.com/ow/re/210
     - description: d29
-      pull_request: pr29
+      pull_request: https://github.com/ow/re/290
+kube-dns:
+  fixes:
+    - description: d48
+      pull_request: https://github.com/ow/re/480
 `
 	test("formats right", () => {
 		expect(formatYaml(changes)).toEqual(expected)
@@ -49,25 +92,25 @@ describe("Markdown", () => {
 ## [MALFORMED]
 
 
- - [#prm1](prm1)
- - [#prm2](prm2)
+ - #510
+ - #533
 
 ## Features
 
 
- - **[one]** d12 [#pr12](pr12)
- - **[two]** d22 [#pr22](pr22)
+ - **[chrony]** d12 [#120](https://github.com/ow/re/120)
+ - **[cloud-provider-yandex]** d22 [#220](https://github.com/ow/re/220)
 
 ## Fixes
 
 
- - **[one]** d11 [#pr11](pr11)
- - **[two]** d21 [#pr21](pr21)
+ - **[chrony]** d11 [#110](https://github.com/ow/re/110)
+ - **[cloud-provider-yandex]** d21 [#210](https://github.com/ow/re/210)
     **NOTE!** x
- - **[two]** d28 [#pr28](pr28)
- - **[two]** d29 [#pr29](pr29)
+ - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
+ - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 `
-	test("has milestone title as h1", () => {
+	test("has chrony title as h1", () => {
 		const firstLine = md.split("\n")[0].trim()
 		expect(firstLine).toBe(`# Changelog v3.44.555`)
 	})

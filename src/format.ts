@@ -110,15 +110,16 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 	// Collect malformed on the top for easier fixing
 	const malformed = changes
 		.filter((c) => !c.valid())
-		.sort((a, b) => (a.pull_request < b.pull_request ? -1 : 1))
+		.map((c) => parsePullRequestNumberFromURL(c.pull_request))
+		.map((x) => parseInt(x))
+		.sort()
 
 	if (malformed.length > 0) {
 		body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }])
 
 		const ul: string[] = []
-		for (const c of malformed) {
-			const prNum = parsePullRequestNumberFromURL(c.pull_request)
-			ul.push(`[#${prNum}](${c.pull_request})`)
+		for (const num of malformed) {
+			ul.push(`#${num}`)
 		}
 		body.push({ ul: ul.sort() })
 	}
@@ -132,8 +133,8 @@ function parsePullRequestNumberFromURL(prUrl: string): string {
 }
 
 function changeMardown(c: ChangeEntry): string {
-	const pr = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`**[${c.module}]** ${c.description} [#${pr}](${pr})`]
+	const prNum = parsePullRequestNumberFromURL(c.pull_request)
+	const lines = [`**[${c.module}]** ${c.description} [#${prNum}](${c.pull_request})`]
 
 	if (c.note) {
 		lines.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`)
