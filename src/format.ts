@@ -77,10 +77,6 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 
 	const md = json2md(body)
 
-	// Workaround to omit excessive empty lines
-	// https://github.com/IonicaBizau/json2md/issues/53
-	// return fixLineBreaks(md)
-	console.log(md)
 	return md
 }
 
@@ -144,17 +140,4 @@ function changeMardown(c: ChangeEntry): string {
 	}
 
 	return lines.join("\n")
-}
-
-function fixLineBreaks(md: string): string {
-	const fixed = md
-		.split("\n")
-		// remove empty lines
-		.filter((s) => s.trim() != "")
-		// wrap subheaders with empty lines
-		.map((s) => (s.startsWith("#") ? `${s}\n` : s))
-		.join("\n")
-
-	// add empty line to the end
-	return fixed + "\n"
 }
