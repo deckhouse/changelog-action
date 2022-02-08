@@ -11,18 +11,20 @@ describe("extracting raw changes", () => {
 	}
 
 	test("parses empty line on empty input", () => {
-		expect(extractChanges("")).toBe("")
+		expect(extractChanges("")).toStrictEqual([])
 	})
 
 	test("parses single block", () => {
 		const input = block("module: one", "changes")
-		expect(extractChanges(input)).toBe("module: one")
+		const parsed = extractChanges(input)
+		expect(parsed).toStrictEqual(["module: one"])
 	})
 
 	test("ignores all blocks except frist one", () => {
 		const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
-		const expected = ["module: one", "module: two"].join("\n---\n")
-		expect(extractChanges(input)).toBe(expected)
+
+		const parsed = extractChanges(input)
+		expect(parsed).toStrictEqual(["module: one", "module: two"])
 	})
 
 	test("ignores non-changes blocks ", () => {
@@ -36,23 +38,26 @@ describe("extracting raw changes", () => {
 			block("module: two", "changes"),
 			block("nothing2"),
 		].join("\n")
-		const expected = ["module: one", "module: two"].join("\n---\n")
-		expect(extractChanges(input)).toBe(expected)
+		const parsed = extractChanges(input)
+		expect(parsed).toStrictEqual(["module: one", "module: two"])
 	})
 
 	test("ignores blocks with malformed beginning", () => {
 		const input = ["````changes", "module: one", "```"].join("\n")
-		expect(extractChanges(input)).toBe("")
+		const parsed = extractChanges(input)
+		expect(parsed).toStrictEqual([])
 	})
 
 	test("tolerates blocks with malformed ending due (the `marked` lib works so)", () => {
 		const input = ["```changes", "module: one", "````"].join("\n")
-		expect(extractChanges(input)).toBe("module: one")
+		const parsed = extractChanges(input)
+		expect(parsed).toStrictEqual(["module: one"])
 	})
 
 	test("parses two blocks from GitHub JSON", () => {
 		const { input, expected } = getTwoBlocksBodyFixture()
-		expect(extractChanges(input)).toBe(expected)
+		const parsed = extractChanges(input)
+		expect(parsed).toStrictEqual(expected)
 	})
 
 	test("ignores HTML comments", () => {
@@ -63,40 +68,48 @@ describe("extracting raw changes", () => {
 			"-->",
 			block("module: two", "changes"),
 		].join("\n")
-		const expected = ["module: one", "module: two"].join("\n---\n")
-		expect(extractChanges(input)).toBe(expected)
+		const parsed = extractChanges(input)
+		expect(parsed).toStrictEqual(["module: one", "module: two"])
 	})
 })
 
 describe("parsing change entries", function () {
-	const delim = "---"
 	const emptyLine = ""
-	const column = (ss) => ss.join("\n") + "\n"
 	const kv = (k, v) => `${k}: ${v}`
+
 	const module = (x) => kv("module", x)
 	const type = (x) => kv("type", x)
 	const description = (x) => kv("description", x)
 	const note = (x) => kv("note", x)
 
+	const doc = (...ss) => ss.join("\n") // assemble kv pairs together
+
 	const pr: PullRequest = {
 		url: "https://github.com/owner/repo/pulls/13",
-		title: "Shmoo",
+		title: "Shmoo", // should not be used
 		number: 13,
 		state: "",
 		body: "",
 		milestone: { title: "v1.23.456", number: 2 },
 	}
 
-	const cases = [
+	const cases: {
+		title: string
+		pr: PullRequest
+		input: string[]
+		want?: Array<ChangeEntry | { pull_request: string }>
+	}[] = [
 		{
 			title: "parses minimal input",
 			pr,
-			input: column([
-				//
-				module("mod"),
-				type("fix"),
-				description("something was done"),
-			]),
+			input: [
+				doc(
+					//
+					module("mod"),
+					type("fix"),
+					description("something was done"),
+				),
+			],
 			want: [
 				new ChangeEntry({
 					module: "mod",
@@ -110,20 +123,22 @@ describe("parsing change entries", function () {
 		{
 			title: "parses multi-line text field",
 			pr,
-			input: column([
-				//
-				module("multiline"),
-				type("fix"),
-				description(
-					column([
-						//
-						"|",
-						"  something was done:",
-						emptyLine,
-						"  parses input with colons in values",
-					]),
+			input: [
+				doc(
+					//
+					module("multiline"),
+					type("fix"),
+					description(
+						doc(
+							//
+							"|",
+							"  something was done:",
+							emptyLine,
+							"  parses input with colons in values",
+						),
+					),
 				),
-			]),
+			],
 			want: [
 				new ChangeEntry({
 					module: "multiline",
@@ -137,13 +152,15 @@ describe("parsing change entries", function () {
 		{
 			title: "parses note field",
 			pr,
-			input: column([
-				//
-				module("modname"),
-				type("fix"),
-				description("something was done"),
-				note("parses note field"),
-			]),
+			input: [
+				doc(
+					//
+					module("modname"),
+					type("fix"),
+					description("something was done"),
+					note("parses note field"),
+				),
+			],
 			want: [
 				new ChangeEntry({
 					module: "modname",
@@ -158,17 +175,19 @@ describe("parsing change entries", function () {
 		{
 			title: "tolerates empty lines",
 			pr,
-			input: column([
-				emptyLine,
-				module("modname"),
-				emptyLine,
-				type("fix"),
-				emptyLine,
-				description("something was done"),
-				emptyLine,
-				note("we xpect some outage"),
-				emptyLine,
-			]),
+			input: [
+				doc(
+					emptyLine,
+					module("modname"),
+					emptyLine,
+					type("fix"),
+					emptyLine,
+					description("something was done"),
+					emptyLine,
+					note("we xpect some outage"),
+					emptyLine,
+				),
+			],
 			want: [
 				new ChangeEntry({
 					module: "modname",
@@ -181,22 +200,41 @@ describe("parsing change entries", function () {
 		},
 
 		{
-			title: "parses multiple docs",
+			title: "parses multiple docs and preserves order",
 			pr,
-			input: column([
-				module("mod1"),
-				type("fix"),
-				description("modification1"),
-				delim,
-				module("mod2"),
-				type("fix"),
-				description("modification2"),
-			]),
+			input: [
+				doc(
+					//
+					module("mod3"),
+					type("fix"),
+					description("modification3"),
+				),
+				doc(
+					//
+					module("mod1"),
+					type("feature"),
+					description("modification1"),
+					note("with note"),
+				),
+				doc(
+					//
+					module("mod2"),
+					type("fix"),
+					description("modification2"),
+				),
+			],
 			want: [
 				new ChangeEntry({
-					module: "mod1",
+					module: "mod3",
 					type: "fix",
+					description: "modification3",
+					pull_request: pr.url,
+				}),
+				new ChangeEntry({
+					module: "mod1",
+					type: "feature",
 					description: "modification1",
+					note: "with note",
 					pull_request: pr.url,
 				}),
 				new ChangeEntry({
@@ -210,13 +248,15 @@ describe("parsing change entries", function () {
 		{
 			title: "returns numbers as strings",
 			pr,
-			input: column([
-				//
-				module("11"),
-				type("fix"),
-				description("-55"),
-				note("42"),
-			]),
+			input: [
+				doc(
+					//
+					module("11"),
+					type("fix"),
+					description("-55"),
+					note("42"),
+				),
+			],
 			want: [
 				new ChangeEntry({
 					module: "11",
@@ -229,132 +269,28 @@ describe("parsing change entries", function () {
 		},
 
 		{
-			title: "returns fallback change for malformed docs",
+			title: "parses empty fields as-is",
 			pr,
-			input: column([
-				module("mod1"),
-				type("fix"),
-				description("modification1"),
-				delim,
-				kv("x", "y"),
-				delim,
-				module("mod2"),
-				type("fix"),
-				description("modification2"),
-			]),
+			input: ["x: y"],
 			want: [
 				new ChangeEntry({
-					module: "mod1",
-					type: "fix",
-					description: "modification1",
-					pull_request: pr.url,
-				}),
-
-				new ChangeEntry({
-					module: "UNKNOWN",
-					type: "unknown",
-					description: "Shmoo",
-					pull_request: pr.url,
-				}),
-				new ChangeEntry({
-					module: "mod2",
-					type: "fix",
-					description: "modification2",
+					module: "",
+					type: "",
+					description: "",
 					pull_request: pr.url,
 				}),
 			],
 		},
 
 		{
-			title: "returns fallback change for missing description",
+			title: "parses malformed YAML",
 			pr,
-			input: column([
-				//
-				module("mod1"),
-				type("fix"),
-			]),
+			input: ["mod: mod: mod:"],
 			want: [
 				new ChangeEntry({
-					module: "mod1",
-					type: "fix",
-					description: "Shmoo",
-					pull_request: pr.url,
-				}),
-			],
-		},
-
-		{
-			title: "substitutes unknown type with `unknown`",
-			pr,
-			input: column([
-				//
-				module("mod1"),
-				type("bigfix"),
-				description("pewpew"),
-			]),
-			want: [
-				new ChangeEntry({
-					module: "mod1",
-					type: "unknown",
-					description: "pewpew",
-					pull_request: pr.url,
-				}),
-			],
-		},
-
-		{
-			title: "returns fallback change for missing `module`",
-			pr,
-			input: column([
-				//
-				type("fix"),
-				description("pewpew"),
-			]),
-			want: [
-				new ChangeEntry({
-					module: "UNKNOWN",
-					type: "fix",
-					description: "pewpew",
-					pull_request: pr.url,
-				}),
-			],
-		},
-
-		{
-			title: "fills all passed inputs in order from Github JSON",
-			pr,
-			input: extractChanges(getTwoBlocksBodyFixture().input),
-			want: [
-				new ChangeEntry({
-					module: "cloud-provider-something",
-					type: "fix",
-					description: "inexistence was not acknowledged",
-					note: "restarts nothing",
-					pull_request: pr.url,
-				}),
-				new ChangeEntry({
-					module: "UNKNOWN",
-					type: "feature",
-					description: "no module hehehe",
-					pull_request: pr.url,
-				}),
-				new ChangeEntry({
-					module: "cloud-provider-something",
-					type: "unknown",
-					description: "error in type hehehe",
-					pull_request: pr.url,
-				}),
-				new ChangeEntry({
-					module: "cloud-provider-something",
-					type: "fix",
-					description: "Shmoo",
-					pull_request: pr.url,
-				}),
-				new ChangeEntry({
-					module: "cloud-provider-something",
-					type: "fix",
-					description: "better to be than no to be",
-					note: "from separate changes block",
+					module: "",
+					type: "",
+					description: "",
 					pull_request: pr.url,
 				}),
 			],
@@ -379,7 +315,7 @@ function getTwoBlocksBodyFixture() {
 	const changes1 = read(changeFile1)
 	const changes2 = read(changeFile2)
 
-	const expected = [changes1, changes2].join("\n---\n")
+	const expected = [changes1, changes2]
 
 	return { input, expected }
 }

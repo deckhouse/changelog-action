@@ -1,39 +1,19 @@
-import { formatYaml, formatMarkdown } from "../src/format"
-import { Change, ChangesByModule } from "../src/parse"
+import { formatMarkdown, formatYaml } from "../src/format"
+import { ChangeEntry } from "../src/parse"
 
-const changes: ChangesByModule = {
-	one: {
-		fixes: [new Change({ description: "d11", pull_request: "pr11" })],
-		features: [new Change({ description: "d12", pull_request: "pr12" })],
-		unknown: [new Change({ description: "d1u", pull_request: "pr1u" })],
-	},
-	two: {
-		fixes: [new Change({ description: "d21", pull_request: "pr21", note: "Big news" })],
-		features: [new Change({ description: "d22", pull_request: "pr22" })],
-		unknown: [new Change({ description: "d2u", pull_request: "pr2u" })],
-	},
-	UNKNOWN: {
-		fixes: [new Change({ description: "du1", pull_request: "pru1" })],
-		features: [new Change({ description: "du2", pull_request: "pru2" })],
-		unknown: [new Change({ description: "duu", pull_request: "pruu" })],
-	},
-}
+const changes: ChangeEntry[] = [
+	new ChangeEntry({ module: "yyy", type: "", description: "dm2", pull_request: "prm2" }),
+	new ChangeEntry({ module: "two", type: "fix", description: "d21", pull_request: "pr21", note: "x" }),
+	new ChangeEntry({ module: "one", type: "feature", description: "d12", pull_request: "pr12" }),
+	new ChangeEntry({ module: "two", type: "feature", description: "d22", pull_request: "pr22" }),
+	new ChangeEntry({ module: "one", type: "fix", description: "d11", pull_request: "pr11" }),
+	new ChangeEntry({ module: "xxx", type: "", description: "dm1", pull_request: "prm1" }),
+	new ChangeEntry({ module: "two", type: "fix", description: "d28", pull_request: "pr28" }),
+	new ChangeEntry({ module: "two", type: "fix", description: "d29", pull_request: "pr29" }),
+]
 
 describe("YAML", () => {
-	const expected = `UNKNOWN:
-  unknown:
-    - description: duu
-      pull_request: pruu
-  features:
-    - description: du2
-      pull_request: pru2
-  fixes:
-    - description: du1
-      pull_request: pru1
-one:
-  unknown:
-    - description: d1u
-      pull_request: pr1u
+	const expected = `one:
   features:
     - description: d12
       pull_request: pr12
@@ -41,16 +21,17 @@ one:
     - description: d11
       pull_request: pr11
 two:
-  unknown:
-    - description: d2u
-      pull_request: pr2u
   features:
     - description: d22
       pull_request: pr22
   fixes:
     - description: d21
-      note: Big news
+      note: x
       pull_request: pr21
+    - description: d28
+      pull_request: pr28
+    - description: d29
+      pull_request: pr29
 `
 	test("formats right", () => {
 		expect(formatYaml(changes)).toEqual(expected)
@@ -65,58 +46,51 @@ describe("Markdown", () => {
 	// is in place.
 	const expected = `## Changelog v3.44.555
 
-#### [UNKNOWN]
+#### [MALFORMED]
 
- - unknown
-     - duu
-         - [Pull request](pruu)
- - features
-     - du2
-         - [Pull request](pru2)
- - fixes
-     - du1
-         - [Pull request](pru1)
+ - [#prm1](prm1)
+ - [#prm2](prm2)
 
-#### [one]
+#### one
 
- - unknown
-     - d1u
-         - [Pull request](pr1u)
- - features
-     - d12
-         - [Pull request](pr12)
- - fixes
-     - d11
-         - [Pull request](pr11)
 
-#### [two]
+**features**
 
- - unknown
-     - d2u
-         - [Pull request](pr2u)
- - features
-     - d22
-         - [Pull request](pr22)
- - fixes
-     - d21
-         - [Pull request](pr21)
-         - **NOTE!** Big news
+ - d12 [#pr12](pr12)
+
+**fixes**
+
+ - d11 [#pr11](pr11)
+
+#### two
+
+
+**features**
+
+ - d22 [#pr22](pr22)
+
+**fixes**
+
+ - d21 [#pr21](pr21)
+    **NOTE!** x
+ - d28 [#pr28](pr28)
+ - d29 [#pr29](pr29)
 `
 	test("has milestone header as h2", () => {
 		const firstLine = md.split("\n")[0].trim()
 		expect(firstLine).toBe(`## Changelog v3.44.555`)
 	})
 
-	test("formats module name as h4 in square brackets", () => {
+	test("formats module name as h4", () => {
 		const subheaders = md
 			.split("\n")
 			.map((s) => s.trim())
 			.filter((s) => s.startsWith("###"))
 
-		expect(subheaders).toStrictEqual(["#### [UNKNOWN]", "#### [one]", "#### [two]"])
+		expect(subheaders).toStrictEqual(["#### [MALFORMED]", "#### one", "#### two"])
 	})
 
 	test("formats right", () => {
-		expect(md).toBe(expected)
+		expect(md).toStrictEqual(expected)
 	})
 })

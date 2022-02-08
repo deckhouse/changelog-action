@@ -1,5 +1,5 @@
-import { formatYaml, formatMarkdown } from "./format"
-import { PullRequest, collectChangelog } from "./parse"
+import { formatMarkdown, formatYaml } from "./format"
+import { collectChangelog, PullRequest } from "./parse"
 
 export interface Inputs {
 	token: string
@@ -20,7 +20,7 @@ export async function collectChanges(inputs: Inputs): Promise<Outputs> {
 		return out
 	}
 
-	// Process
+	// We assume all PRs have the same milestone
 	const milestone = pulls[0].milestone.title
 	const changes = collectChangelog(pulls)
 
