@@ -43,7 +43,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 			list = getTypeList("features")
 			break
 		default:
-			throw new Error("invalid type")
+			throw new Error("invalid type: " + change.type)
 	}
 
 	// add the change
@@ -58,8 +58,8 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	return acc
 }
 
-const MARKDOWN_HEADER_TAG = "h2"
-const MARKDOWN_MODULE_TAG = "h4"
+const MARKDOWN_HEADER_TAG = "h1"
+const MARKDOWN_TYPE_TAG = "h2"
 const MARKDOWN_NOTE_PREFIX = "**NOTE!**"
 
 /**
@@ -71,43 +71,35 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	const body: DataObject[] = [
 		{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }, // title
 		...formatMalformedEntries(changes),
-		...formatEntriesByModuleAndType(changes),
+		...formatFeatureEntries(changes),
+		...formatFixEntries(changes),
 	]
 
 	const md = json2md(body)
 
-	// Workaround to omit excessive empty lines
-	// https://github.com/IonicaBizau/json2md/issues/53
-	return fixLineBreaks(md)
+	return md
 }
 
-function fixLineBreaks(md: string): string {
-	const fixed = md
-		.split("\n")
-		// remove empty lines
-		.filter((s) => s.trim() != "")
-		// wrap subheaders with empty lines
-		.map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
-		.map((s) => (s.startsWith("**") && s.endsWith("**") ? `\n${s}\n` : s))
-		.join("\n")
-
-	// add empty line to the end
-	return fixed + "\n"
+function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {
+	return formatEntries(changes, "feature", "Features")
 }
 
-function formatEntriesByModuleAndType(changes: ChangeEntry[]): DataObject[] {
+function formatFixEntries(changes: ChangeEntry[]): DataObject[] {
+	return formatEntries(changes, "fix", "Fixes")
+}
+
+function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: string): DataObject[] {
+	const filtered = changes
+		.filter((c) => c.valid() && c.type == changeType) //
+		.sort((a, b) => (a.module < b.module ? -1 : 1)) // sort by module
+
 	const body: DataObject[] = []
-
-	const validEntries = changes
-		.filter((c) => c.valid()) //
-		.reduce(groupByModuleAndType, {})
-
-	// Collect valid change entries; sort by module name
-	const pairs = Object.entries(validEntries).sort((a, b) => (a[0] < b[0] ? -1 : 1))
-	for (const [modName, changes] of pairs) {
-		body.push({ [MARKDOWN_MODULE_TAG]: modName })
-		body.push(...moduleChangesMarkdown(changes))
+	if (filtered.length === 0) {
+		return body
 	}
+
+	body.push({ [MARKDOWN_TYPE_TAG]: subHeader })
+	body.push({ ul: filtered.map(changeMardown) })
 
 	return body
 }
@@ -116,17 +108,18 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 	const body: DataObject[] = []
 
 	// Collect malformed on the top for easier fixing
-	const invalidEntries = changes
+	const malformed = changes
 		.filter((c) => !c.valid())
-		.sort((a, b) => (a.pull_request < b.pull_request ? -1 : 1))
+		.map((c) => parsePullRequestNumberFromURL(c.pull_request))
+		.map((x) => parseInt(x))
+		.sort()
 
-	if (invalidEntries.length > 0) {
-		body.push([{ [MARKDOWN_MODULE_TAG]: "[MALFORMED]" }])
+	if (malformed.length > 0) {
+		body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }])
 
 		const ul: string[] = []
-		for (const c of invalidEntries) {
-			const prNum = parsePullRequestNumberFromURL(c.pull_request)
-			ul.push(`[#${prNum}](${c.pull_request})`)
+		for (const num of malformed) {
+			ul.push(`#${num}`)
 		}
 		body.push({ ul: ul.sort() })
 	}
@@ -134,28 +127,14 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 	return body
 }
 
-function moduleChangesMarkdown(moduleChanges: ModuleChanges): DataObject[] {
-	const md: DataObject[] = []
-	if (moduleChanges.features) {
-		md.push({ p: "**features**" })
-		md.push({ ul: moduleChanges.features.flatMap(changeMardown) })
-	}
-	if (moduleChanges.fixes) {
-		md.push({ p: "**fixes**" })
-		md.push({ ul: moduleChanges.fixes.flatMap(changeMardown) })
-	}
-	// console.log("mc", JSON.stringify(md, null, 2))
-	return md
-}
-
 function parsePullRequestNumberFromURL(prUrl: string): string {
 	const parts = prUrl.split("/")
 	return parts[parts.length - 1]
 }
 
-function changeMardown(c: Change): string {
-	const pr = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`${c.description} [#${pr}](${pr})`]
+function changeMardown(c: ChangeEntry): string {
+	const prNum = parsePullRequestNumberFromURL(c.pull_request)
+	const lines = [`**[${c.module}]** ${c.description} [#${prNum}](${c.pull_request})`]
 
 	if (c.note) {
 		lines.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`)
