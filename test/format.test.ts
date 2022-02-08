@@ -44,50 +44,38 @@ describe("Markdown", () => {
 
 	// This markdown formatting is implementation-dependant. The test only check that everything
 	// is in place.
-	const expected = `## Changelog v3.44.555
+	const expected = `# Changelog v3.44.555
 
-#### [MALFORMED]
+## [MALFORMED]
 
  - [#prm1](prm1)
  - [#prm2](prm2)
 
-#### one
+## Features
 
+ - **[one]** d12 [#pr12](pr12)
+ - **[two]** d22 [#pr22](pr22)
 
-**features**
+## Fixes
 
- - d12 [#pr12](pr12)
-
-**fixes**
-
- - d11 [#pr11](pr11)
-
-#### two
-
-
-**features**
-
- - d22 [#pr22](pr22)
-
-**fixes**
-
- - d21 [#pr21](pr21)
+ - **[one]** d11 [#pr11](pr11)
+ - **[two]** d21 [#pr21](pr21)
     **NOTE!** x
- - d28 [#pr28](pr28)
- - d29 [#pr29](pr29)
+ - **[two]** d28 [#pr28](pr28)
+ - **[two]** d29 [#pr29](pr29)
 `
-	test("has milestone header as h2", () => {
+	test("has milestone title as h1", () => {
 		const firstLine = md.split("\n")[0].trim()
-		expect(firstLine).toBe(`## Changelog v3.44.555`)
+		expect(firstLine).toBe(`# Changelog v3.44.555`)
 	})
 
-	test("formats module name as h4", () => {
+	test("formats type name as h2", () => {
 		const subheaders = md
 			.split("\n")
 			.map((s) => s.trim())
-			.filter((s) => s.startsWith("###"))
+			.filter((s) => s.startsWith("## "))
 
-		expect(subheaders).toStrictEqual(["#### [MALFORMED]", "#### one", "#### two"])
+		expect(subheaders).toStrictEqual(["## [MALFORMED]", "## Features", "## Fixes"])
 	})
 
 	test("formats right", () => {

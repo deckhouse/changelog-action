@@ -58,8 +58,8 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	return acc
 }
 
-const MARKDOWN_HEADER_TAG = "h2"
-const MARKDOWN_MODULE_TAG = "h4"
+const MARKDOWN_HEADER_TAG = "h1"
+const MARKDOWN_TYPE_TAG = "h2"
 const MARKDOWN_NOTE_PREFIX = "**NOTE!**"
 
 /**
@@ -71,43 +71,38 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	const body: DataObject[] = [
 		{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }, // title
 		...formatMalformedEntries(changes),
-		...formatEntriesByModuleAndType(changes),
+		...formatFeatureEntries(changes),
+		...formatFixEntries(changes),
 	]
 
 	const md = json2md(body)
 
 	// Workaround to omit excessive empty lines
 	// https://github.com/IonicaBizau/json2md/issues/53
-	return fixLineBreaks(md)
+	// return fixLineBreaks(md)
+	return md
 }
 
-function fixLineBreaks(md: string): string {
-	const fixed = md
-		.split("\n")
-		// remove empty lines
-		.filter((s) => s.trim() != "")
-		// wrap subheaders with empty lines
-		.map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
-		.map((s) => (s.startsWith("**") && s.endsWith("**") ? `\n${s}\n` : s))
-		.join("\n")
-
-	// add empty line to the end
-	return fixed + "\n"
+function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {
+	return formatEntries(changes, "feature", "Features")
 }
 
-function formatEntriesByModuleAndType(changes: ChangeEntry[]): DataObject[] {
+function formatFixEntries(changes: ChangeEntry[]): DataObject[] {
+	return formatEntries(changes, "fix", "Fixes")
+}
+
+function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: string): DataObject[] {
+	const filtered = changes
+		.filter((c) => c.valid() && c.type == changeType) //
+		.sort((a, b) => (a.module < b.module ? -1 : 1)) // sort by module
+
 	const body: DataObject[] = []
-
-	const validEntries = changes
-		.filter((c) => c.valid()) //
-		.reduce(groupByModuleAndType, {})
-
-	// Collect valid change entries; sort by module name
-	const pairs = Object.entries(validEntries).sort((a, b) => (a[0] < b[0] ? -1 : 1))
-	for (const [modName, changes] of pairs) {
-		body.push({ [MARKDOWN_MODULE_TAG]: modName })
-		body.push(...moduleChangesMarkdown(changes))
+	if (filtered.length === 0) {
+		return body
 	}
+
+	body.push({ [MARKDOWN_TYPE_TAG]: subHeader })
+	body.push({ ul: filtered.map(changeMardown) })
 
 	return body
 }
@@ -121,7 +116,7 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 		.sort((a, b) => (a.pull_request < b.pull_request ? -1 : 1))
 
 	if (invalidEntries.length > 0) {
-		body.push([{ [MARKDOWN_MODULE_TAG]: "[MALFORMED]" }])
+		body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }])
 
 		const ul: string[] = []
 		for (const c of invalidEntries) {
@@ -162,4 +157,18 @@ function changeMardown(c: Change): string {
 	}
 
 	return lines.join("\n")
+}
+
+function fixLineBreaks(md: string): string {
+	const fixed = md
+		.split("\n")
+		// remove empty lines
+		.filter((s) => s.trim() != "")
+		// wrap subheaders with empty lines
+		.map((s) => (s.startsWith("###") ? `\n${s}\n` : s))
+		.map((s) => (s.startsWith("**") && s.endsWith("**") ? `\n${s}\n` : s))
+		.join("\n")
+
+	// add empty line to the end
+	return fixed + "\n"
 }
