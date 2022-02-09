@@ -268,7 +268,12 @@ function parseChangeEntries(pr, changesYAMLs) {
     const entries = [];
     for (const changeYAML of changesYAMLs) {
         try {
-            const doc = yaml.load(changeYAML);
+            const doc = yaml.load(changeYAML, { schema: yaml.FAILSAFE_SCHEMA });
+            if (!doc) {
+                const change = createEmptyChange(pr);
+                entries.push(change);
+                continue;
+            }
             const change = parseChange(doc, pr);
             entries.push(change);
         }
