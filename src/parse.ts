@@ -47,7 +47,12 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 	const entries = [] as ChangeEntry[]
 	for (const changeYAML of changesYAMLs) {
 		try {
-			const doc = yaml.load(changeYAML)
+			const doc = yaml.load(changeYAML, { schema: yaml.FAILSAFE_SCHEMA })
+			if (!doc) {
+				const change = createEmptyChange(pr)
+				entries.push(change)
+				continue
+			}
 			const change = parseChange(doc as Partial<ChangeEntryOpts>, pr)
 			entries.push(change)
 		} catch (e) {
