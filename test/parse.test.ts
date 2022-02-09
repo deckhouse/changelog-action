@@ -295,6 +295,20 @@ describe("parsing change entries", function () {
 				}),
 			],
 		},
+
+		{
+			title: "parses zero YAML",
+			pr,
+			input: [""],
+			want: [
+				new ChangeEntry({
+					module: "",
+					type: "",
+					description: "",
+					pull_request: pr.url,
+				}),
+			],
+		},
 	]
 
 	test.each(cases)("$title", function (c) {
