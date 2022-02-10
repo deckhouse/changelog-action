@@ -3,54 +3,54 @@ import { ChangeEntry } from "../src/parse"
 
 const changes: ChangeEntry[] = [
 	new ChangeEntry({
-		module: "yyy",
+		section: "yyy",
 		type: "",
-		description: "dm2",
+		summary: "dm2",
 		pull_request: "https://github.com/ow/re/533",
 	}),
 	new ChangeEntry({
-		module: "cloud-provider-yandex",
+		section: "cloud-provider-yandex",
 		type: "fix",
-		description: "d21",
+		summary: "d21",
 		pull_request: "https://github.com/ow/re/210",
-		note: `Grafana will be restarted.
+		impact: `Grafana will be restarted.
 Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
 Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.`,
 	}),
 	new ChangeEntry({
-		module: "chrony",
+		section: "chrony",
 		type: "feature",
-		description: "d12",
+		summary: "d12",
 		pull_request: "https://github.com/ow/re/120",
 	}),
 	new ChangeEntry({
-		module: "cloud-provider-yandex",
+		section: "cloud-provider-yandex",
 		type: "feature",
-		description: "d22",
+		summary: "d22",
 		pull_request: "https://github.com/ow/re/220",
 	}),
 	new ChangeEntry({
-		module: "chrony",
+		section: "chrony",
 		type: "fix",
-		description: "d11",
+		summary: "d11",
 		pull_request: "https://github.com/ow/re/110",
 	}),
 	new ChangeEntry({
-		module: "xxx",
+		section: "xxx",
 		type: "",
-		description: "dm1",
+		summary: "dm1",
 		pull_request: "https://github.com/ow/re/510",
 	}),
 	new ChangeEntry({
-		module: "kube-dns",
+		section: "kube-dns",
 		type: "fix",
-		description: "d48",
+		summary: "d48",
 		pull_request: "https://github.com/ow/re/480",
 	}),
 	new ChangeEntry({
-		module: "cloud-provider-yandex",
+		section: "cloud-provider-yandex",
 		type: "fix",
-		description: "d29",
+		summary: "d29",
 		pull_request: "https://github.com/ow/re/290",
 	}),
 ]

@@ -21,7 +21,8 @@ function getYAMLSorter() {
 }
 
 /**
- * @function formatYaml returns changes formatted in YAML with grouping by module, type, and omiiting invalid entries
+ * @function formatYaml returns changes formatted in YAML with grouping by module, type, and
+ * omitting invalid entries
  * @param changes by module
  * @returns
  */
@@ -43,8 +44,8 @@ export function formatYaml(changes: ChangeEntry[]): string {
 
 function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	// ensure module key:   { "module": {} }
-	acc[change.module] = acc[change.module] || ({} as ModuleChanges)
-	const mc = acc[change.module]
+	acc[change.section] = acc[change.section] || ({} as ModuleChanges)
+	const mc = acc[change.section]
 	const getTypeList = (k: string) => {
 		mc[k] = mc[k] || []
 		return mc[k]
@@ -67,9 +68,9 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	// add the change
 	list.push(
 		new Change({
-			description: change.summary,
+			summary: change.summary,
 			pull_request: change.pull_request,
-			note: change.impact,
+			impact: change.impact,
 		}),
 	)
 
@@ -106,7 +107,7 @@ function formatFixEntries(changes: ChangeEntry[]): DataObject[] {
 function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: string): DataObject[] {
 	const filtered = changes
 		.filter((c) => c.valid() && c.type == changeType) //
-		.sort((a, b) => (a.module < b.module ? -1 : 1)) // sort by module
+		.sort((a, b) => (a.section < b.section ? -1 : 1)) // sort by module
 
 	const body: DataObject[] = []
 	if (filtered.length === 0) {
@@ -149,7 +150,7 @@ function parsePullRequestNumberFromURL(prUrl: string): string {
 
 function changeMardown(c: ChangeEntry): string {
 	const prNum = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`**[${c.module}]** ${c.summary} [#${prNum}](${c.pull_request})`]
+	const lines = [`**[${c.section}]** ${c.summary} [#${prNum}](${c.pull_request})`]
 
 	if (c.impact) lines.push(c.impact)
 

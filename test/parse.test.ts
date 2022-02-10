@@ -122,9 +122,9 @@ describe("parsing change entries", function () {
 			],
 			want: [
 				new ChangeEntry({
-					module: "mod",
+					section: "mod",
 					type: "fix",
-					description: "something was done",
+					summary: "something was done",
 					pull_request: pr.url,
 				}),
 			],
@@ -151,9 +151,9 @@ describe("parsing change entries", function () {
 			],
 			want: [
 				new ChangeEntry({
-					module: "multiline",
+					section: "multiline",
 					type: "fix",
-					description: "something was done:\n\nparses input with colons in values",
+					summary: "something was done:\n\nparses input with colons in values",
 					pull_request: pr.url,
 				}),
 			],
@@ -173,10 +173,10 @@ describe("parsing change entries", function () {
 			],
 			want: [
 				new ChangeEntry({
-					module: "modname",
+					section: "modname",
 					type: "fix",
-					description: "something was done",
-					note: "parses note field",
+					summary: "something was done",
+					impact: "parses note field",
 					pull_request: pr.url,
 				}),
 			],
@@ -200,10 +200,10 @@ describe("parsing change entries", function () {
 			],
 			want: [
 				new ChangeEntry({
-					module: "modname",
+					section: "modname",
 					type: "fix",
-					description: "something was done",
-					note: "we xpect some outage",
+					summary: "something was done",
+					impact: "we xpect some outage",
 					pull_request: pr.url,
 				}),
 			],
@@ -235,22 +235,22 @@ describe("parsing change entries", function () {
 			],
 			want: [
 				new ChangeEntry({
-					module: "mod3",
+					section: "mod3",
 					type: "fix",
-					description: "modification3",
+					summary: "modification3",
 					pull_request: pr.url,
 				}),
 				new ChangeEntry({
-					module: "mod1",
+					section: "mod1",
 					type: "feature",
-					description: "modification1",
-					note: "with note",
+					summary: "modification1",
+					impact: "with note",
 					pull_request: pr.url,
 				}),
 				new ChangeEntry({
-					module: "mod2",
+					section: "mod2",
 					type: "fix",
-					description: "modification2",
+					summary: "modification2",
 					pull_request: pr.url,
 				}),
 			],
@@ -269,10 +269,10 @@ describe("parsing change entries", function () {
 			],
 			want: [
 				new ChangeEntry({
-					module: "11",
+					section: "11",
 					type: "fix",
-					description: "-55",
-					note: "42",
+					summary: "-55",
+					impact: "42",
 					pull_request: pr.url,
 				}),
 			],
@@ -284,9 +284,9 @@ describe("parsing change entries", function () {
 			input: ["x: y"],
 			want: [
 				new ChangeEntry({
-					module: "",
+					section: "",
 					type: "",
-					description: "",
+					summary: "",
 					pull_request: pr.url,
 				}),
 			],
@@ -298,9 +298,9 @@ describe("parsing change entries", function () {
 			input: ["mod: mod: mod:"],
 			want: [
 				new ChangeEntry({
-					module: "",
+					section: "",
 					type: "",
-					description: "",
+					summary: "",
 					pull_request: pr.url,
 				}),
 			],
@@ -312,9 +312,9 @@ describe("parsing change entries", function () {
 			input: [""],
 			want: [
 				new ChangeEntry({
-					module: "",
+					section: "",
 					type: "",
-					description: "",
+					summary: "",
 					pull_request: pr.url,
 				}),
 			],

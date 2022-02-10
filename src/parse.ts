@@ -84,9 +84,9 @@ function sanitizeString(x: unknown): string {
 
 function createEmptyChange(pr: PullRequest): ChangeEntry {
 	return new ChangeEntry({
-		module: "",
+		section: "",
 		type: "",
-		description: "",
+		summary: "",
 		pull_request: pr.url,
 	})
 }
@@ -125,10 +125,10 @@ export class Change {
 	impact?: string
 
 	constructor(o: ChangeOpts) {
-		this.summary = o.description
+		this.summary = o.summary
 		this.pull_request = o.pull_request
-		if (o.note) {
-			this.impact = o.note
+		if (o.impact) {
+			this.impact = o.impact
 		}
 	}
 
@@ -138,45 +138,45 @@ export class Change {
 	}
 }
 interface ChangeOpts {
-	description: string
+	summary: string
 	pull_request: string
-	note?: string
+	impact?: string
 }
 
 /**
  *  ChangeEntry is the change we expect to find in pull request
  */
 export class ChangeEntry extends Change {
-	module = ""
+	section = ""
 	type = ""
 
 	constructor(o: ChangeEntryOpts) {
 		super(o)
-		this.module = o.module
+		this.section = o.section
 		this.type = o.type
 	}
 
 	// All required fields should be filled
 	valid(): boolean {
-		return !!this.module && knownTypes.has(this.type) && super.valid()
+		return !!this.section && knownTypes.has(this.type) && super.valid()
 	}
 }
 interface ChangeEntryOpts extends ChangeOpts {
-	module: string
+	section: string
 	type: string
 }
 
 interface ChangeInput extends ChangeInputVersion1, ChangeInputVersion2 {}
 interface ChangeInputVersion1 extends ChangeOpts {
-	type: string
 	module: string
+	type: string
 	description: string
 	note?: string
 }
 
 interface ChangeInputVersion2 extends ChangeOpts {
-	type: string
 	section: string
+	type: string
 	summary: string
 	impact?: string
 }
@@ -205,15 +205,15 @@ interface ChangeInputVersion2 extends ChangeOpts {
  */
 function parseInput(doc: ChangeInput, pr: PullRequest): ChangeEntryOpts {
 	const opts: ChangeEntryOpts = {
-		module: sanitizeString(doc.module) || sanitizeString(doc.section) || "",
+		section: sanitizeString(doc.module) || sanitizeString(doc.section) || "",
 		type: sanitizeString(doc.type) || "",
-		description: sanitizeString(doc.description) || sanitizeString(doc.summary) || "",
+		summary: sanitizeString(doc.description) || sanitizeString(doc.summary) || "",
 		pull_request: pr.url,
 	}
 
-	const note = sanitizeString(doc.note) || sanitizeString(doc.impact)
-	if (note) {
-		opts.note = note
+	const impact = sanitizeString(doc.note) || sanitizeString(doc.impact)
+	if (impact) {
+		opts.impact = impact
 	}
 
 	return opts
