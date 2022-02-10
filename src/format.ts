@@ -2,14 +2,33 @@ import * as yaml from "js-yaml"
 import json2md, { DataObject } from "json2md"
 import { Change, ChangeEntry, ChangesByModule, ModuleChanges } from "./parse"
 
+function getYAMLSorter() {
+	// don't pollute the scope with globals
+	const yamlFieldSorter = {
+		features: 1,
+		fixes: 2,
+
+		summary: 1,
+		pull_request: 2,
+		impact: 3,
+	}
+	return function sort(a: string, b: string): number {
+		if (a in yamlFieldSorter && b in yamlFieldSorter) {
+			return yamlFieldSorter[a] - yamlFieldSorter[b]
+		}
+		return a < b ? -1 : 1
+	}
+}
+
 /**
- * @function formatYaml returns changes formatted in YAML with grouping by module, type, and omiiting invalid entries
+ * @function formatYaml returns changes formatted in YAML with grouping by module, type, and
+ * omitting invalid entries
  * @param changes by module
  * @returns
  */
 export function formatYaml(changes: ChangeEntry[]): string {
 	const opts = {
-		sortKeys: true,
+		sortKeys: getYAMLSorter(),
 		lineWidth: 100,
 		forceQuotes: false,
 		quotingType: "'",
@@ -25,8 +44,8 @@ export function formatYaml(changes: ChangeEntry[]): string {
 
 function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	// ensure module key:   { "module": {} }
-	acc[change.module] = acc[change.module] || ({} as ModuleChanges)
-	const mc = acc[change.module]
+	acc[change.section] = acc[change.section] || ({} as ModuleChanges)
+	const mc = acc[change.section]
 	const getTypeList = (k: string) => {
 		mc[k] = mc[k] || []
 		return mc[k]
@@ -34,7 +53,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 	// ensure module change list
 	// e.g. for fixes: { "module": { "fixes": [] } }
-	let list
+	let list: Change[]
 	switch (change.type) {
 		case "fix":
 			list = getTypeList("fixes")
@@ -49,9 +68,9 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	// add the change
 	list.push(
 		new Change({
-			description: change.description,
+			summary: change.summary,
 			pull_request: change.pull_request,
-			note: change.note,
+			impact: change.impact,
 		}),
 	)
 
@@ -60,7 +79,6 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 const MARKDOWN_HEADER_TAG = "h1"
 const MARKDOWN_TYPE_TAG = "h2"
-const MARKDOWN_NOTE_PREFIX = "**NOTE!**"
 
 /**
  * @function formatMarkdown returns changes formatted in markdown
@@ -75,9 +93,7 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 		...formatFixEntries(changes),
 	]
 
-	const md = json2md(body)
-
-	return md
+	return json2md(body)
 }
 
 function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {
@@ -91,7 +107,7 @@ function formatFixEntries(changes: ChangeEntry[]): DataObject[] {
 function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: string): DataObject[] {
 	const filtered = changes
 		.filter((c) => c.valid() && c.type == changeType) //
-		.sort((a, b) => (a.module < b.module ? -1 : 1)) // sort by module
+		.sort((a, b) => (a.section < b.section ? -1 : 1)) // sort by module
 
 	const body: DataObject[] = []
 	if (filtered.length === 0) {
@@ -134,11 +150,9 @@ function parsePullRequestNumberFromURL(prUrl: string): string {
 
 function changeMardown(c: ChangeEntry): string {
 	const prNum = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`**[${c.module}]** ${c.description} [#${prNum}](${c.pull_request})`]
+	const lines = [`**[${c.section}]** ${c.summary} [#${prNum}](${c.pull_request})`]
 
-	if (c.note) {
-		lines.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`)
-	}
+	if (c.impact) lines.push(c.impact)
 
 	return lines.join("\n")
 }

@@ -138,14 +138,14 @@ The action generates changelog in YAML and markdown.
  - features
      - Node restarts can be avoided by pinning a checksum to a node group in config values.
          - [Pull request](https://github.com/owner/repo/pull/1)
-         - **NOTE!** Recommended to use as a last resort.
+         - Recommended to use as a last resort.
 
 #### [node-manager]
 
  - fixes
      - Nodes with outdated manifests are no longer provisioned on *InstanceClass update.
          - [Pull request](https://github.com/owner/repo/pull/1)
-         - **NOTE!** Expect nodes of "Cloud" type to restart.
+         - Expect nodes of "Cloud" type to restart.
             Node checksum calculation is fixed as well as a race condition during
             the machines (MCM) rendering which caused outdated nodes to spawn.
 
@@ -161,14 +161,14 @@ The action generates changelog in YAML and markdown.
  - features
      - Node restarts can be avoided by pinning a checksum to a node group in config values.
          - [Pull request](https://github.com/owner/repo/pull/1)
-         - **NOTE!** Recommended to use as a last resort.
+         - Recommended to use as a last resort.
 
 #### [node-manager]
 
  - fixes
      - Nodes with outdated manifests are no longer provisioned on *InstanceClass update.
          - [Pull request](https://github.com/owner/repo/pull/1)
-         - **NOTE!** Expect nodes of "Cloud" type to restart.
+         - Expect nodes of "Cloud" type to restart.
             Node checksum calculation is fixed as well as a race condition during
             the machines (MCM) rendering which caused outdated nodes to spawn.
 

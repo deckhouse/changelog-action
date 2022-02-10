@@ -53,7 +53,8 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 				entries.push(change)
 				continue
 			}
-			const change = parseChange(doc as Partial<ChangeEntryOpts>, pr)
+			const opts = parseInput(doc as ChangeInput, pr)
+			const change = new ChangeEntry(opts)
 			entries.push(change)
 		} catch (e) {
 			if (!(e instanceof yaml.YAMLException)) {
@@ -67,33 +68,6 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 }
 
 const knownTypes = new Set(["fix", "feature"])
-
-/**
- *
- * doc is an object with YAML doc, e.g.
- *
- * {
- *   "module": "module3",
- *   "type": "fix",
- *   "description": "what was fixed in 151",
- *   "note": "Network flap is expected, but no longer than 10 seconds",
- * }
- */
-function parseChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry {
-	const opts: ChangeEntryOpts = {
-		module: sanitizeString(doc.module) ?? "",
-		type: sanitizeString(doc.type) ?? "",
-		description: sanitizeString(doc.description) ?? "",
-		pull_request: pr.url,
-	}
-
-	const note = sanitizeString(doc.note)
-	if (note) {
-		opts.note = note
-	}
-
-	return new ChangeEntry(opts)
-}
 
 function sanitizeString(x: unknown): string {
 	if (typeof x === "string") {
@@ -110,9 +84,9 @@ function sanitizeString(x: unknown): string {
 
 function createEmptyChange(pr: PullRequest): ChangeEntry {
 	return new ChangeEntry({
-		module: "",
+		section: "",
 		type: "",
-		description: "",
+		summary: "",
 		pull_request: pr.url,
 	})
 }
@@ -136,11 +110,8 @@ export function extractChanges(body: string): string[] {
 
 	const parsed = lexer.lex(body)
 	const changeBlocks = parsed
-		.filter((t: marked.Token): t is marked.Tokens.Code => t.type == "code" && t.lang == "changes")
-		.map((t: marked.Tokens.Code) => t.text)
-
-	// console.log("PARSED", parsed)
-	// console.log("CHANGES/", changeBlocks)
+		.filter((t): t is marked.Tokens.Code => t.type == "code" && t.lang == "changes")
+		.map((t) => t.text)
 
 	return changeBlocks
 }
@@ -149,48 +120,101 @@ export function extractChanges(body: string): string[] {
  *  Change is the change entry to be included in changelog
  */
 export class Change {
-	description = ""
+	summary = ""
 	pull_request = ""
-	note?: string
+	impact?: string
 
 	constructor(o: ChangeOpts) {
-		this.description = o.description
+		this.summary = o.summary
 		this.pull_request = o.pull_request
-		if (o.note) {
-			this.note = o.note
+		if (o.impact) {
+			this.impact = o.impact
 		}
 	}
 
 	// All required fields should be filled
 	valid(): boolean {
-		return !!this.description && !!this.pull_request
+		return !!this.summary && !!this.pull_request
 	}
 }
 interface ChangeOpts {
-	description: string
+	summary: string
 	pull_request: string
-	note?: string
+	impact?: string
 }
 
 /**
  *  ChangeEntry is the change we expect to find in pull request
  */
 export class ChangeEntry extends Change {
-	module = ""
+	section = ""
 	type = ""
 
 	constructor(o: ChangeEntryOpts) {
 		super(o)
-		this.module = o.module
+		this.section = o.section
 		this.type = o.type
 	}
 
 	// All required fields should be filled
 	valid(): boolean {
-		return !!this.module && knownTypes.has(this.type) && super.valid()
+		return !!this.section && knownTypes.has(this.type) && super.valid()
 	}
 }
 interface ChangeEntryOpts extends ChangeOpts {
+	section: string
+	type: string
+}
+
+interface ChangeInput extends ChangeInputVersion1, ChangeInputVersion2 {}
+interface ChangeInputVersion1 extends ChangeOpts {
 	module: string
 	type: string
+	description: string
+	note?: string
+}
+
+interface ChangeInputVersion2 extends ChangeOpts {
+	section: string
+	type: string
+	summary: string
+	impact?: string
+}
+
+/**
+ *
+ * doc is an object made from 'changes' YAML doc, e.g.
+ *
+ * // deprecated version
+ * {
+ *   "module": "module3",
+ *   "type": "fix",
+ *   "description": "what was fixed in 151",
+ *   "note": "Network flap is expected, but no longer than 10 seconds",
+ * }
+ *
+ * OR
+ *
+ * // modern version
+ * {
+ *   "section": "module3",
+ *   "type": "fix",
+ *   "summary": "what was fixed in 151",
+ *   "impact": "Network flap is expected, but no longer than 10 seconds",
+ * }
+ */
+function parseInput(doc: ChangeInput, pr: PullRequest): ChangeEntryOpts {
+	const opts: ChangeEntryOpts = {
+		section: sanitizeString(doc.module) || sanitizeString(doc.section) || "",
+		type: sanitizeString(doc.type) || "",
+		summary: sanitizeString(doc.description) || sanitizeString(doc.summary) || "",
+		pull_request: pr.url,
+	}
+
+	const impact = sanitizeString(doc.note) || sanitizeString(doc.impact)
+	if (impact) {
+		opts.impact = impact
+	}
+
+	return opts
 }

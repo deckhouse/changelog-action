@@ -12,7 +12,7 @@ export interface Outputs {
 }
 
 // This function expects an array of pull requests belonging to single milestone
-export async function collectChanges(inputs: Inputs): Promise<Outputs> {
+export function collectChanges(inputs: Inputs): Outputs {
 	const { pulls } = inputs
 	const out = { yaml: "", markdown: "" }
 
