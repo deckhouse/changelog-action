@@ -2,6 +2,24 @@ import * as yaml from "js-yaml"
 import json2md, { DataObject } from "json2md"
 import { Change, ChangeEntry, ChangesByModule, ModuleChanges } from "./parse"
 
+function getYAMLSorter() {
+	// don't pollute the scope with globals
+	const yamlFieldSorter = {
+		features: 1,
+		fixes: 2,
+
+		summary: 1,
+		pull_request: 2,
+		impact: 3,
+	}
+	return function sort(a: string, b: string): number {
+		if (a in yamlFieldSorter && b in yamlFieldSorter) {
+			return yamlFieldSorter[a] - yamlFieldSorter[b]
+		}
+		return a < b ? -1 : 1
+	}
+}
+
 /**
  * @function formatYaml returns changes formatted in YAML with grouping by module, type, and omiiting invalid entries
  * @param changes by module
@@ -9,7 +27,7 @@ import { Change, ChangeEntry, ChangesByModule, ModuleChanges } from "./parse"
  */
 export function formatYaml(changes: ChangeEntry[]): string {
 	const opts = {
-		sortKeys: true,
+		sortKeys: getYAMLSorter(),
 		lineWidth: 100,
 		forceQuotes: false,
 		quotingType: "'",
@@ -49,9 +67,9 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	// add the change
 	list.push(
 		new Change({
-			description: change.description,
+			description: change.summary,
 			pull_request: change.pull_request,
-			note: change.note,
+			note: change.impact,
 		}),
 	)
 
@@ -131,9 +149,9 @@ function parsePullRequestNumberFromURL(prUrl: string): string {
 
 function changeMardown(c: ChangeEntry): string {
 	const prNum = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`**[${c.module}]** ${c.description} [#${prNum}](${c.pull_request})`]
+	const lines = [`**[${c.module}]** ${c.summary} [#${prNum}](${c.pull_request})`]
 
-	if (c.note) lines.push(c.note)
+	if (c.impact) lines.push(c.impact)
 
 	return lines.join("\n")
 }

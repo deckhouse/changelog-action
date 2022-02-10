@@ -58,18 +58,19 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 describe("YAML", () => {
 	const expected = `chrony:
   features:
-    - description: d12
+    - summary: d12
       pull_request: https://github.com/ow/re/120
   fixes:
-    - description: d11
+    - summary: d11
       pull_request: https://github.com/ow/re/110
 cloud-provider-yandex:
   features:
-    - description: d22
+    - summary: d22
       pull_request: https://github.com/ow/re/220
   fixes:
-    - description: d21
-      note: >-
+    - summary: d21
+      pull_request: https://github.com/ow/re/210
+      impact: >-
         Grafana will be restarted.
 
         Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached),
@@ -79,12 +80,11 @@ cloud-provider-yandex:
         Provisioning datasources from secret instead configmap. Deckhouse datasources need client
         certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while
         terminating.
-      pull_request: https://github.com/ow/re/210
-    - description: d29
+    - summary: d29
       pull_request: https://github.com/ow/re/290
 kube-dns:
   fixes:
-    - description: d48
+    - summary: d48
       pull_request: https://github.com/ow/re/480
 `
 	test("formats right", () => {

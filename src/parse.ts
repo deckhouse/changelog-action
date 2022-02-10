@@ -120,21 +120,21 @@ export function extractChanges(body: string): string[] {
  *  Change is the change entry to be included in changelog
  */
 export class Change {
-	description = ""
+	summary = ""
 	pull_request = ""
-	note?: string
+	impact?: string
 
 	constructor(o: ChangeOpts) {
-		this.description = o.description
+		this.summary = o.description
 		this.pull_request = o.pull_request
 		if (o.note) {
-			this.note = o.note
+			this.impact = o.note
 		}
 	}
 
 	// All required fields should be filled
 	valid(): boolean {
-		return !!this.description && !!this.pull_request
+		return !!this.summary && !!this.pull_request
 	}
 }
 interface ChangeOpts {
