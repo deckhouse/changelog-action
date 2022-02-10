@@ -1,5 +1,6 @@
 import * as yaml from "js-yaml"
 import { marked } from "marked"
+import { hasUncaughtExceptionCaptureCallback } from "process"
 
 export interface PullRequest {
 	state: string
@@ -67,7 +68,13 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 	return entries
 }
 
-const knownTypes = new Set(["fix", "feature"])
+const TYPE_FIX = "fix"
+const TYPE_FEATURE = "feature"
+const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE])
+
+const LEVEL_HIGH = "high"
+const LEVEL_LOW = "low"
+const knownLevels = new Set([LEVEL_LOW, LEVEL_HIGH])
 
 function sanitizeString(x: unknown): string {
 	if (typeof x === "string") {
@@ -162,6 +169,14 @@ export class ChangeEntry extends ChangeContent {
 
 	// All required fields should be filled
 	valid(): boolean {
+		// validate level
+		if (!!this.level && !knownLevels.has(this.level)) {
+			return false
+		}
+		// validate impact presense when the level is high
+		if (this.level === LEVEL_HIGH && !this.impact) {
+			return false
+		}
 		return !!this.section && knownTypes.has(this.type) && super.valid()
 	}
 }

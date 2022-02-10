@@ -60,6 +60,21 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		pull_request: "https://github.com/ow/re/291",
 		impact_level: "low",
 	}),
+	new ChangeEntry({
+		section: "kube-dns",
+		type: "feature",
+		summary: "widlcard domains support",
+		pull_request: "https://github.com/ow/re/491",
+		impact: "So good.",
+		impact_level: "high",
+	}),
+	new ChangeEntry({
+		section: "kube-dns",
+		type: "feature",
+		summary: "impact missing",
+		pull_request: "https://github.com/ow/re/495",
+		impact_level: "high",
+	}),
 ]
 
 describe("YAML", () => {
@@ -90,6 +105,10 @@ cloud-provider-yandex:
     - summary: d29
       pull_request: https://github.com/ow/re/290
 kube-dns:
+  features:
+    - summary: widlcard domains support
+      pull_request: https://github.com/ow/re/491
+      impact: So good.
   fixes:
     - summary: d48
       pull_request: https://github.com/ow/re/480
@@ -110,6 +129,7 @@ describe("Markdown", () => {
 ## [MALFORMED]
 
 
+ - #495
  - #510
  - #533
 
@@ -118,6 +138,8 @@ describe("Markdown", () => {
 
  - **[chrony]** d12 [#120](https://github.com/ow/re/120)
  - **[cloud-provider-yandex]** d22 [#220](https://github.com/ow/re/220)
+ - **[kube-dns]** widlcard domains support [#491](https://github.com/ow/re/491)
+    So good.
 
 ## Fixes
 
