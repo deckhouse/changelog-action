@@ -1,6 +1,6 @@
 import * as yaml from "js-yaml"
 import json2md, { DataObject } from "json2md"
-import { Change, ChangeEntry, ChangesByModule, ModuleChanges } from "./parse"
+import { ChangeContent, ChangeEntry, ChangesByModule, ModuleChanges } from "./parse"
 
 function getYAMLSorter() {
 	// don't pollute the scope with globals
@@ -37,6 +37,7 @@ export function formatYaml(changes: ChangeEntry[]): string {
 	// create the map from only valid entries:  module -> fix/feature -> change[]
 	const body = changes
 		.filter((c) => c.valid()) //
+		.filter((c) => c.level !== "low")
 		.reduce(groupByModuleAndType, {})
 
 	return yaml.dump(body, opts)
@@ -53,7 +54,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 	// ensure module change list
 	// e.g. for fixes: { "module": { "fixes": [] } }
-	let list: Change[]
+	let list: ChangeContent[]
 	switch (change.type) {
 		case "fix":
 			list = getTypeList("fixes")
@@ -67,7 +68,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 	// add the change
 	list.push(
-		new Change({
+		new ChangeContent({
 			summary: change.summary,
 			pull_request: change.pull_request,
 			impact: change.impact,

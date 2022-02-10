@@ -20,8 +20,8 @@ export interface ChangesByModule {
  * ModuleChanges describes changes in single module grouped by type
  */
 export interface ModuleChanges {
-	fixes?: Change[]
-	features?: Change[]
+	fixes?: ChangeContent[]
+	features?: ChangeContent[]
 }
 
 export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
@@ -117,9 +117,9 @@ export function extractChanges(body: string): string[] {
 }
 
 /**
- *  Change is the change entry to be included in changelog
+ *  ChangeContent is the content to be printed on the lowest level
  */
-export class Change {
+export class ChangeContent {
 	summary = ""
 	pull_request = ""
 	impact?: string
@@ -144,16 +144,20 @@ interface ChangeOpts {
 }
 
 /**
- *  ChangeEntry is the change we expect to find in pull request
+ *  ChangeEntry is the change data we expect to find in pull request
  */
-export class ChangeEntry extends Change {
+export class ChangeEntry extends ChangeContent {
 	section = ""
 	type = ""
+	level = ""
 
 	constructor(o: ChangeEntryOpts) {
 		super(o)
 		this.section = o.section
 		this.type = o.type
+		if (o.impact_level) {
+			this.level = o.impact_level
+		}
 	}
 
 	// All required fields should be filled
@@ -164,6 +168,7 @@ export class ChangeEntry extends Change {
 interface ChangeEntryOpts extends ChangeOpts {
 	section: string
 	type: string
+	impact_level?: string
 }
 
 interface ChangeInput extends ChangeInputVersion1, ChangeInputVersion2 {}
@@ -179,6 +184,7 @@ interface ChangeInputVersion2 extends ChangeOpts {
 	type: string
 	summary: string
 	impact?: string
+	impact_level?: string
 }
 
 /**
@@ -214,6 +220,11 @@ function parseInput(doc: ChangeInput, pr: PullRequest): ChangeEntryOpts {
 	const impact = sanitizeString(doc.note) || sanitizeString(doc.impact)
 	if (impact) {
 		opts.impact = impact
+	}
+
+	const impactLevel = sanitizeString(doc.impact_level)
+	if (impactLevel) {
+		opts.impact_level = impactLevel
 	}
 
 	return opts
