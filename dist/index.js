@@ -83,6 +83,7 @@ function formatYaml(changes) {
     };
     const body = changes
         .filter((c) => c.valid())
+        .filter((c) => c.impact_level !== parse_1.LEVEL_LOW)
         .reduce(groupByModuleAndType, {});
     return yaml.dump(body, opts);
 }
@@ -96,16 +97,16 @@ function groupByModuleAndType(acc, change) {
     };
     let list;
     switch (change.type) {
-        case "fix":
+        case parse_1.TYPE_FIX:
             list = getTypeList("fixes");
             break;
-        case "feature":
+        case parse_1.TYPE_FEATURE:
             list = getTypeList("features");
             break;
         default:
             throw new Error("invalid type: " + change.type);
     }
-    list.push(new parse_1.Change({
+    list.push(new parse_1.ChangeContent({
         summary: change.summary,
         pull_request: change.pull_request,
         impact: change.impact,
@@ -113,22 +114,38 @@ function groupByModuleAndType(acc, change) {
     return acc;
 }
 const MARKDOWN_HEADER_TAG = "h1";
-const MARKDOWN_TYPE_TAG = "h2";
+const MARKDOWN_SUBHEADER_TAG = "h2";
 function formatMarkdown(milestone, changes) {
     const body = [
         { [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` },
         ...formatMalformedEntries(changes),
+        ...formatReleaseDigest(changes),
         ...formatFeatureEntries(changes),
         ...formatFixEntries(changes),
     ];
     return (0, json2md_1.default)(body);
 }
 exports.formatMarkdown = formatMarkdown;
+function formatReleaseDigest(changes) {
+    const subHeader = "Release digest";
+    const impacts = changes
+        .filter((c) => c.valid() && c.impact_level === parse_1.LEVEL_HIGH)
+        .map((c) => c.impact)
+        .filter((x) => !!x)
+        .sort();
+    const body = [];
+    if (impacts.length === 0) {
+        return body;
+    }
+    body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader });
+    body.push({ ul: impacts });
+    return body;
+}
 function formatFeatureEntries(changes) {
-    return formatEntries(changes, "feature", "Features");
+    return formatEntries(changes, parse_1.TYPE_FEATURE, "Features");
 }
 function formatFixEntries(changes) {
-    return formatEntries(changes, "fix", "Fixes");
+    return formatEntries(changes, parse_1.TYPE_FIX, "Fixes");
 }
 function formatEntries(changes, changeType, subHeader) {
     const filtered = changes
@@ -138,7 +155,7 @@ function formatEntries(changes, changeType, subHeader) {
     if (filtered.length === 0) {
         return body;
     }
-    body.push({ [MARKDOWN_TYPE_TAG]: subHeader });
+    body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader });
     body.push({ ul: filtered.map(changeMardown) });
     return body;
 }
@@ -146,14 +163,16 @@ function formatMalformedEntries(changes) {
     const body = [];
     const malformed = changes
         .filter((c) => !c.valid())
-        .map((c) => parsePullRequestNumberFromURL(c.pull_request))
-        .map((x) => parseInt(x))
-        .sort();
+        .map((c) => ({
+        pr: parseInt(parsePullRequestNumberFromURL(c.pull_request), 10),
+        message: c.validate().join(", "),
+    }))
+        .sort((a, b) => a.pr - b.pr);
     if (malformed.length > 0) {
-        body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }]);
+        body.push([{ [MARKDOWN_SUBHEADER_TAG]: "[MALFORMED]" }]);
         const ul = [];
-        for (const num of malformed) {
-            ul.push(`#${num}`);
+        for (const m of malformed) {
+            ul.push(`#${m.pr} ${m.message}`);
         }
         body.push({ ul: ul.sort() });
     }
@@ -245,7 +264,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.Change = exports.extractChanges = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.extractChanges = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(9017);
 function collectChangelog(pulls) {
@@ -279,7 +298,12 @@ function parseChangeEntries(pr, changesYAMLs) {
     return entries;
 }
 exports.parseChangeEntries = parseChangeEntries;
-const knownTypes = new Set(["fix", "feature"]);
+exports.TYPE_FIX = "fix";
+exports.TYPE_FEATURE = "feature";
+const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE]);
+exports.LEVEL_HIGH = "high";
+exports.LEVEL_LOW = "low";
+const knownLevels = new Set([exports.LEVEL_LOW, exports.LEVEL_HIGH]);
 function sanitizeString(x) {
     if (typeof x === "string") {
         return x.trim();
@@ -306,7 +330,7 @@ function extractChanges(body) {
     return changeBlocks;
 }
 exports.extractChanges = extractChanges;
-class Change {
+class ChangeContent {
     constructor(o) {
         this.summary = "";
         this.pull_request = "";
@@ -317,20 +341,49 @@ class Change {
         }
     }
     valid() {
-        return !!this.summary && !!this.pull_request;
+        const errs = this.validate();
+        return errs.length === 0;
+    }
+    validate() {
+        const errs = [];
+        if (!this.summary) {
+            errs.push("missing summary");
+        }
+        if (!this.pull_request) {
+            throw new Error("missing pull_request");
+        }
+        return errs;
     }
 }
-exports.Change = Change;
-class ChangeEntry extends Change {
+exports.ChangeContent = ChangeContent;
+class ChangeEntry extends ChangeContent {
     constructor(o) {
         super(o);
         this.section = "";
         this.type = "";
+        this.impact_level = "";
         this.section = o.section;
         this.type = o.type;
+        if (o.impact_level) {
+            this.impact_level = o.impact_level;
+        }
     }
-    valid() {
-        return !!this.section && knownTypes.has(this.type) && super.valid();
+    validate() {
+        const errs = [];
+        errs.push(...super.validate());
+        if (!!this.impact_level && !knownLevels.has(this.impact_level)) {
+            errs.push(`invalid impact level "${this.impact_level}"`);
+        }
+        if (this.impact_level === exports.LEVEL_HIGH && !this.impact) {
+            errs.push("missing high impact detail");
+        }
+        if (!this.section) {
+            errs.push("missing section/module");
+        }
+        if (!knownTypes.has(this.type)) {
+            errs.push(this.type ? `invalid type "${this.type}"` : "missing type");
+        }
+        return errs.sort();
     }
 }
 exports.ChangeEntry = ChangeEntry;
@@ -344,6 +397,10 @@ function parseInput(doc, pr) {
     const impact = sanitizeString(doc.note) || sanitizeString(doc.impact);
     if (impact) {
         opts.impact = impact;
+    }
+    const impactLevel = sanitizeString(doc.impact_level);
+    if (impactLevel) {
+        opts.impact_level = impactLevel;
     }
     return opts;
 }
