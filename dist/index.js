@@ -2,36 +2,25 @@
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 8654:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.collectChanges = void 0;
 const format_1 = __nccwpck_require__(6610);
 const parse_1 = __nccwpck_require__(5223);
 function collectChanges(inputs) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { pulls } = inputs;
-        const out = { yaml: "", markdown: "" };
-        if (pulls.length === 0) {
-            return out;
-        }
-        const milestone = pulls[0].milestone.title;
-        const changes = (0, parse_1.collectChangelog)(pulls);
-        out.yaml = (0, format_1.formatYaml)(changes);
-        out.markdown = (0, format_1.formatMarkdown)(milestone, changes);
+    const { pulls } = inputs;
+    const out = { yaml: "", markdown: "" };
+    if (pulls.length === 0) {
         return out;
-    });
+    }
+    const milestone = pulls[0].milestone.title;
+    const changes = (0, parse_1.collectChangelog)(pulls);
+    out.yaml = (0, format_1.formatYaml)(changes);
+    out.markdown = (0, format_1.formatMarkdown)(milestone, changes);
+    return out;
 }
 exports.collectChanges = collectChanges;
 
@@ -70,9 +59,24 @@ exports.formatMarkdown = exports.formatYaml = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const json2md_1 = __importDefault(__nccwpck_require__(8158));
 const parse_1 = __nccwpck_require__(5223);
+function getYAMLSorter() {
+    const yamlFieldSorter = {
+        features: 1,
+        fixes: 2,
+        summary: 1,
+        pull_request: 2,
+        impact: 3,
+    };
+    return function sort(a, b) {
+        if (a in yamlFieldSorter && b in yamlFieldSorter) {
+            return yamlFieldSorter[a] - yamlFieldSorter[b];
+        }
+        return a < b ? -1 : 1;
+    };
+}
 function formatYaml(changes) {
     const opts = {
-        sortKeys: true,
+        sortKeys: getYAMLSorter(),
         lineWidth: 100,
         forceQuotes: false,
         quotingType: "'",
@@ -84,8 +88,8 @@ function formatYaml(changes) {
 }
 exports.formatYaml = formatYaml;
 function groupByModuleAndType(acc, change) {
-    acc[change.module] = acc[change.module] || {};
-    const mc = acc[change.module];
+    acc[change.section] = acc[change.section] || {};
+    const mc = acc[change.section];
     const getTypeList = (k) => {
         mc[k] = mc[k] || [];
         return mc[k];
@@ -102,15 +106,14 @@ function groupByModuleAndType(acc, change) {
             throw new Error("invalid type: " + change.type);
     }
     list.push(new parse_1.Change({
-        description: change.description,
+        summary: change.summary,
         pull_request: change.pull_request,
-        note: change.note,
+        impact: change.impact,
     }));
     return acc;
 }
 const MARKDOWN_HEADER_TAG = "h1";
 const MARKDOWN_TYPE_TAG = "h2";
-const MARKDOWN_NOTE_PREFIX = "**NOTE!**";
 function formatMarkdown(milestone, changes) {
     const body = [
         { [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` },
@@ -118,8 +121,7 @@ function formatMarkdown(milestone, changes) {
         ...formatFeatureEntries(changes),
         ...formatFixEntries(changes),
     ];
-    const md = (0, json2md_1.default)(body);
-    return md;
+    return (0, json2md_1.default)(body);
 }
 exports.formatMarkdown = formatMarkdown;
 function formatFeatureEntries(changes) {
@@ -131,7 +133,7 @@ function formatFixEntries(changes) {
 function formatEntries(changes, changeType, subHeader) {
     const filtered = changes
         .filter((c) => c.valid() && c.type == changeType)
-        .sort((a, b) => (a.module < b.module ? -1 : 1));
+        .sort((a, b) => (a.section < b.section ? -1 : 1));
     const body = [];
     if (filtered.length === 0) {
         return body;
@@ -163,10 +165,9 @@ function parsePullRequestNumberFromURL(prUrl) {
 }
 function changeMardown(c) {
     const prNum = parsePullRequestNumberFromURL(c.pull_request);
-    const lines = [`**[${c.module}]** ${c.description} [#${prNum}](${c.pull_request})`];
-    if (c.note) {
-        lines.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`);
-    }
+    const lines = [`**[${c.section}]** ${c.summary} [#${prNum}](${c.pull_request})`];
+    if (c.impact)
+        lines.push(c.impact);
     return lines.join("\n");
 }
 
@@ -197,33 +198,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const changes_1 = __nccwpck_require__(8654);
 function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const inputs = {
-                token: core.getInput("token"),
-                pulls: JSON.parse(core.getInput("pull_requests")),
-            };
-            const o = yield (0, changes_1.collectChanges)(inputs);
-            core.setOutput("yaml", o.yaml);
-            core.setOutput("markdown", o.markdown);
-        }
-        catch (error) {
-            core.setFailed(error.message);
-        }
-    });
+    try {
+        const inputs = {
+            token: core.getInput("token"),
+            pulls: JSON.parse(core.getInput("pull_requests")),
+        };
+        const o = (0, changes_1.collectChanges)(inputs);
+        core.setOutput("yaml", o.yaml);
+        core.setOutput("markdown", o.markdown);
+    }
+    catch (error) {
+        core.setFailed(error.message);
+    }
 }
 run();
 
@@ -274,7 +264,8 @@ function parseChangeEntries(pr, changesYAMLs) {
                 entries.push(change);
                 continue;
             }
-            const change = parseChange(doc, pr);
+            const opts = parseInput(doc, pr);
+            const change = new ChangeEntry(opts);
             entries.push(change);
         }
         catch (e) {
@@ -289,20 +280,6 @@ function parseChangeEntries(pr, changesYAMLs) {
 }
 exports.parseChangeEntries = parseChangeEntries;
 const knownTypes = new Set(["fix", "feature"]);
-function parseChange(doc, pr) {
-    var _a, _b, _c;
-    const opts = {
-        module: (_a = sanitizeString(doc.module)) !== null && _a !== void 0 ? _a : "",
-        type: (_b = sanitizeString(doc.type)) !== null && _b !== void 0 ? _b : "",
-        description: (_c = sanitizeString(doc.description)) !== null && _c !== void 0 ? _c : "",
-        pull_request: pr.url,
-    };
-    const note = sanitizeString(doc.note);
-    if (note) {
-        opts.note = note;
-    }
-    return new ChangeEntry(opts);
-}
 function sanitizeString(x) {
     if (typeof x === "string") {
         return x.trim();
@@ -314,9 +291,9 @@ function sanitizeString(x) {
 }
 function createEmptyChange(pr) {
     return new ChangeEntry({
-        module: "",
+        section: "",
         type: "",
-        description: "",
+        summary: "",
         pull_request: pr.url,
     });
 }
@@ -331,32 +308,45 @@ function extractChanges(body) {
 exports.extractChanges = extractChanges;
 class Change {
     constructor(o) {
-        this.description = "";
+        this.summary = "";
         this.pull_request = "";
-        this.description = o.description;
+        this.summary = o.summary;
         this.pull_request = o.pull_request;
-        if (o.note) {
-            this.note = o.note;
+        if (o.impact) {
+            this.impact = o.impact;
         }
     }
     valid() {
-        return !!this.description && !!this.pull_request;
+        return !!this.summary && !!this.pull_request;
     }
 }
 exports.Change = Change;
 class ChangeEntry extends Change {
     constructor(o) {
         super(o);
-        this.module = "";
+        this.section = "";
         this.type = "";
-        this.module = o.module;
+        this.section = o.section;
         this.type = o.type;
     }
     valid() {
-        return !!this.module && knownTypes.has(this.type) && super.valid();
+        return !!this.section && knownTypes.has(this.type) && super.valid();
     }
 }
 exports.ChangeEntry = ChangeEntry;
+function parseInput(doc, pr) {
+    const opts = {
+        section: sanitizeString(doc.module) || sanitizeString(doc.section) || "",
+        type: sanitizeString(doc.type) || "",
+        summary: sanitizeString(doc.description) || sanitizeString(doc.summary) || "",
+        pull_request: pr.url,
+    };
+    const impact = sanitizeString(doc.note) || sanitizeString(doc.impact);
+    if (impact) {
+        opts.impact = impact;
+    }
+    return opts;
+}
 
 
 /***/ }),
