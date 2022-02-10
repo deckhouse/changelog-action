@@ -107,19 +107,59 @@ Consider this example. Let's say, a PR belongs to milestone `v1.39.0` and descri
 
 ~~~
 ```changes
-module: node-manager
-type: fix
-description: "Nodes with outdated manifests are no longer provisioned on *InstanceClass update."
-note: |
-  Expect nodes of "Cloud" type to restart.
-
-  Node checksum calculation is fixed as well as a race condition during
-  the machines (MCM) rendering which caused outdated nodes to spawn.
+section: yyy
+type: ""
+summary: dm2
+impact_level: high
 ---
-module: cloud-provider-aws
+section: cloud-provider-yandex
+type: fix
+summary: d21
+impact_level: high
+impact: |-
+  Grafana will be restarted.
+  Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+  Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
+---
+section: chrony
 type: feature
-description: "Node restarts can be avoided by pinning a checksum to a node group in config values."
-note: Recommended to use as a last resort.
+summary: d12
+---
+section: cloud-provider-yandex
+type: feature
+summary: d22
+---
+section: chrony
+type: fix
+summary: d11
+---
+section: xxx
+type: fix | feature
+summary: dm1
+---
+section: kube-dns
+type: fix
+summary: d48
+---
+section: cloud-provider-yandex
+type: fix
+summary: d29
+---
+section: cloud-provider-yandex
+type: fix
+summary: d00029
+impact_level: low
+---
+section: kube-dns
+type: feature
+summary: widlcard domains support
+impact: So good.
+impact_level: high
+---
+section: kube-dns
+type: feature
+summary: impact missing
+impact_level: high
 ```
 ~~~
 
@@ -130,47 +170,84 @@ The action generates changelog in YAML and markdown.
 #### Markdown output
 
 ```markdown
+# Changelog v3.44.555
 
-## Changelog v1.39.0
+## [MALFORMED]
 
-#### [cloud-provider-aws]
 
- - features
-     - Node restarts can be avoided by pinning a checksum to a node group in config values.
-         - [Pull request](https://github.com/owner/repo/pull/1)
-         - Recommended to use as a last resort.
+ - #495 missing high impact detail
+ - #510 invalid type "fix | feature"
+ - #533 missing high impact detail, missing type
 
-#### [node-manager]
+## Release digest
 
- - fixes
-     - Nodes with outdated manifests are no longer provisioned on *InstanceClass update.
-         - [Pull request](https://github.com/owner/repo/pull/1)
-         - Expect nodes of "Cloud" type to restart.
-            Node checksum calculation is fixed as well as a race condition during
-            the machines (MCM) rendering which caused outdated nodes to spawn.
+
+ - Grafana will be restarted.
+    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
+ - So good.
+
+## Features
+
+
+ - **[chrony]** d12 [#120](https://github.com/ow/re/120)
+ - **[cloud-provider-yandex]** d22 [#220](https://github.com/ow/re/220)
+ - **[kube-dns]** widlcard domains support [#491](https://github.com/ow/re/491)
+    So good.
+
+## Fixes
+
+
+ - **[chrony]** d11 [#110](https://github.com/ow/re/110)
+ - **[cloud-provider-yandex]** d21 [#210](https://github.com/ow/re/210)
+    Grafana will be restarted.
+    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
+ - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
+ - **[cloud-provider-yandex]** d00029 [#291](https://github.com/ow/re/291)
+ - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 
 ```
 
 <details>
   <summary>Markdown Preview</summary>
 
-## Changelog v1.39.0
+# Changelog v3.44.555
 
-#### [cloud-provider-aws]
+## [MALFORMED]
 
- - features
-     - Node restarts can be avoided by pinning a checksum to a node group in config values.
-         - [Pull request](https://github.com/owner/repo/pull/1)
-         - Recommended to use as a last resort.
 
-#### [node-manager]
+ - #495 missing high impact detail
+ - #510 invalid type "fix | feature"
+ - #533 missing high impact detail, missing type
 
- - fixes
-     - Nodes with outdated manifests are no longer provisioned on *InstanceClass update.
-         - [Pull request](https://github.com/owner/repo/pull/1)
-         - Expect nodes of "Cloud" type to restart.
-            Node checksum calculation is fixed as well as a race condition during
-            the machines (MCM) rendering which caused outdated nodes to spawn.
+## Release digest
+
+
+ - Grafana will be restarted.
+    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
+ - So good.
+
+## Features
+
+
+ - **[chrony]** d12 [#120](https://github.com/ow/re/120)
+ - **[cloud-provider-yandex]** d22 [#220](https://github.com/ow/re/220)
+ - **[kube-dns]** widlcard domains support [#491](https://github.com/ow/re/491)
+    So good.
+
+## Fixes
+
+
+ - **[chrony]** d11 [#110](https://github.com/ow/re/110)
+ - **[cloud-provider-yandex]** d21 [#210](https://github.com/ow/re/210)
+    Grafana will be restarted.
+    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
+ - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
+ - **[cloud-provider-yandex]** d00029 [#291](https://github.com/ow/re/291)
+ - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 
 </details>
 
@@ -179,19 +256,40 @@ The action generates changelog in YAML and markdown.
 #### YAML output
 
 ```yaml
-cloud-provider-aws:
+chrony:
   features:
-    - description: Node restarts can be avoided by pinning a checksum to a node group in config values.
-      note: Recommended to use as a last resort.
-      pull_request: https://github.com/owner/repo/pull/1
-node-manager:
+    - summary: d12
+      pull_request: https://github.com/ow/re/120
   fixes:
-    - description: Nodes with outdated manifests are no longer provisioned on *InstanceClass update.
-      note: |-
-        Expect nodes of "Cloud" type to restart.
-        Node checksum calculation is fixed as well as a race condition during
-        the machines (MCM) rendering which caused outdated nodes to spawn.
-      pull_request: https://github.com/owner/repo/pull/1
+    - summary: d11
+      pull_request: https://github.com/ow/re/110
+cloud-provider-yandex:
+  features:
+    - summary: d22
+      pull_request: https://github.com/ow/re/220
+  fixes:
+    - summary: d21
+      pull_request: https://github.com/ow/re/210
+      impact: >-
+        Grafana will be restarted.
+
+        Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached),
+        because direct(browse) datasources type is depreated now. And alerts don't work with direct
+        data sources.
+
+        Provisioning datasources from secret instead configmap. Deckhouse datasources need client
+        certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while
+        terminating.
+    - summary: d29
+      pull_request: https://github.com/ow/re/290
+kube-dns:
+  features:
+    - summary: widlcard domains support
+      pull_request: https://github.com/ow/re/491
+      impact: So good.
+  fixes:
+    - summary: d48
+      pull_request: https://github.com/ow/re/480
 ```
 
 

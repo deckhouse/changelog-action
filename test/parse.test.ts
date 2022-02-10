@@ -1,6 +1,6 @@
 import * as fs from "fs"
 import * as path from "path"
-import { parseChangeEntries, PullRequest, ChangeEntry, extractChanges } from "./../src/parse"
+import { ChangeEntry, extractChanges, parseChangeEntries, PullRequest } from "./../src/parse"
 
 describe("extracting raw changes", () => {
 	function block(content: string, type = "") {
@@ -14,62 +14,124 @@ describe("extracting raw changes", () => {
 		expect(extractChanges("")).toStrictEqual([])
 	})
 
-	test("parses single block", () => {
-		const input = block("module: one", "changes")
-		const parsed = extractChanges(input)
-		expect(parsed).toStrictEqual(["module: one"])
+	describe("v1", () => {
+		test("parses single block", () => {
+			const input = block("module: one", "changes")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["module: one"])
+		})
+
+		test("ignores all blocks except frist one", () => {
+			const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
+
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["module: one", "module: two"])
+		})
+
+		test("ignores non-changes blocks ", () => {
+			const input = [
+				block("nothing"),
+				"",
+				block("yaml", "yaml"),
+				block("module: one", "changes"),
+				block("shell", "shell"),
+				"",
+				block("module: two", "changes"),
+				block("nothing2"),
+			].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["module: one", "module: two"])
+		})
+
+		test("ignores blocks with malformed beginning", () => {
+			const input = ["````changes", "module: one", "```"].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual([])
+		})
+
+		test("tolerates blocks with malformed ending due (the `marked` lib works so)", () => {
+			const input = ["```changes", "module: one", "````"].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["module: one"])
+		})
+
+		test("parses two blocks from GitHub JSON", () => {
+			const { input, expected } = getTwoBlocksBodyFixture()
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(expected)
+		})
+
+		test("ignores HTML comments", () => {
+			const input = [
+				block("module: one", "changes"),
+				"<!--",
+				block("module: hidden", "changes"),
+				"-->",
+				block("module: two", "changes"),
+			].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["module: one", "module: two"])
+		})
 	})
 
-	test("ignores all blocks except frist one", () => {
-		const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
+	describe("v2", () => {
+		test("parses single block", () => {
+			const input = block("section: one", "changes")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["section: one"])
+		})
 
-		const parsed = extractChanges(input)
-		expect(parsed).toStrictEqual(["module: one", "module: two"])
-	})
+		test("ignores all blocks except frist one", () => {
+			const input = [block("section: one", "changes"), block("section: two", "changes")].join("\n")
 
-	test("ignores non-changes blocks ", () => {
-		const input = [
-			block("nothing"),
-			"",
-			block("yaml", "yaml"),
-			block("module: one", "changes"),
-			block("shell", "shell"),
-			"",
-			block("module: two", "changes"),
-			block("nothing2"),
-		].join("\n")
-		const parsed = extractChanges(input)
-		expect(parsed).toStrictEqual(["module: one", "module: two"])
-	})
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["section: one", "section: two"])
+		})
 
-	test("ignores blocks with malformed beginning", () => {
-		const input = ["````changes", "module: one", "```"].join("\n")
-		const parsed = extractChanges(input)
-		expect(parsed).toStrictEqual([])
-	})
+		test("ignores non-changes blocks ", () => {
+			const input = [
+				block("nothing"),
+				"",
+				block("yaml", "yaml"),
+				block("section: one", "changes"),
+				block("shell", "shell"),
+				"",
+				block("section: two", "changes"),
+				block("nothing2"),
+			].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["section: one", "section: two"])
+		})
 
-	test("tolerates blocks with malformed ending due (the `marked` lib works so)", () => {
-		const input = ["```changes", "module: one", "````"].join("\n")
-		const parsed = extractChanges(input)
-		expect(parsed).toStrictEqual(["module: one"])
-	})
+		test("ignores blocks with malformed beginning", () => {
+			const input = ["````changes", "section: one", "```"].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual([])
+		})
 
-	test("parses two blocks from GitHub JSON", () => {
-		const { input, expected } = getTwoBlocksBodyFixture()
-		const parsed = extractChanges(input)
-		expect(parsed).toStrictEqual(expected)
-	})
+		test("tolerates blocks with malformed ending due (the `marked` lib works so)", () => {
+			const input = ["```changes", "section: one", "````"].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["section: one"])
+		})
 
-	test("ignores HTML comments", () => {
-		const input = [
-			block("module: one", "changes"),
-			"<!--",
-			block("module: hidden", "changes"),
-			"-->",
-			block("module: two", "changes"),
-		].join("\n")
-		const parsed = extractChanges(input)
-		expect(parsed).toStrictEqual(["module: one", "module: two"])
+		test("parses two blocks from GitHub JSON", () => {
+			const { input, expected } = getTwoBlocksBodyFixture()
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(expected)
+		})
+
+		test("ignores HTML comments", () => {
+			const input = [
+				block("section: one", "changes"),
+				"<!--",
+				block("section: hidden", "changes"),
+				"-->",
+				block("section: two", "changes"),
+			].join("\n")
+			const parsed = extractChanges(input)
+			expect(parsed).toStrictEqual(["section: one", "section: two"])
+		})
 	})
 })
 
@@ -89,6 +151,7 @@ describe("parsing change entries", function () {
 	const sectionField = (x) => kv("section", x)
 	const summaryField = (x) => kv("summary", x)
 	const impactField = (x) => kv("impact", x)
+	const impactLevelField = (x) => kv("impact_level", x)
 
 	const pr: PullRequest = {
 		url: "https://github.com/owner/repo/pulls/13",
@@ -334,6 +397,36 @@ describe("parsing change entries", function () {
 		test.each(cases)("$title", function (c) {
 			const change = parseChangeEntries(pr, c.input)
 			expect(change).toStrictEqual(c.want)
+		})
+
+		test("parses impact level", () => {
+			const section = "section"
+			const typ = "fix"
+			const summary = "big deal"
+			const impact = "changes much"
+			const impactLevel = "high"
+
+			const input = [
+				doc(
+					//
+					sectionField(section),
+					type(typ),
+					summaryField(summary),
+					impactField(impact),
+					impactLevelField(impactLevel),
+				),
+			]
+			const change = parseChangeEntries(pr, input)
+			expect(change).toStrictEqual([
+				new ChangeEntry({
+					section,
+					type: typ,
+					summary,
+					impact,
+					impact_level: impactLevel,
+					pull_request: pr.url,
+				}),
+			])
 		})
 	})
 })

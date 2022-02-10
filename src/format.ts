@@ -1,6 +1,15 @@
 import * as yaml from "js-yaml"
 import json2md, { DataObject } from "json2md"
-import { Change, ChangeEntry, ChangesByModule, ModuleChanges } from "./parse"
+import {
+	ChangeContent,
+	ChangeEntry,
+	ChangesByModule,
+	LEVEL_HIGH,
+	LEVEL_LOW,
+	ModuleChanges,
+	TYPE_FEATURE,
+	TYPE_FIX,
+} from "./parse"
 
 function getYAMLSorter() {
 	// don't pollute the scope with globals
@@ -37,6 +46,7 @@ export function formatYaml(changes: ChangeEntry[]): string {
 	// create the map from only valid entries:  module -> fix/feature -> change[]
 	const body = changes
 		.filter((c) => c.valid()) //
+		.filter((c) => c.impact_level !== LEVEL_LOW)
 		.reduce(groupByModuleAndType, {})
 
 	return yaml.dump(body, opts)
@@ -53,12 +63,12 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 	// ensure module change list
 	// e.g. for fixes: { "module": { "fixes": [] } }
-	let list: Change[]
+	let list: ChangeContent[]
 	switch (change.type) {
-		case "fix":
+		case TYPE_FIX:
 			list = getTypeList("fixes")
 			break
-		case "feature":
+		case TYPE_FEATURE:
 			list = getTypeList("features")
 			break
 		default:
@@ -67,7 +77,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 	// add the change
 	list.push(
-		new Change({
+		new ChangeContent({
 			summary: change.summary,
 			pull_request: change.pull_request,
 			impact: change.impact,
@@ -78,7 +88,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 }
 
 const MARKDOWN_HEADER_TAG = "h1"
-const MARKDOWN_TYPE_TAG = "h2"
+const MARKDOWN_SUBHEADER_TAG = "h2"
 
 /**
  * @function formatMarkdown returns changes formatted in markdown
@@ -89,6 +99,7 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	const body: DataObject[] = [
 		{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }, // title
 		...formatMalformedEntries(changes),
+		...formatReleaseDigest(changes),
 		...formatFeatureEntries(changes),
 		...formatFixEntries(changes),
 	]
@@ -96,12 +107,32 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	return json2md(body)
 }
 
+function formatReleaseDigest(changes: ChangeEntry[]): DataObject[] {
+	const subHeader = "Release digest"
+
+	const impacts = changes
+		.filter((c) => c.valid() && c.impact_level === LEVEL_HIGH)
+		.map((c) => c.impact)
+		.filter((x): x is string => !!x) // for type check calmness
+		.sort() // sorting to naіvely group potentially similar impacts together
+
+	const body: DataObject[] = []
+	if (impacts.length === 0) {
+		return body
+	}
+
+	body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader })
+	body.push({ ul: impacts })
+
+	return body
+}
+
 function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {
-	return formatEntries(changes, "feature", "Features")
+	return formatEntries(changes, TYPE_FEATURE, "Features")
 }
 
 function formatFixEntries(changes: ChangeEntry[]): DataObject[] {
-	return formatEntries(changes, "fix", "Fixes")
+	return formatEntries(changes, TYPE_FIX, "Fixes")
 }
 
 function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: string): DataObject[] {
@@ -114,7 +145,7 @@ function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: st
 		return body
 	}
 
-	body.push({ [MARKDOWN_TYPE_TAG]: subHeader })
+	body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader })
 	body.push({ ul: filtered.map(changeMardown) })
 
 	return body
@@ -126,16 +157,18 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 	// Collect malformed on the top for easier fixing
 	const malformed = changes
 		.filter((c) => !c.valid())
-		.map((c) => parsePullRequestNumberFromURL(c.pull_request))
-		.map((x) => parseInt(x))
-		.sort()
+		.map((c) => ({
+			pr: parseInt(parsePullRequestNumberFromURL(c.pull_request), 10),
+			message: c.validate().join(", "),
+		}))
+		.sort((a, b) => a.pr - b.pr)
 
 	if (malformed.length > 0) {
-		body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }])
+		body.push([{ [MARKDOWN_SUBHEADER_TAG]: "[MALFORMED]" }])
 
 		const ul: string[] = []
-		for (const num of malformed) {
-			ul.push(`#${num}`)
+		for (const m of malformed) {
+			ul.push(`#${m.pr} ${m.message}`)
 		}
 		body.push({ ul: ul.sort() })
 	}

@@ -1,5 +1,5 @@
 import * as core from "@actions/core"
-import { Inputs, collectChanges } from "./changes"
+import { collectChanges, Inputs } from "./changes"
 import { PullRequest } from "./parse"
 
 function run() {

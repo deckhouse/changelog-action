@@ -2,17 +2,20 @@ import { formatMarkdown, formatYaml } from "../src/format"
 import { ChangeEntry } from "../src/parse"
 
 const changes: ChangeEntry[] = [
+	// missing high impact detail, missing type
 	new ChangeEntry({
 		section: "yyy",
 		type: "",
 		summary: "dm2",
 		pull_request: "https://github.com/ow/re/533",
+		impact_level: "high",
 	}),
 	new ChangeEntry({
 		section: "cloud-provider-yandex",
 		type: "fix",
 		summary: "d21",
 		pull_request: "https://github.com/ow/re/210",
+		impact_level: "high",
 		impact: `Grafana will be restarted.
 Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
 Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.`,
@@ -35,9 +38,10 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		summary: "d11",
 		pull_request: "https://github.com/ow/re/110",
 	}),
+	// invalid type
 	new ChangeEntry({
 		section: "xxx",
-		type: "",
+		type: "fix | feature",
 		summary: "dm1",
 		pull_request: "https://github.com/ow/re/510",
 	}),
@@ -53,7 +57,101 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		summary: "d29",
 		pull_request: "https://github.com/ow/re/290",
 	}),
+	new ChangeEntry({
+		section: "cloud-provider-yandex",
+		type: "fix",
+		summary: "d00029",
+		pull_request: "https://github.com/ow/re/291",
+		impact_level: "low",
+	}),
+	new ChangeEntry({
+		section: "kube-dns",
+		type: "feature",
+		summary: "widlcard domains support",
+		pull_request: "https://github.com/ow/re/491",
+		impact: "So good.",
+		impact_level: "high",
+	}),
+	// missing high impact detail
+	new ChangeEntry({
+		section: "kube-dns",
+		type: "feature",
+		summary: "impact missing",
+		pull_request: "https://github.com/ow/re/495",
+		impact_level: "high",
+	}),
 ]
+
+describe("Change validation", () => {
+	const required = {
+		section: "kube-dns",
+		type: "feature",
+		summary: "summary",
+		pull_request: "https://github.com/ow/re/495",
+	}
+	const impact = "big deal"
+	const impact_level = "high"
+
+	const errMissingHighImpactDetail = "missing high impact detail"
+	const errInvalidType = (t) => `invalid type "${t}"`
+	const errMissing = (f) => `missing ${f}`
+
+	const cases = [
+		{
+			title: "no errors when only required",
+			opts: required,
+			expected: [],
+		},
+		{
+			title: "no errors when valid high impact",
+			opts: { ...required, impact, impact_level },
+			expected: [],
+		},
+		{
+			title: "no errors when valid low with impact",
+			opts: { ...required, impact, impact_level: "low" },
+			expected: [],
+		},
+		{
+			title: "no errors when valid low without impact",
+			opts: { ...required, impact_level: "low" },
+			expected: [],
+		},
+		{
+			title: "err missing high impact description",
+			opts: { ...required, impact_level: "high" },
+			expected: [errMissingHighImpactDetail],
+		},
+		{
+			title: "err invalid type",
+			opts: { ...required, type: "high" },
+			expected: [errInvalidType("high")],
+		},
+		{
+			title: "err invalid type",
+			opts: { ...required, type: "" },
+			expected: [errMissing("type")],
+		},
+		{
+			title: "err invalid summary",
+			opts: { ...required, summary: "" },
+			expected: [errMissing("summary")],
+		},
+		{
+			title: "err invalid section/module",
+			opts: { ...required, section: "" },
+			expected: [errMissing("section/module")],
+		},
+		{
+			title: "errs sorted",
+			opts: { ...required, type: "", impact_level: "high" },
+			expected: [errMissingHighImpactDetail, errMissing("type")],
+		},
+	]
+	test.each(cases)("$title", (c) => {
+		expect(new ChangeEntry(c.opts).validate()).toStrictEqual(c.expected)
+	})
+})
 
 describe("YAML", () => {
 	const expected = `chrony:
@@ -83,6 +181,10 @@ cloud-provider-yandex:
     - summary: d29
       pull_request: https://github.com/ow/re/290
 kube-dns:
+  features:
+    - summary: widlcard domains support
+      pull_request: https://github.com/ow/re/491
+      impact: So good.
   fixes:
     - summary: d48
       pull_request: https://github.com/ow/re/480
@@ -103,14 +205,25 @@ describe("Markdown", () => {
 ## [MALFORMED]
 
 
- - #510
- - #533
+ - #495 missing high impact detail
+ - #510 invalid type "fix | feature"
+ - #533 missing high impact detail, missing type
+
+## Release digest
+
+
+ - Grafana will be restarted.
+    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
+ - So good.
 
 ## Features
 
 
  - **[chrony]** d12 [#120](https://github.com/ow/re/120)
  - **[cloud-provider-yandex]** d22 [#220](https://github.com/ow/re/220)
+ - **[kube-dns]** widlcard domains support [#491](https://github.com/ow/re/491)
+    So good.
 
 ## Fixes
 
@@ -121,6 +234,7 @@ describe("Markdown", () => {
     Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
     Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
  - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
+ - **[cloud-provider-yandex]** d00029 [#291](https://github.com/ow/re/291)
  - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 `
 	test("has chrony title as h1", () => {
@@ -134,7 +248,7 @@ describe("Markdown", () => {
 			.map((s) => s.trim())
 			.filter((s) => s.startsWith("## "))
 
-		expect(subheaders).toStrictEqual(["## [MALFORMED]", "## Features", "## Fixes"])
+		expect(subheaders).toStrictEqual(["## [MALFORMED]", "## Release digest", "## Features", "## Fixes"])
 	})
 
 	test("formats right", () => {

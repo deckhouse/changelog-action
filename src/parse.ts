@@ -20,8 +20,8 @@ export interface ChangesByModule {
  * ModuleChanges describes changes in single module grouped by type
  */
 export interface ModuleChanges {
-	fixes?: Change[]
-	features?: Change[]
+	fixes?: ChangeContent[]
+	features?: ChangeContent[]
 }
 
 export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
@@ -67,7 +67,13 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 	return entries
 }
 
-const knownTypes = new Set(["fix", "feature"])
+export const TYPE_FIX = "fix"
+export const TYPE_FEATURE = "feature"
+const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE])
+
+export const LEVEL_HIGH = "high"
+export const LEVEL_LOW = "low"
+const knownLevels = new Set([LEVEL_LOW, LEVEL_HIGH])
 
 function sanitizeString(x: unknown): string {
 	if (typeof x === "string") {
@@ -117,9 +123,9 @@ export function extractChanges(body: string): string[] {
 }
 
 /**
- *  Change is the change entry to be included in changelog
+ *  ChangeContent is the content to be printed on the lowest level
  */
-export class Change {
+export class ChangeContent {
 	summary = ""
 	pull_request = ""
 	impact?: string
@@ -134,7 +140,20 @@ export class Change {
 
 	// All required fields should be filled
 	valid(): boolean {
-		return !!this.summary && !!this.pull_request
+		const errs = this.validate()
+		return errs.length === 0
+	}
+
+	// All required fields should be filled
+	validate(): string[] {
+		const errs: string[] = []
+		if (!this.summary) {
+			errs.push("missing summary")
+		}
+		if (!this.pull_request) {
+			throw new Error("missing pull_request")
+		}
+		return errs
 	}
 }
 interface ChangeOpts {
@@ -144,26 +163,52 @@ interface ChangeOpts {
 }
 
 /**
- *  ChangeEntry is the change we expect to find in pull request
+ *  ChangeEntry is the change data we expect to find in pull request
  */
-export class ChangeEntry extends Change {
+export class ChangeEntry extends ChangeContent {
 	section = ""
 	type = ""
+	impact_level = ""
 
 	constructor(o: ChangeEntryOpts) {
 		super(o)
 		this.section = o.section
 		this.type = o.type
+		if (o.impact_level) {
+			this.impact_level = o.impact_level
+		}
 	}
 
-	// All required fields should be filled
-	valid(): boolean {
-		return !!this.section && knownTypes.has(this.type) && super.valid()
+	validate(): string[] {
+		const errs: string[] = []
+
+		errs.push(...super.validate())
+
+		// validate level
+		if (!!this.impact_level && !knownLevels.has(this.impact_level)) {
+			errs.push(`invalid impact level "${this.impact_level}"`)
+		}
+
+		// validate impact presense when the level is high
+		if (this.impact_level === LEVEL_HIGH && !this.impact) {
+			errs.push("missing high impact detail")
+		}
+
+		if (!this.section) {
+			errs.push("missing section/module")
+		}
+
+		if (!knownTypes.has(this.type)) {
+			errs.push(this.type ? `invalid type "${this.type}"` : "missing type")
+		}
+
+		return errs.sort()
 	}
 }
 interface ChangeEntryOpts extends ChangeOpts {
 	section: string
 	type: string
+	impact_level?: string
 }
 
 interface ChangeInput extends ChangeInputVersion1, ChangeInputVersion2 {}
@@ -179,6 +224,7 @@ interface ChangeInputVersion2 extends ChangeOpts {
 	type: string
 	summary: string
 	impact?: string
+	impact_level?: string
 }
 
 /**
@@ -214,6 +260,11 @@ function parseInput(doc: ChangeInput, pr: PullRequest): ChangeEntryOpts {
 	const impact = sanitizeString(doc.note) || sanitizeString(doc.impact)
 	if (impact) {
 		opts.impact = impact
+	}
+
+	const impactLevel = sanitizeString(doc.impact_level)
+	if (impactLevel) {
+		opts.impact_level = impactLevel
 	}
 
 	return opts
