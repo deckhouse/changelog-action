@@ -76,13 +76,19 @@ describe("extracting raw changes", () => {
 describe("parsing change entries", function () {
 	const emptyLine = ""
 	const kv = (k, v) => `${k}: ${v}`
-
-	const module = (x) => kv("module", x)
-	const type = (x) => kv("type", x)
-	const description = (x) => kv("description", x)
-	const note = (x) => kv("note", x)
-
 	const doc = (...ss) => ss.join("\n") // assemble kv pairs together
+
+	const type = (x) => kv("type", x)
+
+	// v1
+	const moduleField = (x) => kv("module", x)
+	const descriptionField = (x) => kv("description", x)
+	const noteField = (x) => kv("note", x)
+
+	// v2
+	const sectionField = (x) => kv("section", x)
+	const summaryField = (x) => kv("summary", x)
+	const impactField = (x) => kv("impact", x)
 
 	const pr: PullRequest = {
 		url: "https://github.com/owner/repo/pulls/13",
@@ -93,21 +99,25 @@ describe("parsing change entries", function () {
 		milestone: { title: "v1.23.456", number: 2 },
 	}
 
-	const cases: {
+	const getCases = (
+		$mod: (x: string) => string,
+		$desc: (x: string) => string,
+		$note: (x: string) => string,
+	): {
 		title: string
 		pr: PullRequest
 		input: string[]
 		want?: Array<ChangeEntry | { pull_request: string }>
-	}[] = [
+	}[] => [
 		{
 			title: "parses minimal input",
 			pr,
 			input: [
 				doc(
 					//
-					module("mod"),
+					$mod("mod"),
 					type("fix"),
-					description("something was done"),
+					$desc("something was done"),
 				),
 			],
 			want: [
@@ -126,9 +136,9 @@ describe("parsing change entries", function () {
 			input: [
 				doc(
 					//
-					module("multiline"),
+					$mod("multiline"),
 					type("fix"),
-					description(
+					$desc(
 						doc(
 							//
 							"|",
@@ -155,10 +165,10 @@ describe("parsing change entries", function () {
 			input: [
 				doc(
 					//
-					module("modname"),
+					$mod("modname"),
 					type("fix"),
-					description("something was done"),
-					note("parses note field"),
+					$desc("something was done"),
+					$note("parses note field"),
 				),
 			],
 			want: [
@@ -178,13 +188,13 @@ describe("parsing change entries", function () {
 			input: [
 				doc(
 					emptyLine,
-					module("modname"),
+					$mod("modname"),
 					emptyLine,
 					type("fix"),
 					emptyLine,
-					description("something was done"),
+					$desc("something was done"),
 					emptyLine,
-					note("we xpect some outage"),
+					$note("we xpect some outage"),
 					emptyLine,
 				),
 			],
@@ -205,22 +215,22 @@ describe("parsing change entries", function () {
 			input: [
 				doc(
 					//
-					module("mod3"),
+					$mod("mod3"),
 					type("fix"),
-					description("modification3"),
+					$desc("modification3"),
 				),
 				doc(
 					//
-					module("mod1"),
+					$mod("mod1"),
 					type("feature"),
-					description("modification1"),
-					note("with note"),
+					$desc("modification1"),
+					$note("with note"),
 				),
 				doc(
 					//
-					module("mod2"),
+					$mod("mod2"),
 					type("fix"),
-					description("modification2"),
+					$desc("modification2"),
 				),
 			],
 			want: [
@@ -251,10 +261,10 @@ describe("parsing change entries", function () {
 			input: [
 				doc(
 					//
-					module("11"),
+					$mod("11"),
 					type("fix"),
-					description("-55"),
-					note("42"),
+					$desc("-55"),
+					$note("42"),
 				),
 			],
 			want: [
@@ -311,9 +321,20 @@ describe("parsing change entries", function () {
 		},
 	]
 
-	test.each(cases)("$title", function (c) {
-		const change = parseChangeEntries(pr, c.input)
-		expect(change).toStrictEqual(c.want)
+	describe("v1", function () {
+		const cases = getCases(moduleField, descriptionField, noteField)
+		test.each(cases)("$title", function (c) {
+			const change = parseChangeEntries(pr, c.input)
+			expect(change).toStrictEqual(c.want)
+		})
+	})
+
+	describe("v2", function () {
+		const cases = getCases(sectionField, summaryField, impactField)
+		test.each(cases)("$title", function (c) {
+			const change = parseChangeEntries(pr, c.input)
+			expect(change).toStrictEqual(c.want)
+		})
 	})
 })
 
