@@ -5,7 +5,7 @@
 	"main": "lib/index.js",
 	"scripts": {
 		"build": "tsc && ncc build",
-		"format": "prettier --write '**/*.ts'",
+		"format": "organize-imports-cli **/*.ts && prettier --write '**/*.ts'",
 		"format-check": "prettier --check '**/*.ts'",
 		"lint": "eslint src/**/*.ts",
 		"test:unit": "jest unit",

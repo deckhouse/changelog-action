@@ -1,6 +1,6 @@
 import * as fs from "fs"
 import * as path from "path"
-import { parseChangeEntries, PullRequest, ChangeEntry, extractChanges } from "./../src/parse"
+import { ChangeEntry, extractChanges, parseChangeEntries, PullRequest } from "./../src/parse"
 
 describe("extracting raw changes", () => {
 	function block(content: string, type = "") {
