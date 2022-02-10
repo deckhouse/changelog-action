@@ -60,7 +60,6 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 const MARKDOWN_HEADER_TAG = "h1"
 const MARKDOWN_TYPE_TAG = "h2"
-const MARKDOWN_NOTE_PREFIX = "**NOTE!**"
 
 /**
  * @function formatMarkdown returns changes formatted in markdown
@@ -134,9 +133,7 @@ function changeMardown(c: ChangeEntry): string {
 	const prNum = parsePullRequestNumberFromURL(c.pull_request)
 	const lines = [`**[${c.module}]** ${c.description} [#${prNum}](${c.pull_request})`]
 
-	if (c.note) {
-		lines.push(`${MARKDOWN_NOTE_PREFIX} ${c.note}`)
-	}
+	if (c.note) lines.push(c.note)
 
 	return lines.join("\n")
 }
