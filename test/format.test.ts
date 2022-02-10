@@ -2,11 +2,13 @@ import { formatMarkdown, formatYaml } from "../src/format"
 import { ChangeEntry } from "../src/parse"
 
 const changes: ChangeEntry[] = [
+	// missing high impact detail, missing type
 	new ChangeEntry({
 		section: "yyy",
 		type: "",
 		summary: "dm2",
 		pull_request: "https://github.com/ow/re/533",
+		impact_level: "high",
 	}),
 	new ChangeEntry({
 		section: "cloud-provider-yandex",
@@ -35,9 +37,10 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		summary: "d11",
 		pull_request: "https://github.com/ow/re/110",
 	}),
+	// invalid type
 	new ChangeEntry({
 		section: "xxx",
-		type: "",
+		type: "fix | feature",
 		summary: "dm1",
 		pull_request: "https://github.com/ow/re/510",
 	}),
@@ -68,6 +71,7 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		impact: "So good.",
 		impact_level: "high",
 	}),
+	// missing high impact detail
 	new ChangeEntry({
 		section: "kube-dns",
 		type: "feature",
@@ -76,6 +80,77 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		impact_level: "high",
 	}),
 ]
+
+describe("Change validation", () => {
+	const required = {
+		section: "kube-dns",
+		type: "feature",
+		summary: "summary",
+		pull_request: "https://github.com/ow/re/495",
+	}
+	const impact = "big deal"
+	const impact_level = "high"
+
+	const errMissingHighImpactDetail = "missing high impact detail"
+	const errInvalidType = (t) => `invalid type "${t}"`
+	const errMissing = (f) => `missing ${f}`
+
+	const cases = [
+		{
+			title: "no errors when only required",
+			opts: required,
+			expected: [],
+		},
+		{
+			title: "no errors when valid high impact",
+			opts: { ...required, impact, impact_level },
+			expected: [],
+		},
+		{
+			title: "no errors when valid low with impact",
+			opts: { ...required, impact, impact_level: "low" },
+			expected: [],
+		},
+		{
+			title: "no errors when valid low without impact",
+			opts: { ...required, impact_level: "low" },
+			expected: [],
+		},
+		{
+			title: "err missing high impact description",
+			opts: { ...required, impact_level: "high" },
+			expected: [errMissingHighImpactDetail],
+		},
+		{
+			title: "err invalid type",
+			opts: { ...required, type: "high" },
+			expected: [errInvalidType("high")],
+		},
+		{
+			title: "err invalid type",
+			opts: { ...required, type: "" },
+			expected: [errMissing("type")],
+		},
+		{
+			title: "err invalid summary",
+			opts: { ...required, summary: "" },
+			expected: [errMissing("summary")],
+		},
+		{
+			title: "err invalid section/module",
+			opts: { ...required, section: "" },
+			expected: [errMissing("section/module")],
+		},
+		{
+			title: "errs sorted",
+			opts: { ...required, type: "", impact_level: "high" },
+			expected: [errMissingHighImpactDetail, errMissing("type")],
+		},
+	]
+	test.each(cases)("$title", (c) => {
+		expect(new ChangeEntry(c.opts).validate()).toStrictEqual(c.expected)
+	})
+})
 
 describe("YAML", () => {
 	const expected = `chrony:
@@ -129,9 +204,9 @@ describe("Markdown", () => {
 ## [MALFORMED]
 
 
- - #495
- - #510
- - #533
+ - #495 missing high impact detail
+ - #510 invalid type "fix | feature"
+ - #533 missing high impact detail, missing type
 
 ## Features
 

@@ -127,16 +127,18 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 	// Collect malformed on the top for easier fixing
 	const malformed = changes
 		.filter((c) => !c.valid())
-		.map((c) => parsePullRequestNumberFromURL(c.pull_request))
-		.map((x) => parseInt(x))
-		.sort()
+		.map((c) => ({
+			pr: parseInt(parsePullRequestNumberFromURL(c.pull_request), 10),
+			message: c.validate().join(", "),
+		}))
+		.sort((a, b) => a.pr - b.pr)
 
 	if (malformed.length > 0) {
 		body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }])
 
 		const ul: string[] = []
-		for (const num of malformed) {
-			ul.push(`#${num}`)
+		for (const m of malformed) {
+			ul.push(`#${m.pr} ${m.message}`)
 		}
 		body.push({ ul: ul.sort() })
 	}

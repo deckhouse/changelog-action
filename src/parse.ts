@@ -141,7 +141,20 @@ export class ChangeContent {
 
 	// All required fields should be filled
 	valid(): boolean {
-		return !!this.summary && !!this.pull_request
+		const errs = this.validate()
+		return errs.length === 0
+	}
+
+	// All required fields should be filled
+	validate(): string[] {
+		const errs: string[] = []
+		if (!this.summary) {
+			errs.push("missing summary")
+		}
+		if (!this.pull_request) {
+			throw new Error("missing pull_request")
+		}
+		return errs
 	}
 }
 interface ChangeOpts {
@@ -167,17 +180,30 @@ export class ChangeEntry extends ChangeContent {
 		}
 	}
 
-	// All required fields should be filled
-	valid(): boolean {
+	validate(): string[] {
+		const errs: string[] = []
+
 		// validate level
 		if (!!this.level && !knownLevels.has(this.level)) {
-			return false
+			errs.push(`invalid impact level "${this.level}"`)
 		}
+
 		// validate impact presense when the level is high
 		if (this.level === LEVEL_HIGH && !this.impact) {
-			return false
+			errs.push("missing high impact detail")
 		}
-		return !!this.section && knownTypes.has(this.type) && super.valid()
+
+		if (!this.section) {
+			errs.push("missing section/module")
+		}
+
+		if (!knownTypes.has(this.type)) {
+			errs.push(this.type ? `invalid type "${this.type}"` : "missing type")
+		}
+
+		errs.push(...super.validate())
+
+		return errs.sort()
 	}
 }
 interface ChangeEntryOpts extends ChangeOpts {
