@@ -1,6 +1,5 @@
 import * as yaml from "js-yaml"
 import { marked } from "marked"
-import { hasUncaughtExceptionCaptureCallback } from "process"
 
 export interface PullRequest {
 	state: string
@@ -68,12 +67,12 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 	return entries
 }
 
-const TYPE_FIX = "fix"
-const TYPE_FEATURE = "feature"
+export const TYPE_FIX = "fix"
+export const TYPE_FEATURE = "feature"
 const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE])
 
-const LEVEL_HIGH = "high"
-const LEVEL_LOW = "low"
+export const LEVEL_HIGH = "high"
+export const LEVEL_LOW = "low"
 const knownLevels = new Set([LEVEL_LOW, LEVEL_HIGH])
 
 function sanitizeString(x: unknown): string {
@@ -169,27 +168,29 @@ interface ChangeOpts {
 export class ChangeEntry extends ChangeContent {
 	section = ""
 	type = ""
-	level = ""
+	impact_level = ""
 
 	constructor(o: ChangeEntryOpts) {
 		super(o)
 		this.section = o.section
 		this.type = o.type
 		if (o.impact_level) {
-			this.level = o.impact_level
+			this.impact_level = o.impact_level
 		}
 	}
 
 	validate(): string[] {
 		const errs: string[] = []
 
+		errs.push(...super.validate())
+
 		// validate level
-		if (!!this.level && !knownLevels.has(this.level)) {
-			errs.push(`invalid impact level "${this.level}"`)
+		if (!!this.impact_level && !knownLevels.has(this.impact_level)) {
+			errs.push(`invalid impact level "${this.impact_level}"`)
 		}
 
 		// validate impact presense when the level is high
-		if (this.level === LEVEL_HIGH && !this.impact) {
+		if (this.impact_level === LEVEL_HIGH && !this.impact) {
 			errs.push("missing high impact detail")
 		}
 
@@ -200,8 +201,6 @@ export class ChangeEntry extends ChangeContent {
 		if (!knownTypes.has(this.type)) {
 			errs.push(this.type ? `invalid type "${this.type}"` : "missing type")
 		}
-
-		errs.push(...super.validate())
 
 		return errs.sort()
 	}

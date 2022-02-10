@@ -15,6 +15,7 @@ const changes: ChangeEntry[] = [
 		type: "fix",
 		summary: "d21",
 		pull_request: "https://github.com/ow/re/210",
+		impact_level: "high",
 		impact: `Grafana will be restarted.
 Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
 Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.`,
@@ -208,6 +209,14 @@ describe("Markdown", () => {
  - #510 invalid type "fix | feature"
  - #533 missing high impact detail, missing type
 
+## Release digest
+
+
+ - Grafana will be restarted.
+    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
+    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
+ - So good.
+
 ## Features
 
 
@@ -239,7 +248,7 @@ describe("Markdown", () => {
 			.map((s) => s.trim())
 			.filter((s) => s.startsWith("## "))
 
-		expect(subheaders).toStrictEqual(["## [MALFORMED]", "## Features", "## Fixes"])
+		expect(subheaders).toStrictEqual(["## [MALFORMED]", "## Release digest", "## Features", "## Fixes"])
 	})
 
 	test("formats right", () => {

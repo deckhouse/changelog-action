@@ -1,6 +1,6 @@
 import * as yaml from "js-yaml"
 import json2md, { DataObject } from "json2md"
-import { ChangeContent, ChangeEntry, ChangesByModule, ModuleChanges } from "./parse"
+import { ChangeContent, ChangeEntry, ChangesByModule, LEVEL_HIGH, ModuleChanges } from "./parse"
 
 function getYAMLSorter() {
 	// don't pollute the scope with globals
@@ -37,7 +37,7 @@ export function formatYaml(changes: ChangeEntry[]): string {
 	// create the map from only valid entries:  module -> fix/feature -> change[]
 	const body = changes
 		.filter((c) => c.valid()) //
-		.filter((c) => c.level !== "low")
+		.filter((c) => c.impact_level !== "low")
 		.reduce(groupByModuleAndType, {})
 
 	return yaml.dump(body, opts)
@@ -79,7 +79,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 }
 
 const MARKDOWN_HEADER_TAG = "h1"
-const MARKDOWN_TYPE_TAG = "h2"
+const MARKDOWN_SUBHEADER_TAG = "h2"
 
 /**
  * @function formatMarkdown returns changes formatted in markdown
@@ -90,11 +90,32 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	const body: DataObject[] = [
 		{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }, // title
 		...formatMalformedEntries(changes),
+		...formatReleaseDigest(changes),
 		...formatFeatureEntries(changes),
 		...formatFixEntries(changes),
 	]
 
 	return json2md(body)
+}
+
+function formatReleaseDigest(changes: ChangeEntry[]): DataObject[] {
+	const subHeader = "Release digest"
+
+	const impacts = changes
+		.filter((c) => c.valid() && c.impact_level === LEVEL_HIGH)
+		.map((c) => c.impact)
+		.filter((x): x is string => !!x) // for type check calmness
+		.sort() // sorting to naіvely group potentially similar impacts together
+
+	const body: DataObject[] = []
+	if (impacts.length === 0) {
+		return body
+	}
+
+	body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader })
+	body.push({ ul: impacts })
+
+	return body
 }
 
 function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {
@@ -115,7 +136,7 @@ function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: st
 		return body
 	}
 
-	body.push({ [MARKDOWN_TYPE_TAG]: subHeader })
+	body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader })
 	body.push({ ul: filtered.map(changeMardown) })
 
 	return body
@@ -134,7 +155,7 @@ function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
 		.sort((a, b) => a.pr - b.pr)
 
 	if (malformed.length > 0) {
-		body.push([{ [MARKDOWN_TYPE_TAG]: "[MALFORMED]" }])
+		body.push([{ [MARKDOWN_SUBHEADER_TAG]: "[MALFORMED]" }])
 
 		const ul: string[] = []
 		for (const m of malformed) {
