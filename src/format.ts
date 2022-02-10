@@ -34,7 +34,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 
 	// ensure module change list
 	// e.g. for fixes: { "module": { "fixes": [] } }
-	let list
+	let list: Change[]
 	switch (change.type) {
 		case "fix":
 			list = getTypeList("fixes")
@@ -75,9 +75,7 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 		...formatFixEntries(changes),
 	]
 
-	const md = json2md(body)
-
-	return md
+	return json2md(body)
 }
 
 function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {

@@ -53,7 +53,8 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 				entries.push(change)
 				continue
 			}
-			const change = parseChange(doc as Partial<ChangeEntryOpts>, pr)
+			const opts = parseInput(doc as ChangeInput, pr)
+			const change = new ChangeEntry(opts)
 			entries.push(change)
 		} catch (e) {
 			if (!(e instanceof yaml.YAMLException)) {
@@ -67,33 +68,6 @@ export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): Cha
 }
 
 const knownTypes = new Set(["fix", "feature"])
-
-/**
- *
- * doc is an object with YAML doc, e.g.
- *
- * {
- *   "module": "module3",
- *   "type": "fix",
- *   "description": "what was fixed in 151",
- *   "note": "Network flap is expected, but no longer than 10 seconds",
- * }
- */
-function parseChange(doc: Partial<ChangeEntryOpts>, pr: PullRequest): ChangeEntry {
-	const opts: ChangeEntryOpts = {
-		module: sanitizeString(doc.module) ?? "",
-		type: sanitizeString(doc.type) ?? "",
-		description: sanitizeString(doc.description) ?? "",
-		pull_request: pr.url,
-	}
-
-	const note = sanitizeString(doc.note)
-	if (note) {
-		opts.note = note
-	}
-
-	return new ChangeEntry(opts)
-}
 
 function sanitizeString(x: unknown): string {
 	if (typeof x === "string") {
@@ -136,11 +110,8 @@ export function extractChanges(body: string): string[] {
 
 	const parsed = lexer.lex(body)
 	const changeBlocks = parsed
-		.filter((t: marked.Token): t is marked.Tokens.Code => t.type == "code" && t.lang == "changes")
-		.map((t: marked.Tokens.Code) => t.text)
-
-	// console.log("PARSED", parsed)
-	// console.log("CHANGES/", changeBlocks)
+		.filter((t): t is marked.Tokens.Code => t.type == "code" && t.lang == "changes")
+		.map((t) => t.text)
 
 	return changeBlocks
 }
@@ -193,4 +164,57 @@ export class ChangeEntry extends Change {
 interface ChangeEntryOpts extends ChangeOpts {
 	module: string
 	type: string
+}
+
+interface ChangeInput extends ChangeInputVersion1, ChangeInputVersion2 {}
+interface ChangeInputVersion1 extends ChangeOpts {
+	type: string
+	module: string
+	description: string
+	note?: string
+}
+
+interface ChangeInputVersion2 extends ChangeOpts {
+	type: string
+	section: string
+	summary: string
+	impact?: string
+}
+
+/**
+ *
+ * doc is an object made from 'changes' YAML doc, e.g.
+ *
+ * // deprecated version
+ * {
+ *   "module": "module3",
+ *   "type": "fix",
+ *   "description": "what was fixed in 151",
+ *   "note": "Network flap is expected, but no longer than 10 seconds",
+ * }
+ *
+ * OR
+ *
+ * // modern version
+ * {
+ *   "section": "module3",
+ *   "type": "fix",
+ *   "summary": "what was fixed in 151",
+ *   "impact": "Network flap is expected, but no longer than 10 seconds",
+ * }
+ */
+function parseInput(doc: ChangeInput, pr: PullRequest): ChangeEntryOpts {
+	const opts: ChangeEntryOpts = {
+		module: sanitizeString(doc.module) || sanitizeString(doc.section) || "",
+		type: sanitizeString(doc.type) || "",
+		description: sanitizeString(doc.description) || sanitizeString(doc.summary) || "",
+		pull_request: pr.url,
+	}
+
+	const note = sanitizeString(doc.note) || sanitizeString(doc.impact)
+	if (note) {
+		opts.note = note
+	}
+
+	return opts
 }
