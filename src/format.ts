@@ -1,6 +1,15 @@
 import * as yaml from "js-yaml"
 import json2md, { DataObject } from "json2md"
-import { ChangeContent, ChangeEntry, ChangesByModule, LEVEL_HIGH, ModuleChanges } from "./parse"
+import {
+	ChangeContent,
+	ChangeEntry,
+	ChangesByModule,
+	LEVEL_HIGH,
+	LEVEL_LOW,
+	ModuleChanges,
+	TYPE_FEATURE,
+	TYPE_FIX,
+} from "./parse"
 
 function getYAMLSorter() {
 	// don't pollute the scope with globals
@@ -37,7 +46,7 @@ export function formatYaml(changes: ChangeEntry[]): string {
 	// create the map from only valid entries:  module -> fix/feature -> change[]
 	const body = changes
 		.filter((c) => c.valid()) //
-		.filter((c) => c.impact_level !== "low")
+		.filter((c) => c.impact_level !== LEVEL_LOW)
 		.reduce(groupByModuleAndType, {})
 
 	return yaml.dump(body, opts)
@@ -56,10 +65,10 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	// e.g. for fixes: { "module": { "fixes": [] } }
 	let list: ChangeContent[]
 	switch (change.type) {
-		case "fix":
+		case TYPE_FIX:
 			list = getTypeList("fixes")
 			break
-		case "feature":
+		case TYPE_FEATURE:
 			list = getTypeList("features")
 			break
 		default:
@@ -119,11 +128,11 @@ function formatReleaseDigest(changes: ChangeEntry[]): DataObject[] {
 }
 
 function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {
-	return formatEntries(changes, "feature", "Features")
+	return formatEntries(changes, TYPE_FEATURE, "Features")
 }
 
 function formatFixEntries(changes: ChangeEntry[]): DataObject[] {
-	return formatEntries(changes, "fix", "Fixes")
+	return formatEntries(changes, TYPE_FIX, "Fixes")
 }
 
 function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: string): DataObject[] {
