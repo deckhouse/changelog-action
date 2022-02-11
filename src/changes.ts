@@ -1,4 +1,4 @@
-import { formatMarkdown, formatYaml } from "./format"
+import { formatMarkdown, formatPartialMarkdown, formatYaml } from "./format"
 import { collectChangelog, PullRequest } from "./parse"
 
 export interface Inputs {
@@ -9,12 +9,13 @@ export interface Inputs {
 export interface Outputs {
 	yaml: string
 	markdown: string
+	partialMarkdown: string
 }
 
 // This function expects an array of pull requests belonging to single milestone
 export function collectChanges(inputs: Inputs): Outputs {
 	const { pulls } = inputs
-	const out = { yaml: "", markdown: "" }
+	const out = { yaml: "", markdown: "", partialMarkdown: "" }
 
 	if (pulls.length === 0) {
 		return out
@@ -26,6 +27,7 @@ export function collectChanges(inputs: Inputs): Outputs {
 
 	out.yaml = formatYaml(changes)
 	out.markdown = formatMarkdown(milestone, changes)
+	out.partialMarkdown = formatPartialMarkdown(changes)
 
 	return out
 }

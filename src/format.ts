@@ -87,93 +87,92 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 	return acc
 }
 
-const MARKDOWN_HEADER_TAG = "h1"
-const MARKDOWN_SUBHEADER_TAG = "h2"
-
 /**
- * @function formatMarkdown returns changes formatted in markdown
- * @param changes by module
- * @returns
+ * @function formatMarkdown returns changes formatted in markdown for PR body
  */
 export function formatMarkdown(milestone: string, changes: ChangeEntry[]): string {
+	const headerTag = "h1"
+	const subheaderTag = "h2"
+
 	const body: DataObject[] = [
-		{ [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` }, // title
-		...formatMalformedEntries(changes),
-		...formatReleaseDigest(changes),
-		...formatFeatureEntries(changes),
-		...formatFixEntries(changes),
+		{ [headerTag]: `Changelog ${milestone}` }, // title
 	]
+
+	const malformed = collectMalformed(changes)
+	if (malformed.length > 0) {
+		body.push({ [subheaderTag]: "[MALFORMED]" })
+		body.push({ ul: malformed })
+	}
+
+	const impacts = collectImpact(changes)
+	if (impacts.length > 0) {
+		body.push({ [subheaderTag]: "Release digest" })
+		body.push({ ul: impacts })
+	}
+
+	const features = collectChanges(changes, TYPE_FEATURE)
+	if (features.length > 0) {
+		body.push({ [subheaderTag]: "Features" })
+		body.push({ ul: features })
+	}
+
+	const fixes = collectChanges(changes, TYPE_FIX)
+	if (fixes.length > 0) {
+		body.push({ [subheaderTag]: "Fixes" })
+		body.push({ ul: fixes })
+	}
 
 	return json2md(body)
 }
 
-function formatReleaseDigest(changes: ChangeEntry[]): DataObject[] {
-	const subHeader = "Release digest"
+/**
+ * @function formatPartialMarkdown returns partial changes formatted in markdown for accumulating in
+ * single file
+ */
+export function formatPartialMarkdown(changes: ChangeEntry[]): string {
+	const subheaderTag = "h3"
 
-	const impacts = changes
+	const body: DataObject[] = []
+
+	const features = collectChanges(changes, TYPE_FEATURE)
+	if (features.length > 0) {
+		body.push({ [subheaderTag]: "Features" })
+		body.push({ ul: features })
+	}
+
+	const fixes = collectChanges(changes, TYPE_FIX)
+	if (fixes.length > 0) {
+		body.push({ [subheaderTag]: "Fixes" })
+		body.push({ ul: fixes })
+	}
+
+	return json2md(body)
+}
+
+function collectImpact(changes: ChangeEntry[]): string[] {
+	return changes
 		.filter((c) => c.valid() && c.impact_level === LEVEL_HIGH)
 		.map((c) => c.impact)
 		.filter((x): x is string => !!x) // for type check calmness
 		.sort() // sorting to naіvely group potentially similar impacts together
-
-	const body: DataObject[] = []
-	if (impacts.length === 0) {
-		return body
-	}
-
-	body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader })
-	body.push({ ul: impacts })
-
-	return body
 }
 
-function formatFeatureEntries(changes: ChangeEntry[]): DataObject[] {
-	return formatEntries(changes, TYPE_FEATURE, "Features")
-}
-
-function formatFixEntries(changes: ChangeEntry[]): DataObject[] {
-	return formatEntries(changes, TYPE_FIX, "Fixes")
-}
-
-function formatEntries(changes: ChangeEntry[], changeType: string, subHeader: string): DataObject[] {
-	const filtered = changes
+function collectChanges(changes: ChangeEntry[], changeType: string): string[] {
+	return changes
 		.filter((c) => c.valid() && c.type == changeType) //
 		.sort((a, b) => (a.section < b.section ? -1 : 1)) // sort by module
-
-	const body: DataObject[] = []
-	if (filtered.length === 0) {
-		return body
-	}
-
-	body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader })
-	body.push({ ul: filtered.map(changeMardown) })
-
-	return body
+		.map(changeMardown)
 }
 
-function formatMalformedEntries(changes: ChangeEntry[]): DataObject[] {
-	const body: DataObject[] = []
-
-	// Collect malformed on the top for easier fixing
-	const malformed = changes
-		.filter((c) => !c.valid())
+function collectMalformed(changes: ChangeEntry[]): string[] {
+	return changes
+		.filter((c) => !c.valid()) // malformed
 		.map((c) => ({
 			pr: parseInt(parsePullRequestNumberFromURL(c.pull_request), 10),
 			message: c.validate().join(", "),
 		}))
-		.sort((a, b) => a.pr - b.pr)
-
-	if (malformed.length > 0) {
-		body.push([{ [MARKDOWN_SUBHEADER_TAG]: "[MALFORMED]" }])
-
-		const ul: string[] = []
-		for (const m of malformed) {
-			ul.push(`#${m.pr} ${m.message}`)
-		}
-		body.push({ ul: ul.sort() })
-	}
-
-	return body
+		.sort((a, b) => a.pr - b.pr) // asc
+		.map((c) => `#${c.pr} ${c.message}`) // Github expands "#123" to PR links
 }
 
 function parsePullRequestNumberFromURL(prUrl: string): string {
@@ -183,9 +182,12 @@ function parsePullRequestNumberFromURL(prUrl: string): string {
 
 function changeMardown(c: ChangeEntry): string {
 	const prNum = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`**[${c.section}]** ${c.summary} [#${prNum}](${c.pull_request})`]
 
-	if (c.impact) lines.push(c.impact)
+	const prlink = `[#${prNum}](${c.pull_request})`
+	const line = `**[${c.section}]** ${c.summary} ${prlink}`
 
-	return lines.join("\n")
+	if (c.impact) {
+		return line + "\n" + c.impact
+	}
+	return line
 }

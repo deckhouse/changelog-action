@@ -14,6 +14,7 @@ function run() {
 
 		core.setOutput("yaml", o.yaml)
 		core.setOutput("markdown", o.markdown)
+		core.setOutput("partial_markdown", o.partialMarkdown)
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} catch (error: any) {
