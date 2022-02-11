@@ -100,13 +100,13 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 		{ [headerTag]: `Changelog ${milestone}` }, // title
 	]
 
-	const malformed = collectMalformedList(changes)
+	const malformed = collectMalformed(changes)
 	if (malformed.length > 0) {
 		body.push({ [subheaderTag]: "[MALFORMED]" })
 		body.push({ ul: malformed })
 	}
 
-	const impacts = collectReleaseDigest(changes)
+	const impacts = collectImpact(changes)
 	if (impacts.length > 0) {
 		body.push({ [subheaderTag]: "Release digest" })
 		body.push({ ul: impacts })
@@ -147,7 +147,7 @@ export function formatPartialMarkdown(changes: ChangeEntry[]): string {
 	return json2md(body)
 }
 
-function collectReleaseDigest(changes: ChangeEntry[]): string[] {
+function collectImpact(changes: ChangeEntry[]): string[] {
 	return changes
 		.filter((c) => c.valid() && c.impact_level === LEVEL_HIGH)
 		.map((c) => c.impact)
@@ -162,7 +162,7 @@ function collectChanges(changes: ChangeEntry[], changeType: string): string[] {
 		.map(changeMardown)
 }
 
-function collectMalformedList(changes: ChangeEntry[]): string[] {
+function collectMalformed(changes: ChangeEntry[]): string[] {
 	return changes
 		.filter((c) => !c.valid())
 		.map((c) => ({
