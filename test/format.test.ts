@@ -282,13 +282,13 @@ describe("Partial Markdown", () => {
  - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 `
 	test("does not have h1", () => {
-		const firstLine = md.split("\n").filter((line) => line.startsWith("# "))
-		expect(firstLine).toHaveLength(0)
+		const headers = md.split("\n").filter((line) => line.startsWith("# "))
+		expect(headers).toHaveLength(0)
 	})
 
 	test("does not have h2", () => {
-		const firstLine = md.split("\n").filter((line) => line.startsWith("## "))
-		expect(firstLine).toHaveLength(0)
+		const subheaders = md.split("\n").filter((line) => line.startsWith("## "))
+		expect(subheaders).toHaveLength(0)
 	})
 
 	test("formats sections as h3", () => {
