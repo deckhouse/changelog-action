@@ -88,9 +88,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 }
 
 /**
- * @function formatMarkdown returns changes formatted in markdown
- * @param changes by module
- * @returns
+ * @function formatMarkdown returns changes formatted in markdown for PR body
  */
 export function formatMarkdown(milestone: string, changes: ChangeEntry[]): string {
 	const headerTag = "h1"
@@ -127,6 +125,10 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	return json2md(body)
 }
 
+/**
+ * @function formatPartialMarkdown returns partial changes formatted in markdown for accumulating in
+ * single file
+ */
 export function formatPartialMarkdown(changes: ChangeEntry[]): string {
 	const subheaderTag = "h3"
 
@@ -164,13 +166,13 @@ function collectChanges(changes: ChangeEntry[], changeType: string): string[] {
 
 function collectMalformed(changes: ChangeEntry[]): string[] {
 	return changes
-		.filter((c) => !c.valid())
+		.filter((c) => !c.valid()) // malformed
 		.map((c) => ({
 			pr: parseInt(parsePullRequestNumberFromURL(c.pull_request), 10),
 			message: c.validate().join(", "),
 		}))
-		.sort((a, b) => a.pr - b.pr)
-		.map((c) => `#${c.pr} ${c.message}`)
+		.sort((a, b) => a.pr - b.pr) // asc
+		.map((c) => `#${c.pr} ${c.message}`) // Github expands "#123" to PR links
 }
 
 function parsePullRequestNumberFromURL(prUrl: string): string {
@@ -180,9 +182,12 @@ function parsePullRequestNumberFromURL(prUrl: string): string {
 
 function changeMardown(c: ChangeEntry): string {
 	const prNum = parsePullRequestNumberFromURL(c.pull_request)
-	const lines = [`**[${c.section}]** ${c.summary} [#${prNum}](${c.pull_request})`]
 
-	if (c.impact) lines.push(c.impact)
+	const prlink = `[#${prNum}](${c.pull_request})`
+	const line = `**[${c.section}]** ${c.summary} ${prlink}`
 
-	return lines.join("\n")
+	if (c.impact) {
+		return line + "\n" + c.impact
+	}
+	return line
 }
