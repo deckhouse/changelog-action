@@ -12,7 +12,7 @@ const format_1 = __nccwpck_require__(6610);
 const parse_1 = __nccwpck_require__(5223);
 function collectChanges(inputs) {
     const { pulls } = inputs;
-    const out = { yaml: "", markdown: "" };
+    const out = { yaml: "", markdown: "", partialMarkdown: "" };
     if (pulls.length === 0) {
         return out;
     }
@@ -20,6 +20,7 @@ function collectChanges(inputs) {
     const changes = (0, parse_1.collectChangelog)(pulls);
     out.yaml = (0, format_1.formatYaml)(changes);
     out.markdown = (0, format_1.formatMarkdown)(milestone, changes);
+    out.partialMarkdown = (0, format_1.formatPartialMarkdown)(changes);
     return out;
 }
 exports.collectChanges = collectChanges;
@@ -55,7 +56,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.formatMarkdown = exports.formatYaml = void 0;
+exports.formatPartialMarkdown = exports.formatMarkdown = exports.formatYaml = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const json2md_1 = __importDefault(__nccwpck_require__(8158));
 const parse_1 = __nccwpck_require__(5223);
@@ -113,70 +114,73 @@ function groupByModuleAndType(acc, change) {
     }));
     return acc;
 }
-const MARKDOWN_HEADER_TAG = "h1";
-const MARKDOWN_SUBHEADER_TAG = "h2";
 function formatMarkdown(milestone, changes) {
+    const headerTag = "h1";
+    const subheaderTag = "h2";
     const body = [
-        { [MARKDOWN_HEADER_TAG]: `Changelog ${milestone}` },
-        ...formatMalformedEntries(changes),
-        ...formatReleaseDigest(changes),
-        ...formatFeatureEntries(changes),
-        ...formatFixEntries(changes),
+        { [headerTag]: `Changelog ${milestone}` },
     ];
+    const malformed = collectMalformed(changes);
+    if (malformed.length > 0) {
+        body.push({ [subheaderTag]: "[MALFORMED]" });
+        body.push({ ul: malformed });
+    }
+    const impacts = collectImpact(changes);
+    if (impacts.length > 0) {
+        body.push({ [subheaderTag]: "Release digest" });
+        body.push({ ul: impacts });
+    }
+    const features = collectChanges(changes, parse_1.TYPE_FEATURE);
+    if (features.length > 0) {
+        body.push({ [subheaderTag]: "Features" });
+        body.push({ ul: features });
+    }
+    const fixes = collectChanges(changes, parse_1.TYPE_FIX);
+    if (fixes.length > 0) {
+        body.push({ [subheaderTag]: "Fixes" });
+        body.push({ ul: fixes });
+    }
     return (0, json2md_1.default)(body);
 }
 exports.formatMarkdown = formatMarkdown;
-function formatReleaseDigest(changes) {
-    const subHeader = "Release digest";
-    const impacts = changes
+function formatPartialMarkdown(changes) {
+    const subheaderTag = "h3";
+    const body = [];
+    const features = collectChanges(changes, parse_1.TYPE_FEATURE);
+    if (features.length > 0) {
+        body.push({ [subheaderTag]: "Features" });
+        body.push({ ul: features });
+    }
+    const fixes = collectChanges(changes, parse_1.TYPE_FIX);
+    if (fixes.length > 0) {
+        body.push({ [subheaderTag]: "Fixes" });
+        body.push({ ul: fixes });
+    }
+    return (0, json2md_1.default)(body);
+}
+exports.formatPartialMarkdown = formatPartialMarkdown;
+function collectImpact(changes) {
+    return changes
         .filter((c) => c.valid() && c.impact_level === parse_1.LEVEL_HIGH)
         .map((c) => c.impact)
         .filter((x) => !!x)
         .sort();
-    const body = [];
-    if (impacts.length === 0) {
-        return body;
-    }
-    body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader });
-    body.push({ ul: impacts });
-    return body;
 }
-function formatFeatureEntries(changes) {
-    return formatEntries(changes, parse_1.TYPE_FEATURE, "Features");
-}
-function formatFixEntries(changes) {
-    return formatEntries(changes, parse_1.TYPE_FIX, "Fixes");
-}
-function formatEntries(changes, changeType, subHeader) {
-    const filtered = changes
+function collectChanges(changes, changeType) {
+    return changes
         .filter((c) => c.valid() && c.type == changeType)
-        .sort((a, b) => (a.section < b.section ? -1 : 1));
-    const body = [];
-    if (filtered.length === 0) {
-        return body;
-    }
-    body.push({ [MARKDOWN_SUBHEADER_TAG]: subHeader });
-    body.push({ ul: filtered.map(changeMardown) });
-    return body;
+        .sort((a, b) => (a.section < b.section ? -1 : 1))
+        .map(changeMardown);
 }
-function formatMalformedEntries(changes) {
-    const body = [];
-    const malformed = changes
+function collectMalformed(changes) {
+    return changes
         .filter((c) => !c.valid())
         .map((c) => ({
         pr: parseInt(parsePullRequestNumberFromURL(c.pull_request), 10),
         message: c.validate().join(", "),
     }))
-        .sort((a, b) => a.pr - b.pr);
-    if (malformed.length > 0) {
-        body.push([{ [MARKDOWN_SUBHEADER_TAG]: "[MALFORMED]" }]);
-        const ul = [];
-        for (const m of malformed) {
-            ul.push(`#${m.pr} ${m.message}`);
-        }
-        body.push({ ul: ul.sort() });
-    }
-    return body;
+        .sort((a, b) => a.pr - b.pr)
+        .map((c) => `#${c.pr} ${c.message}`);
 }
 function parsePullRequestNumberFromURL(prUrl) {
     const parts = prUrl.split("/");
@@ -184,10 +188,12 @@ function parsePullRequestNumberFromURL(prUrl) {
 }
 function changeMardown(c) {
     const prNum = parsePullRequestNumberFromURL(c.pull_request);
-    const lines = [`**[${c.section}]** ${c.summary} [#${prNum}](${c.pull_request})`];
-    if (c.impact)
-        lines.push(c.impact);
-    return lines.join("\n");
+    const prlink = `[#${prNum}](${c.pull_request})`;
+    const line = `**[${c.section}]** ${c.summary} ${prlink}`;
+    if (c.impact) {
+        return line + "\n" + c.impact;
+    }
+    return line;
 }
 
 
@@ -229,6 +235,7 @@ function run() {
         const o = (0, changes_1.collectChanges)(inputs);
         core.setOutput("yaml", o.yaml);
         core.setOutput("markdown", o.markdown);
+        core.setOutput("partial_markdown", o.partialMarkdown);
     }
     catch (error) {
         core.setFailed(error.message);
