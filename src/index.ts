@@ -1,25 +1,27 @@
 import * as core from "@actions/core"
-import { collectChanges, Inputs } from "./changes"
-import { PullRequest } from "./parse"
+import { collectReleaseChanges as collectChanges, Inputs, Outputs } from "./changes"
+import { Client } from "./client"
 
-function run() {
+async function main() {
 	try {
 		const inputs: Inputs = {
 			token: core.getInput("token"),
-			pulls: JSON.parse(core.getInput("pull_requests")) as PullRequest[],
+			repo: core.getInput("repo"),
+			milestone: core.getInput("milestone"),
 		}
-		// core.debug(`Inputs: ${inspect(inputs)}`)
 
-		const o = collectChanges(inputs)
+		const client = new Client(inputs.repo, inputs.token)
 
-		core.setOutput("yaml", o.yaml)
-		core.setOutput("markdown", o.markdown)
-		core.setOutput("partial_markdown", o.partialMarkdown)
+		const o = await collectChanges(client, inputs.milestone)
+
+		core.setOutput("patch_yaml", o.patchYaml)
+		core.setOutput("patch_markdown", o.patchMarkdown)
+		core.setOutput("minor_markdown", o.minorMarkdown)
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	} catch (error: any) {
-		core.setFailed(error.message)
+	} catch (e: any) {
+		core.setFailed(e.message)
 	}
 }
 
-run()
+main()
