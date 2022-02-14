@@ -1,5 +1,5 @@
 import * as core from "@actions/core"
-import { collectReleaseChanges as collectChanges, Inputs, Outputs } from "./changes"
+import { collectReleaseChanges as collectChanges, Inputs } from "./changes"
 import { Client } from "./client"
 
 async function main() {
