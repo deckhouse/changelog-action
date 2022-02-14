@@ -17,6 +17,7 @@ async function main() {
 		core.setOutput("patch_yaml", o.patchYaml)
 		core.setOutput("patch_markdown", o.patchMarkdown)
 		core.setOutput("minor_markdown", o.minorMarkdown)
+		core.setOutput("minor_version", o.minorVersion)
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} catch (e: any) {

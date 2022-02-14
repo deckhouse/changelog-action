@@ -12,6 +12,7 @@ export interface Outputs {
 	patchYaml: string
 	patchMarkdown: string
 	minorMarkdown: string
+	minorVersion: string
 }
 
 // This function expects an array of pull requests belonging to single milestone
@@ -21,7 +22,12 @@ export async function collectReleaseChanges(client: Client, milestone: string): 
 		throw new Error(`unexpected version "${milestone}"`)
 	}
 
-	const out = { patchYaml: "", patchMarkdown: "", minorMarkdown: "" }
+	const out = {
+		patchYaml: "",
+		patchMarkdown: "",
+		minorMarkdown: "",
+		minorVersion: version.toMinor(),
+	}
 
 	// Get pulls for current patch relese
 	const pulls = await client.getMilestonePulls(milestone)

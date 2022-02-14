@@ -9,35 +9,32 @@ This action creates changelogs by merged PRs per milestone.
     #   steps.args.outputs.milestone_title  = "v1.2.3"
     #   steps.args.outputs.milestone_number = 42
 
-    - name: Find Merged Pull Requsts
-      id: merged_milestone
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.token }}
-      run: |
-        prs="$(gh pr list \
-          --repo '${{ github.repository }}' \
-          --search 'milestone:${{ steps.args.outputs.milestone_title }}' \
-          --state merged \
-          --json number,url,title,body,state,milestone)"
-        echo "::set-output name=prs::${prs}"
-
     - name: Collect Changelog
       id: changelog
       uses: deckhouse/changelog-action@v1
       with:
         token: ${{ inputs.token }}
-        pull_requests: ${{ steps.merged_milestone.outputs.prs }}
+        milestone: ${{ steps.args.outputs.milestone_title }}
+        repo: deckhouse/deckhouse
 
-    - name: Write Changelog File
-      id: file
+    - name: Write Changelog YAML
+      id: yaml_file
       shell: bash
       run: |
         mkdir -p ./CHANGELOG
         filename='./CHANGELOG/CHANGELOG-${{ steps.args.outputs.milestone_title }}.yml'
-        cat > "$filename" <<EOBODYINACTION
-        ${{ steps.changelog.outputs.yaml }}
-        EOBODYINACTION
+        cat > "$filename" <<EOF
+        ${{ steps.changelog.outputs.patch_yaml }}
+        EOF
+
+    - name: Write Changelog Markdown
+      id: md_file
+      shell: bash
+      run: |
+        filename='./CHANGELOG/CHANGELOG-${{ steps.changelog.outputs.minor_version }}.md'
+        cat > "$filename" <<EOF
+        ${{ steps.changelog.outputs.minor_markdown }}
+        EOF
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3.10.1
