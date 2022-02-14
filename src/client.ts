@@ -48,19 +48,3 @@ export class Client {
 		)
 	}
 }
-
-// async function main() {
-// 	const octokit = new Octokit({
-// 		auth: token,
-// 		userAgent: "shvgn v0.0.0",
-// 		timeZone: "Europe/Moscow",
-// 		baseUrl: "https://api.github.com",
-// 	})
-
-// 	const milestone = "v1.30.0"
-// 	const context = { repo: { owner: "deckhouse", repo: "deckhouse" } }
-// 	const pulls = await action({ github: octokit, context }, { milestone })
-
-// 	console.log(pulls)
-// 	console.log("Total:", pulls.length)
-// }
