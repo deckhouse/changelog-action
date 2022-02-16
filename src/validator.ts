@@ -1,4 +1,4 @@
-import { ChangeEntry, ChangeEntryOpts } from "./parse"
+import { ChangeEntry, ChangeEntryOpts, knownLevels } from "./parse"
 
 export function getValidator(allowedSections: string[] = []): ValidatorImpl | NoopValidator {
 	if (allowedSections.length === 0) {
@@ -51,22 +51,44 @@ export class NoopValidator implements Validator {
 
 function parseConfig(sections: string[]) {
 	const m = new Map()
-	for (const s of sections) {
-		const parts = s.split(":")
-		const [section, level] = parts
+	const invalid = new Set<string>()
+	const duplicates = new Set<string>()
 
-		switch (parts.length) {
-			case 0:
-				throw new Error(`invalid allowed_sections config: "${sections}"`)
-			case 1:
-				m.set(section, "")
-				break
-			case 2:
-				m.set(section, level)
-				break
-			default:
-				throw new Error(`unexpected section notation in allowed_sections config: "${s}"`)
+	for (const definition of sections) {
+		const parts = definition.split(":")
+
+		if (parts.length === 0 || parts.length > 2) {
+			invalid.add(definition)
+			continue
+		}
+
+		const [section, level] = parts
+		if (m.has(section)) {
+			duplicates.add(section)
+			continue
+		}
+
+		if (parts.length === 1) {
+			m.set(section, "")
+			continue
+		}
+
+		if (parts.length === 2 && level && knownLevels.has(level)) {
+			m.set(section, level)
+			continue
 		}
 	}
+
+	let err = ""
+	if (invalid.size > 0) {
+		err += `invalid section definitions: ${Array.from(invalid).join(", ")}`
+	}
+	if (duplicates.size > 0) {
+		err += `\nduplicated sections in definitions: ${Array.from(duplicates).join(", ")}`
+	}
+	if (err.length > 0) {
+		throw new Error(`invalid allowed_sections:\n${err}`)
+	}
+
 	return m
 }
