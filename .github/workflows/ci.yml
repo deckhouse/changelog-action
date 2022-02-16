@@ -2,10 +2,10 @@ name: CI
 on:
   push:
     tags:
-      - v*
+      - v**
     branches:
       - main
-      - release/*
+      - release/**
     paths-ignore:
       - "README.md"
   pull_request:
@@ -39,7 +39,7 @@ jobs:
           path: action.yml
 
   package:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: (github.event_name == 'push') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     needs:
       - build
     runs-on: ubuntu-latest
