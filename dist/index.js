@@ -86,7 +86,6 @@ function formatYaml(changes) {
     };
     const body = changes
         .filter((c) => c.valid())
-        .filter((c) => c.impact_level !== parse_1.LEVEL_LOW)
         .reduce(groupByModuleAndType, {});
     return yaml.dump(body, opts);
 }
@@ -170,7 +169,7 @@ function collectImpact(changes) {
 }
 function collectChanges(changes, changeType) {
     return changes
-        .filter((c) => c.valid() && c.type == changeType)
+        .filter((c) => c.valid() && c.type == changeType && c.impact_level != parse_1.LEVEL_LOW)
         .sort((a, b) => (a.section < b.section ? -1 : 1))
         .map(changeMardown);
 }
