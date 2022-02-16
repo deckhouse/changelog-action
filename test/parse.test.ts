@@ -1,10 +1,11 @@
 import * as fs from "fs"
 import * as path from "path"
+import { NoopValidator } from "../src/validator"
 import {
 	ChangeEntry,
 	collectChangelog,
-	extractChanges,
 	parseChangeEntries,
+	parseChangesBlocks,
 	PullRequest,
 } from "./../src/parse"
 
@@ -17,20 +18,20 @@ describe("extracting raw changes", () => {
 	}
 
 	test("parses empty line on empty input", () => {
-		expect(extractChanges("")).toStrictEqual([])
+		expect(parseChangesBlocks("")).toStrictEqual([])
 	})
 
 	describe("v1", () => {
 		test("parses single block", () => {
 			const input = block("module: one", "changes")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["module: one"])
 		})
 
 		test("ignores all blocks except frist one", () => {
 			const input = [block("module: one", "changes"), block("module: two", "changes")].join("\n")
 
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["module: one", "module: two"])
 		})
 
@@ -45,25 +46,25 @@ describe("extracting raw changes", () => {
 				block("module: two", "changes"),
 				block("nothing2"),
 			].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["module: one", "module: two"])
 		})
 
 		test("ignores blocks with malformed beginning", () => {
 			const input = ["````changes", "module: one", "```"].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual([])
 		})
 
 		test("tolerates blocks with malformed ending due (the `marked` lib works so)", () => {
 			const input = ["```changes", "module: one", "````"].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["module: one"])
 		})
 
 		test("parses two blocks from GitHub JSON", () => {
 			const { input, expected } = getTwoBlocksBodyFixture()
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(expected)
 		})
 
@@ -75,7 +76,7 @@ describe("extracting raw changes", () => {
 				"-->",
 				block("module: two", "changes"),
 			].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["module: one", "module: two"])
 		})
 	})
@@ -83,14 +84,14 @@ describe("extracting raw changes", () => {
 	describe("v2", () => {
 		test("parses single block", () => {
 			const input = block("section: one", "changes")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["section: one"])
 		})
 
 		test("ignores all blocks except frist one", () => {
 			const input = [block("section: one", "changes"), block("section: two", "changes")].join("\n")
 
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["section: one", "section: two"])
 		})
 
@@ -105,25 +106,25 @@ describe("extracting raw changes", () => {
 				block("section: two", "changes"),
 				block("nothing2"),
 			].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["section: one", "section: two"])
 		})
 
 		test("ignores blocks with malformed beginning", () => {
 			const input = ["````changes", "section: one", "```"].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual([])
 		})
 
 		test("tolerates blocks with malformed ending due (the `marked` lib works so)", () => {
 			const input = ["```changes", "section: one", "````"].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["section: one"])
 		})
 
 		test("parses two blocks from GitHub JSON", () => {
 			const { input, expected } = getTwoBlocksBodyFixture()
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(expected)
 		})
 
@@ -135,7 +136,7 @@ describe("extracting raw changes", () => {
 				"-->",
 				block("section: two", "changes"),
 			].join("\n")
-			const parsed = extractChanges(input)
+			const parsed = parseChangesBlocks(input)
 			expect(parsed).toStrictEqual(["section: one", "section: two"])
 		})
 	})
@@ -376,6 +377,26 @@ describe("parsing change entries", function () {
 		},
 
 		{
+			title: "parses malformed YAML alogn with valid YAML",
+			pr,
+			input: ["mod: mod: mod:", "module: good"],
+			want: [
+				new ChangeEntry({
+					section: "",
+					type: "",
+					summary: "",
+					pull_request: pr.url,
+				}),
+				new ChangeEntry({
+					section: "good",
+					type: "",
+					summary: "",
+					pull_request: pr.url,
+				}),
+			],
+		},
+
+		{
 			title: "parses empty YAML",
 			pr,
 			input: [""],
@@ -446,7 +467,7 @@ describe("parsing change entries", function () {
 
 describe("Parsing pulls", () => {
 	const pulls = getPulls()
-	const changes = collectChangelog(pulls)
+	const changes = collectChangelog(pulls, new NoopValidator())
 
 	it("contains all changes", () => {
 		expect(changes).toHaveLength(57)
@@ -468,12 +489,10 @@ note: "Node with label 'dhctl.deckhouse.io/node-for-converge' exclude from sched
 
 		it("parses the changes from PR body", () => {
 			const p = pulls.find((p) => p.number === 353)
-			const changeBlocks = extractChanges(p.body)
+			const changeBlocks = parseChangesBlocks(p.body)
 			expect(changeBlocks).toHaveLength(1)
 			expect(changeBlocks).toStrictEqual([expectedBlock])
 		})
-
-		it("converts block to changes", () => {})
 
 		it("contains all changes", () => {
 			const c353 = changes.filter((c) => c.pull_request.endsWith("/353"))

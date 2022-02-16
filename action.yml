@@ -8,6 +8,17 @@ inputs:
     description: |
       Pull requests JSON Array. Required fields: number, url, milestone, title, body, state.
     required: true
+  allowed_sections:
+    description: |
+      Sections config for the validation of possible values. Optional. Accepts comma-separated
+      values:
+
+        "chrony,node-manager,ci,docs"
+
+      Forced impact_level can be added with a colon:
+
+        "chrony,node-manager,ci:low,docs"
+    required: false
 outputs:
   yaml:
     description: Changelog YAML
