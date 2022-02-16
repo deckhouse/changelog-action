@@ -32,6 +32,7 @@ export class ValidatorImpl implements Validator {
 		if (!this.config.has(c.section)) {
 			return new InvalidChangeEntry(c, [`unknown section "${c.section}"`])
 		}
+
 		const forcedLevel = this.config.get(c.section)
 		if (forcedLevel && forcedLevel != c.impact_level) {
 			const cc = new ChangeEntry(c)

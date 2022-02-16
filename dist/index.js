@@ -10,14 +10,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.collectChanges = void 0;
 const format_1 = __nccwpck_require__(6610);
 const parse_1 = __nccwpck_require__(5223);
+const validator_1 = __nccwpck_require__(4618);
 function collectChanges(inputs) {
-    const { pulls } = inputs;
     const out = { yaml: "", markdown: "", partialMarkdown: "" };
+    const { pulls, allowedSections } = inputs;
     if (pulls.length === 0) {
         return out;
     }
+    const validator = (0, validator_1.getValidator)(allowedSections);
     const milestone = pulls[0].milestone.title;
-    const changes = (0, parse_1.collectChangelog)(pulls);
+    const changes = (0, parse_1.collectChangelog)(pulls, validator);
     out.yaml = (0, format_1.formatYaml)(changes);
     out.markdown = (0, format_1.formatMarkdown)(milestone, changes);
     out.partialMarkdown = (0, format_1.formatPartialMarkdown)(changes);
@@ -231,6 +233,7 @@ function run() {
         const inputs = {
             token: core.getInput("token"),
             pulls: JSON.parse(core.getInput("pull_requests")),
+            allowedSections: core.getInput("allowed_sections"),
         };
         const o = (0, changes_1.collectChanges)(inputs);
         core.setOutput("yaml", o.yaml);
@@ -271,47 +274,50 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.ChangeContent = exports.extractChanges = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(9017);
-function collectChangelog(pulls) {
+function collectChangelog(pulls, validator) {
     return pulls
-        .map((pr) => ({ pr, changesBlocks: extractChanges(pr.body) }))
-        .flatMap(({ pr, changesBlocks }) => parseChangeEntries(pr, changesBlocks));
+        .map((pr) => ({ pr, changesBlocks: parseChangesBlocks(pr.body) }))
+        .flatMap(({ pr, changesBlocks }) => parseChangeEntries(pr, changesBlocks))
+        .map((c) => validator.validate(c));
 }
 exports.collectChangelog = collectChangelog;
 function parseChangeEntries(pr, changesBlocks) {
     const entries = [];
-    for (const changesBlock of changesBlocks) {
+    const iter = generateEntries(changesBlocks);
+    for (const doc of iter) {
+        if (!doc) {
+            entries.push(createEmptyChange(pr));
+            continue;
+        }
+        const opts = parseInput(doc, pr);
+        entries.push(new ChangeEntry(opts));
+    }
+    return entries;
+}
+exports.parseChangeEntries = parseChangeEntries;
+function* generateEntries(changesBlocks) {
+    for (const block of changesBlocks) {
         try {
-            const docs = yaml.loadAll(changesBlock, null, { schema: yaml.FAILSAFE_SCHEMA });
+            const docs = yaml.loadAll(block, null, { schema: yaml.FAILSAFE_SCHEMA });
             if (docs.length === 0) {
-                const change = createEmptyChange(pr);
-                entries.push(change);
+                yield null;
                 continue;
             }
             for (const doc of docs) {
-                if (!doc) {
-                    const change = createEmptyChange(pr);
-                    entries.push(change);
-                    continue;
-                }
-                const opts = parseInput(doc, pr);
-                const change = new ChangeEntry(opts);
-                entries.push(change);
+                yield doc;
             }
         }
         catch (e) {
             if (!(e instanceof yaml.YAMLException)) {
                 throw e;
             }
-            const change = createEmptyChange(pr);
-            entries.push(change);
+            yield null;
         }
     }
-    return entries;
 }
-exports.parseChangeEntries = parseChangeEntries;
 exports.TYPE_FIX = "fix";
 exports.TYPE_FEATURE = "feature";
 const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE]);
@@ -335,7 +341,7 @@ function createEmptyChange(pr) {
         pull_request: pr.url,
     });
 }
-function extractChanges(body) {
+function parseChangesBlocks(body) {
     const lexer = new marked_1.marked.Lexer({ gfm: true });
     const parsed = lexer.lex(body);
     const changeBlocks = parsed
@@ -343,7 +349,7 @@ function extractChanges(body) {
         .map((t) => t.text);
     return changeBlocks;
 }
-exports.extractChanges = extractChanges;
+exports.parseChangesBlocks = parseChangesBlocks;
 class ChangeContent {
     constructor(o) {
         this.summary = "";
@@ -392,7 +398,7 @@ class ChangeEntry extends ChangeContent {
             errs.push("missing high impact detail");
         }
         if (!this.section) {
-            errs.push("missing section/module");
+            errs.push("missing section");
         }
         if (!knownTypes.has(this.type)) {
             errs.push(this.type ? `invalid type "${this.type}"` : "missing type");
@@ -417,6 +423,80 @@ function parseInput(doc, pr) {
         opts.impact_level = impactLevel;
     }
     return opts;
+}
+
+
+/***/ }),
+
+/***/ 4618:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NoopValidator = exports.ValidatorImpl = exports.getValidator = void 0;
+const parse_1 = __nccwpck_require__(5223);
+function getValidator(allowedSections = "") {
+    const csv = allowedSections.trim();
+    if (!csv) {
+        return new NoopValidator();
+    }
+    const m = parseConfig(csv);
+    return new ValidatorImpl(m);
+}
+exports.getValidator = getValidator;
+class InvalidChangeEntry extends parse_1.ChangeEntry {
+    constructor(opts, extraErrors) {
+        super(opts);
+        this.extraErrors = extraErrors;
+    }
+    validate() {
+        return [...super.validate(), ...this.extraErrors];
+    }
+}
+class ValidatorImpl {
+    constructor(config) {
+        this.config = config;
+    }
+    validate(c) {
+        if (!this.config.has(c.section)) {
+            return new InvalidChangeEntry(c, [`unknown section "${c.section}"`]);
+        }
+        const forcedLevel = this.config.get(c.section);
+        if (forcedLevel && forcedLevel != c.impact_level) {
+            const cc = new parse_1.ChangeEntry(c);
+            cc.impact_level = forcedLevel;
+            return cc;
+        }
+        return c;
+    }
+}
+exports.ValidatorImpl = ValidatorImpl;
+class NoopValidator {
+    validate(c) {
+        return c;
+    }
+}
+exports.NoopValidator = NoopValidator;
+function parseConfig(csv) {
+    const m = new Map();
+    for (const s of csv.split(",")) {
+        const parts = s.split(":");
+        const [section, level] = parts;
+        switch (parts.length) {
+            case 0:
+                throw new Error(`invalid allowed_sections config: "${csv}"`);
+            case 1:
+                m.set(section, "");
+                break;
+            case 2:
+                m.set(section, level);
+                break;
+            default:
+                throw new Error(`unexpected section notation in allowed_sections config: "${s}"`);
+        }
+    }
+    return m;
 }
 
 
