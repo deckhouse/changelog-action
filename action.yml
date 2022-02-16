@@ -10,14 +10,13 @@ inputs:
     required: true
   allowed_sections:
     description: |
-      Sections config for the validation of possible values. Optional. Accepts comma-separated
-      values:
+      Sections config for the validation of possible values. Optional. Accepts comma-separated or newline-sepatated strings.
+      Forced impact_level can be added with a colon. Example:
 
-        "chrony,node-manager,ci,docs"
-
-      Forced impact_level can be added with a colon:
-
-        "chrony,node-manager,ci:low,docs"
+        chrony
+        ci:low
+        docs
+        node-manager
     required: false
 outputs:
   yaml:
