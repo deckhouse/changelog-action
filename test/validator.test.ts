@@ -12,7 +12,7 @@ describe("Getting validator", () => {
 	}
 
 	test("no config no validation", () => {
-		const val = getValidator("")
+		const val = getValidator([])
 
 		const c = new ChangeEntry(opts)
 
@@ -20,7 +20,7 @@ describe("Getting validator", () => {
 	})
 
 	test("allows specified sections", () => {
-		const val = getValidator("big-mod")
+		const val = getValidator(["big-mod"])
 
 		const c = new ChangeEntry(opts)
 
@@ -28,7 +28,7 @@ describe("Getting validator", () => {
 	})
 
 	test("invalidated unspecified sections", () => {
-		const val = getValidator("large-mod")
+		const val = getValidator(["large-mod"])
 		const c = new ChangeEntry(opts)
 
 		const validated = val.validate(c)
@@ -38,7 +38,7 @@ describe("Getting validator", () => {
 	})
 
 	test("forcing impact", () => {
-		const val = getValidator("big-mod:low")
+		const val = getValidator(["big-mod:low"])
 		const c = new ChangeEntry(opts)
 
 		const shrinked = new ChangeEntry({ ...opts, impact_level: LEVEL_LOW })
@@ -47,7 +47,7 @@ describe("Getting validator", () => {
 	})
 
 	describe("Accepting multiple sections", () => {
-		const val = getValidator("coolmodule:high,basicmodule,dummy-mod:low")
+		const val = getValidator(["coolmodule:high", "basicmodule", "dummy-mod:low"])
 
 		test("invalidating unknown section", () => {
 			const unknown = new ChangeEntry(opts)

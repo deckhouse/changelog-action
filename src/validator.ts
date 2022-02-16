@@ -1,12 +1,11 @@
 import { ChangeEntry, ChangeEntryOpts } from "./parse"
 
-export function getValidator(allowedSections = ""): ValidatorImpl | NoopValidator {
-	const csv = allowedSections.trim()
-	if (!csv) {
+export function getValidator(allowedSections: string[] = []): ValidatorImpl | NoopValidator {
+	if (allowedSections.length === 0) {
 		return new NoopValidator()
 	}
 
-	const m = parseConfig(csv)
+	const m = parseConfig(allowedSections)
 	return new ValidatorImpl(m)
 }
 
@@ -50,15 +49,15 @@ export class NoopValidator implements Validator {
 	}
 }
 
-function parseConfig(csv: string) {
+function parseConfig(sections: string[]) {
 	const m = new Map()
-	for (const s of csv.split(",")) {
+	for (const s of sections) {
 		const parts = s.split(":")
 		const [section, level] = parts
 
 		switch (parts.length) {
 			case 0:
-				throw new Error(`invalid allowed_sections config: "${csv}"`)
+				throw new Error(`invalid allowed_sections config: "${sections}"`)
 			case 1:
 				m.set(section, "")
 				break
