@@ -204,7 +204,6 @@ The action generates changelog in YAML and markdown.
     Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
     Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
  - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
- - **[cloud-provider-yandex]** d00029 [#291](https://github.com/ow/re/291)
  - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 
 ```
@@ -246,7 +245,6 @@ The action generates changelog in YAML and markdown.
     Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
     Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
  - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
- - **[cloud-provider-yandex]** d00029 [#291](https://github.com/ow/re/291)
  - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
 
 </details>

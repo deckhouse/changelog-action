@@ -7,7 +7,9 @@ function run() {
 		const inputs: Inputs = {
 			token: core.getInput("token"),
 			pulls: JSON.parse(core.getInput("pull_requests")) as PullRequest[],
+			allowedSections: core.getInput("allowed_sections"),
 		}
+
 		// core.debug(`Inputs: ${inspect(inputs)}`)
 
 		const o = collectChanges(inputs)

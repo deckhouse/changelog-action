@@ -1,5 +1,6 @@
 import * as yaml from "js-yaml"
 import { marked } from "marked"
+import { Validator } from "./validator"
 
 export interface PullRequest {
 	state: string
@@ -24,10 +25,21 @@ export interface ModuleChanges {
 	features?: ChangeContent[]
 }
 
-export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
+/**
+ * collectChangelog collects change entries for further formatting
+ * @param pulls         pull requests
+ * @param validator     validator
+ * @returns             change entries
+ *
+ * Note,
+ *   - there can be multiple "changes" blocks per PR
+ *   - there can be multiple changes per "changes" block
+ */
+export function collectChangelog(pulls: PullRequest[], validator: Validator): ChangeEntry[] {
 	return pulls
-		.map((pr) => ({ pr, changesBlocks: extractChanges(pr.body) })) // there can be multiple "changes" blocks per PR
-		.flatMap(({ pr, changesBlocks }) => parseChangeEntries(pr, changesBlocks)) // there can be multiple changes per "changes" block
+		.map((pr) => ({ pr, changesBlocks: parseChangesBlocks(pr.body) }))
+		.flatMap(({ pr, changesBlocks }) => parseChangeEntries(pr, changesBlocks))
+		.map((c) => validator.validate(c))
 }
 
 /**
@@ -45,34 +57,43 @@ export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
  */
 export function parseChangeEntries(pr: PullRequest, changesBlocks: string[]): ChangeEntry[] {
 	const entries = [] as ChangeEntry[]
-	for (const changesBlock of changesBlocks) {
+	const iter = generateEntries(changesBlocks)
+
+	for (const doc of iter) {
+		if (!doc) {
+			// empty YAMLs are malformed entries
+			entries.push(createEmptyChange(pr))
+			continue
+		}
+
+		const opts = parseInput(doc as ChangeInput, pr)
+		entries.push(new ChangeEntry(opts))
+	}
+	return entries
+}
+
+function* generateEntries(changesBlocks: string[]): Generator<unknown> {
+	for (const block of changesBlocks) {
 		try {
-			const docs = yaml.loadAll(changesBlock, null, { schema: yaml.FAILSAFE_SCHEMA })
-			// no change block is fine, the PR is just ignored
+			// using loadAll in order not to parse multi-doc blocks by hand
+			const docs = yaml.loadAll(block, null, { schema: yaml.FAILSAFE_SCHEMA })
+
 			if (docs.length === 0) {
-				const change = createEmptyChange(pr)
-				entries.push(change)
+				yield null // changes are required in all PRs
 				continue
 			}
+
 			for (const doc of docs) {
-				if (!doc) {
-					const change = createEmptyChange(pr)
-					entries.push(change)
-					continue
-				}
-				const opts = parseInput(doc as ChangeInput, pr)
-				const change = new ChangeEntry(opts)
-				entries.push(change)
+				yield doc
 			}
 		} catch (e) {
 			if (!(e instanceof yaml.YAMLException)) {
 				throw e
 			}
-			const change = createEmptyChange(pr)
-			entries.push(change)
+			// If one of YAMLs is malformed, the PR is rendered malformed as a whole
+			yield null
 		}
 	}
-	return entries
 }
 
 export const TYPE_FIX = "fix"
@@ -117,7 +138,7 @@ function createEmptyChange(pr: PullRequest): ChangeEntry {
  * }
  *
  */
-export function extractChanges(body: string): string[] {
+export function parseChangesBlocks(body: string): string[] {
 	// Turn on Github Flavored Markdown.
 	// See other options here: https://marked.js.org/using_advanced#options
 	const lexer = new marked.Lexer({ gfm: true })
@@ -203,7 +224,7 @@ export class ChangeEntry extends ChangeContent {
 		}
 
 		if (!this.section) {
-			errs.push("missing section/module")
+			errs.push("missing section")
 		}
 
 		if (!knownTypes.has(this.type)) {
@@ -213,7 +234,7 @@ export class ChangeEntry extends ChangeContent {
 		return errs.sort()
 	}
 }
-interface ChangeEntryOpts extends ChangeOpts {
+export interface ChangeEntryOpts extends ChangeOpts {
 	section: string
 	type: string
 	impact_level?: string
