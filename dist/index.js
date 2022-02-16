@@ -232,7 +232,7 @@ function run() {
         const inputs = {
             token: core.getInput("token"),
             pulls: JSON.parse(core.getInput("pull_requests")),
-            allowedSections: core.getInput("allowed_sections"),
+            allowedSections: parseList(core.getInput("allowed_sections")),
         };
         const o = (0, changes_1.collectChanges)(inputs);
         core.setOutput("yaml", o.yaml);
@@ -242,6 +242,12 @@ function run() {
     catch (error) {
         core.setFailed(error.message);
     }
+}
+function parseList(s) {
+    return s
+        .split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter((s) => s !== "");
 }
 run();
 
@@ -435,12 +441,11 @@ function parseInput(doc, pr) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NoopValidator = exports.ValidatorImpl = exports.getValidator = void 0;
 const parse_1 = __nccwpck_require__(5223);
-function getValidator(allowedSections = "") {
-    const csv = allowedSections.trim();
-    if (!csv) {
+function getValidator(allowedSections = []) {
+    if (allowedSections.length === 0) {
         return new NoopValidator();
     }
-    const m = parseConfig(csv);
+    const m = parseConfig(allowedSections);
     return new ValidatorImpl(m);
 }
 exports.getValidator = getValidator;
@@ -477,14 +482,14 @@ class NoopValidator {
     }
 }
 exports.NoopValidator = NoopValidator;
-function parseConfig(csv) {
+function parseConfig(sections) {
     const m = new Map();
-    for (const s of csv.split(",")) {
+    for (const s of sections) {
         const parts = s.split(":");
         const [section, level] = parts;
         switch (parts.length) {
             case 0:
-                throw new Error(`invalid allowed_sections config: "${csv}"`);
+                throw new Error(`invalid allowed_sections config: "${sections}"`);
             case 1:
                 m.set(section, "");
                 break;
