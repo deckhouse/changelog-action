@@ -125,11 +125,33 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	return json2md(body)
 }
 
+export interface ChangesWithVersion {
+	version: string
+	changes: ChangeEntry[]
+}
+
+/**
+ * @function formatCumulatieMarkdown returns cumulative changelog in markdown
+ */
+export function formatCumulatieMarkdown(minorVersion: string, cwvs: ChangesWithVersion[]): string {
+	const headerTag = "h1"
+	const subheaderTag = "h2"
+
+	const body: DataObject[] = [{ [headerTag]: `Changelog ${minorVersion}` }]
+
+	for (const x of cwvs) {
+		body.push({ [subheaderTag]: x.version })
+		body.push(...collectPartialMarkdown(x.changes))
+	}
+
+	return json2md(body)
+}
+
 /**
  * @function formatPartialMarkdown returns partial changes formatted in markdown for accumulating in
  * single file
  */
-export function formatPartialMarkdown(changes: ChangeEntry[]): string {
+function collectPartialMarkdown(changes: ChangeEntry[]): DataObject[] {
 	const subheaderTag = "h3"
 
 	const body: DataObject[] = []
@@ -146,7 +168,7 @@ export function formatPartialMarkdown(changes: ChangeEntry[]): string {
 		body.push({ ul: fixes })
 	}
 
-	return json2md(body)
+	return body
 }
 
 function collectImpact(changes: ChangeEntry[]): string[] {
@@ -169,20 +191,20 @@ function collectMalformed(changes: ChangeEntry[]): string[] {
 	return changes
 		.filter((c) => !c.valid()) // malformed
 		.map((c) => ({
-			pr: parseInt(parsePullRequestNumberFromURL(c.pull_request), 10),
+			pr: parseInt(parsePullNumberFromURL(c.pull_request), 10),
 			message: c.validate().join(", "),
 		}))
 		.sort((a, b) => a.pr - b.pr) // asc
 		.map((c) => `#${c.pr} ${c.message}`) // Github expands "#123" to PR links
 }
 
-function parsePullRequestNumberFromURL(prUrl: string): string {
+function parsePullNumberFromURL(prUrl: string): string {
 	const parts = prUrl.split("/")
 	return parts[parts.length - 1]
 }
 
 function changeMardown(c: ChangeEntry): string {
-	const prNum = parsePullRequestNumberFromURL(c.pull_request)
+	const prNum = parsePullNumberFromURL(c.pull_request)
 
 	const prlink = `[#${prNum}](${c.pull_request})`
 	const line = `**[${c.section}]** ${c.summary} ${prlink}`

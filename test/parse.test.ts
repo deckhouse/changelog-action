@@ -1,13 +1,8 @@
 import * as fs from "fs"
 import * as path from "path"
+import { Pull } from "../src/client"
 import { NoopValidator } from "../src/validator"
-import {
-	ChangeEntry,
-	collectChangelog,
-	parseChangeEntries,
-	parseChangesBlocks,
-	PullRequest,
-} from "./../src/parse"
+import { ChangeEntry, collectChangelog, parseChangeEntries, parseChangesBlocks } from "./../src/parse"
 
 describe("extracting raw changes", () => {
 	function block(content: string, type = "") {
@@ -160,13 +155,17 @@ describe("parsing change entries", function () {
 	const impactField = (x) => kv("impact", x)
 	const impactLevelField = (x) => kv("impact_level", x)
 
-	const pr: PullRequest = {
+	const pr: Pull = {
 		url: "https://github.com/owner/repo/pulls/13",
 		title: "Shmoo", // should not be used
 		number: 13,
 		state: "",
 		body: "",
-		milestone: { title: "v1.23.456", number: 2 },
+		milestone: {
+			title: "v1.23.456",
+			number: 2,
+			state: "closed",
+		},
 	}
 
 	const getCases = (
@@ -175,7 +174,7 @@ describe("parsing change entries", function () {
 		$note: (x: string) => string,
 	): {
 		title: string
-		pr: PullRequest
+		pr: Pull
 		input: string[]
 		want?: Array<ChangeEntry | { pull_request: string }>
 	}[] => [
