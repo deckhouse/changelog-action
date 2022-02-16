@@ -7,7 +7,7 @@ function run() {
 		const inputs: Inputs = {
 			token: core.getInput("token"),
 			pulls: JSON.parse(core.getInput("pull_requests")) as PullRequest[],
-			allowedSections: core.getInput("allowed_sections"),
+			allowedSections: parseList(core.getInput("allowed_sections")),
 		}
 
 		// core.debug(`Inputs: ${inspect(inputs)}`)
@@ -22,6 +22,13 @@ function run() {
 	} catch (error: any) {
 		core.setFailed(error.message)
 	}
+}
+
+function parseList(s: string): string[] {
+	return s
+		.split(/[\n,]+/)
+		.map((s) => s.trim())
+		.filter((s) => s !== "")
 }
 
 run()

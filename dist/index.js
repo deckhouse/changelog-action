@@ -232,7 +232,7 @@ function run() {
         const inputs = {
             token: core.getInput("token"),
             pulls: JSON.parse(core.getInput("pull_requests")),
-            allowedSections: core.getInput("allowed_sections"),
+            allowedSections: parseList(core.getInput("allowed_sections")),
         };
         const o = (0, changes_1.collectChanges)(inputs);
         core.setOutput("yaml", o.yaml);
@@ -242,6 +242,12 @@ function run() {
     catch (error) {
         core.setFailed(error.message);
     }
+}
+function parseList(s) {
+    return s
+        .split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter((s) => s !== "");
 }
 run();
 
@@ -273,7 +279,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(9017);
 function collectChangelog(pulls, validator) {
@@ -322,7 +328,7 @@ exports.TYPE_FEATURE = "feature";
 const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE]);
 exports.LEVEL_HIGH = "high";
 exports.LEVEL_LOW = "low";
-const knownLevels = new Set([exports.LEVEL_LOW, exports.LEVEL_HIGH]);
+exports.knownLevels = new Set([exports.LEVEL_LOW, exports.LEVEL_HIGH]);
 function sanitizeString(x) {
     if (typeof x === "string") {
         return x.trim();
@@ -390,7 +396,7 @@ class ChangeEntry extends ChangeContent {
     validate() {
         const errs = [];
         errs.push(...super.validate());
-        if (!!this.impact_level && !knownLevels.has(this.impact_level)) {
+        if (!!this.impact_level && !exports.knownLevels.has(this.impact_level)) {
             errs.push(`invalid impact level "${this.impact_level}"`);
         }
         if (this.impact_level === exports.LEVEL_HIGH && !this.impact) {
@@ -435,12 +441,11 @@ function parseInput(doc, pr) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NoopValidator = exports.ValidatorImpl = exports.getValidator = void 0;
 const parse_1 = __nccwpck_require__(5223);
-function getValidator(allowedSections = "") {
-    const csv = allowedSections.trim();
-    if (!csv) {
+function getValidator(allowedSections = []) {
+    if (allowedSections.length === 0) {
         return new NoopValidator();
     }
-    const m = parseConfig(csv);
+    const m = parseConfig(allowedSections);
     return new ValidatorImpl(m);
 }
 exports.getValidator = getValidator;
@@ -477,23 +482,39 @@ class NoopValidator {
     }
 }
 exports.NoopValidator = NoopValidator;
-function parseConfig(csv) {
+function parseConfig(sections) {
     const m = new Map();
-    for (const s of csv.split(",")) {
-        const parts = s.split(":");
-        const [section, level] = parts;
-        switch (parts.length) {
-            case 0:
-                throw new Error(`invalid allowed_sections config: "${csv}"`);
-            case 1:
-                m.set(section, "");
-                break;
-            case 2:
-                m.set(section, level);
-                break;
-            default:
-                throw new Error(`unexpected section notation in allowed_sections config: "${s}"`);
+    const invalid = new Set();
+    const duplicates = new Set();
+    for (const definition of sections) {
+        const parts = definition.split(":");
+        if (parts.length === 0 || parts.length > 2) {
+            invalid.add(definition);
+            continue;
         }
+        const [section, level] = parts;
+        if (m.has(section)) {
+            duplicates.add(section);
+            continue;
+        }
+        if (parts.length === 1) {
+            m.set(section, "");
+            continue;
+        }
+        if (parts.length === 2 && level && parse_1.knownLevels.has(level)) {
+            m.set(section, level);
+            continue;
+        }
+    }
+    let err = "";
+    if (invalid.size > 0) {
+        err += `invalid section definitions: ${Array.from(invalid).join(", ")}`;
+    }
+    if (duplicates.size > 0) {
+        err += `\nduplicated sections in definitions: ${Array.from(duplicates).join(", ")}`;
+    }
+    if (err.length > 0) {
+        throw new Error(`invalid allowed_sections:\n${err}`);
     }
     return m;
 }

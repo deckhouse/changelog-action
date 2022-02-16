@@ -102,7 +102,7 @@ const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE])
 
 export const LEVEL_HIGH = "high"
 export const LEVEL_LOW = "low"
-const knownLevels = new Set([LEVEL_LOW, LEVEL_HIGH])
+export const knownLevels = new Set([LEVEL_LOW, LEVEL_HIGH])
 
 function sanitizeString(x: unknown): string {
 	if (typeof x === "string") {

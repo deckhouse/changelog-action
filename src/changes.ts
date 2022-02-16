@@ -5,7 +5,7 @@ import { getValidator } from "./validator"
 export interface Inputs {
 	token: string
 	pulls: PullRequest[]
-	allowedSections: string
+	allowedSections: string[]
 }
 
 export interface Outputs {
