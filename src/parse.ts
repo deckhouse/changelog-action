@@ -1,4 +1,3 @@
-import { copyFileSync } from "fs"
 import * as yaml from "js-yaml"
 import { marked } from "marked"
 
