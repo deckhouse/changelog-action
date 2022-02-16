@@ -1,0 +1,498 @@
+[
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/894",
+		"number": 894,
+		"title": "[docs] Fix article text in «Cloud provider — AWS: provider configuration» page",
+		"body": "## Description\r\n\r\nThe \"Cloud provider — AWS: provider configuration\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'Cloud provider — AWS: provider configuration' article.\"\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/892",
+		"number": 892,
+		"title": "Changelog: fix PR URL",
+		"body": "## Description\r\n\r\nURL to PRs are now correct\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nNow URLs point to github JSON API\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nsection: ci\r\ntype: fix \r\nsummary: Fixed PR URL in changelog\r\nimpact_level: low \r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/884",
+		"number": 884,
+		"title": "[docs] Fix article text in «Cloud provider — AWS: Layouts» page",
+		"body": "## Description\r\n\r\nThe \"Cloud provider — AWS: Layouts\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'Cloud provider — AWS: Layouts' article.\"\r\nimpact_level: low\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/882",
+		"number": 882,
+		"title": "Changelog: fix self-trigger",
+		"body": "## Description\r\n\r\nFix triggering changelog workflow by merging the changelog PR\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nThis change leaves us without useless workflows and useless PRs\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nsection: ci\r\ntype: fix\r\nsummary: Fixed self-trigger of changelog PR\r\nimpact_level: low\r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/878",
+		"number": 878,
+		"title": "[docs] Fix article text in «Kubernetes Cluster» page",
+		"body": "## Description\r\n\r\nThe \"Kubernetes Cluster\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'Kubernetes Cluster' article.\"\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/870",
+		"number": 870,
+		"title": "[prometheus] Exposing API doc fixes",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Description\r\n* Correct info about exposing Prometheus API\r\n* Add the schema of Deckhouse monitoring & autoscaling\r\n\r\n## Why do we need it, and what problem does it solve?\r\nSubstitute trickster with Prometheus to make the example more common.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n```changes\r\nsection: prometheus\r\ntype: fix\r\nsummary: Exposing API doc fixes.\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/869",
+		"number": 869,
+		"title": "[ingress-nginx] Expose status class label values with the xx suffix",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Description\r\nAdd the `xx` suffix to the `status_class` label of the `ingress_nginx_detail_backend_responses_total` metric.\r\n\r\n## Why do we need it, and what problem does it solve?\r\nThis PR fixes panels for ingress-nginx controllers in Grafana. As for now, users an only see zeros in some tables, e.g.\r\n\r\n![image](https://user-images.githubusercontent.com/32434187/153671571-eae68f3d-1fd9-4357-8615-6b8fbf8e4f89.png)\r\n\r\n\r\n## Changelog entries\r\n```changes\r\nsection: ingress-nginx\r\ntype: fix\r\nsummary: \"Expose status class label values with the xx suffix. Fix info about backends on dashboards.\"\r\nimpact_level: high\r\nimpact: |\r\n  All ingress controllers >= 0.33 will restart.\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/864",
+		"number": 864,
+		"title": "Add enviroment variables to CSI",
+		"body": "## Description\r\n\r\nNew CSI-controller introduced by https://github.com/deckhouse/deckhouse/pull/831 requires NAMESPACE environment variable set.\r\nOfficial templates are always include NAMESPACE and ADDRESS environment variables set while our templates are not.\r\nThis PR updates our template to use environment variables too.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: common\r\ntype: fix\r\ndescription: fix csi-controller requires NAMESPACE environment variable\r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/855",
+		"number": 855,
+		"title": "Changelog schema template and link",
+		"body": "## Description\r\n\r\nAdd PR template to explain modern changes block\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nHelps describe PRs our way\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nsection: repo\r\ntype: feature\r\nsummary: Updated PR template and the contribution guide\r\nimpact_level: low\r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/850",
+		"number": 850,
+		"title": "[node-manager] add error file when bashible context failed",
+		"body": "Signed-off-by: Yuriy Losev <yuriy.losev@flant.com>\r\n\r\n## Description\r\nAdd file with error on failed context building\r\n\r\n## Why do we need it, and what problem does it solve?\r\nWe can lose errors in bashible-apiserver logs and it becomes complicated to debug some corner-case situations\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: feature\r\ndescription: Add file with context-building error on failure\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/837",
+		"number": 837,
+		"title": "[node-manager][doc] Node cleanup doc fix",
+		"body": "## Description\r\nnode-manager doc fix — remove registry packages cache during cleanup.\r\n\r\n## Changelog entries\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: node-manager FAQ updates —  remove registry packages cache during cleanup.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/833",
+		"number": 833,
+		"title": "[dhctl] Create additional kube resources in order",
+		"body": "## Description\r\nCreate additional kube resurces in order instead create group by GVK\r\n\r\n## Why do we need it, and what problem does it solve?\r\nIf you need to create namespace and resource in this namespace, you can get error because dhctl can create resource before namespace. It happens because we group resources by GVK into map and maps in go are unordered.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: dhctl\r\ntype: feature\r\ndescription: Create additional kube resources in order\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/832",
+		"number": 832,
+		"title": "Fix article text in «The deckhouse module: Custom Resource» page",
+		"body": "## Description\r\n\r\nThe \"The deckhouse module: Custom Resource\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'The deckhouse module: Custom Resource' article.\"\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/831",
+		"number": 831,
+		"title": "[common] Update CSI",
+		"body": "## Description\r\n\r\n- [x] Update CSI-images for Kubernetes >1.21.0 \r\n- [x] Add `csi-snapshotter` and `livenessprobe`\r\n- [x] Update permissions in `helm_lib_csi_controller_rbac`\r\n- [x] Replace StatefulSet by Deployment and enable `leader-election`\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nfixes https://github.com/deckhouse/deckhouse/issues/830\r\n- The CSI manifests are outdated, we need to update them.\r\n- LINSTOR module should reuse these manifests https://github.com/deckhouse/deckhouse/pull/746\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: global\r\ntype: feature\r\ndescription: Update csi images and manifests\r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/829",
+		"number": 829,
+		"title": "[docs] Fix the «The deckhouse module: configuration» page",
+		"body": "## Description\r\n\r\nThe \"The deckhouse module: configuration\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'The deckhouse module: configuration' article.\"\r\nimpact_level: low\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/823",
+		"number": 823,
+		"title": "[user-authn] Bump Dex to v2.31.0",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Description\r\nhttps://github.com/dexidp/dex/releases/tag/v2.31.0\r\n\r\n## Why do we need it, and what problem does it solve?\r\nReduce the number of patches.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: user-authn\r\ntype: feature\r\ndescription: Bump Dex to v2.31.0\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/821",
+		"number": 821,
+		"title": "[docs] Minor getting started and documentation updates",
+		"body": "Minor getting started and documentation updates",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/820",
+		"number": 820,
+		"title": "Changelog: fix JQ JSON quoting",
+		"body": "## Description\r\n\r\nFix changelog action by fixing bah quoting\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nFixes changelog assembling\r\n\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/819",
+		"number": 819,
+		"title": "Changelog: fix JQ JSON parsing",
+		"body": "## Description\r\n\r\nChangelog: compact JSON with jq\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nFix failing workflows\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/818",
+		"number": 818,
+		"title": "[docs] Fix the «The deckhouse module: usage» article",
+		"body": "## Description\r\nThe \"The deckhouse module: usage\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review the 'The deckhouse module: usage' article.\"\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/817",
+		"number": 817,
+		"title": "[docs] Fix article text in «The deckhouse module» page",
+		"body": "## Description\r\n\r\nThe \"The deckhouse module\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'The deckhouse module' article.\"\r\nimpact_level: low\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/815",
+		"number": 815,
+		"title": "[kube-dns] Add the cacheTTLSeconds option for stub zones",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Description\r\nAdd ability to tune cache TTL for stub zones.\r\n\r\n## Why do we need it, and what problem does it solve?\r\nSome nameservers demand more caching time, and some of them require less.\r\n\r\nCloses https://github.com/deckhouse/deckhouse/issues/811\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: kube-dns\r\ntype: feature\r\ndescription: Add ability to tune cache TTL for stub zones.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/812",
+		"number": 812,
+		"title": "[ci] fix: use tagged dev/install image to run in e2e tests",
+		"body": "## Description\r\n\r\nSave 'dev/install' image name and use `docker run` to start e2e tests.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\n`werf run` could rebuild some stages and it makes e2e test last more than 30 minutes.\r\n\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: ci\r\ntype: fix\r\ndescription: use docker run to start e2e tests\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/810",
+		"number": 810,
+		"title": "[ci] fix: more documentation for PR#777, clean semicolons",
+		"body": "## Description\r\n\r\nAdd documentation about building deckhouse images for branches and tags.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nIt explains changes made in PR #777 to ease changing build process in the future.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: ci\r\ntype: fix\r\ndescription: Add documentation about building deckhouse images for branches and tags.\r\nimpact_level: low\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/806",
+		"number": 806,
+		"title": "[docs] Fix Deckhouse FAQ",
+		"body": "## Description\r\n\r\nThe \"FAQ\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix Deckhouse FAQ.\"\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/805",
+		"number": 805,
+		"title": "[deckhouse] small updater improvements",
+		"body": "Signed-off-by: Yuriy Losev <yuriy.losev@flant.com>\r\n\r\n## Description\r\nRemove field from AdditionalPrintColumns and add a couple of status messages\r\n\r\n## Why do we need it, and what problem does it solve?\r\nPrint column `applyAfter` is not very useful but k8s default format of time makes it annoyable to read\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: deckhouse\r\ntype: fix\r\ndescription: Remove additional print column `applyAfter`\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/803",
+		"number": 803,
+		"title": "[docs] Fix the «Deckhouse Platform editions comparison» article",
+		"body": "## Description\r\n\r\nThe \"Deckhouse Platform editions comparison\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review the 'Deckhouse Platform editions comparison' article.\"",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/798",
+		"number": 798,
+		"title": "[dhctl] Terraform runner tests",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Description\r\nAdd test for terraform runners and terraform pipelines\r\n\r\n## Why do we need it, and what problem does it solve?\r\nThere are approximately 1k lines of the code, yet no unit tests. Entrenching runners' behavior will help developers improve the development process's stability and durability of the code and, last but not least, improve the pace.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: dhctl\r\ntype: feature\r\ndescription: Add unit tests for Terraform runners.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/797",
+		"number": 797,
+		"title": "CI: fix JS binding",
+		"body": "## Description\r\n\r\nMake variable bindling local\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nReduce bug risk due to interference with globals in github actions\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: ci\r\ntype: fix\r\ndescription: Make CI code little more accurate\r\nimpact_level: low\r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/793",
+		"number": 793,
+		"title": "[node-manager] Upgrade cluster-autoscaler from v0.12.0 to v0.19.0",
+		"body": "Signed-off-by: Yuriy Losev <yuriy.losev@flant.com>\r\n\r\n## Description\r\nUpgrade cluster-autoscaler. Probably it's enough to fix [this](https://github.com/deckhouse/deckhouse/issues/736). (because some communication inside cluster-autoscaler was reworked and it rechecks current taints)\r\nAlso fix [issue](https://github.com/deckhouse/deckhouse/issues/46) with smoke-mini pods. Marks them with specific annotation to avoid autoscaler attention and add condition for node scheduling inside hook (remove node with autoscaler taint from scheduler)\r\n\r\n\r\n## Why do we need it, and what problem does it solve?\r\nUpgrade cluster-autoscaler and fix issues about pending cluster downscale\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: feature\r\ndescription: Upgrade cluster-autoscaler to v0.19.0\r\nnote: All Daemonsets in d8-* namespaces are excluded from eviction on a down-scale and kept ready until node removal\r\nimpact_level: high\r\n```\r\n\r\n```changes\r\nmodule: upmeter\r\ntype: fix\r\ndescription: Rework scheduler with respect of cluster-autoscaler taints\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/792",
+		"number": 792,
+		"title": "Changelog: skip auto-generated PRs",
+		"body": "## Description\r\n\r\nSkip changelog PR in the list of fetched PRs for the changelog generation.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nReduces the risk of failing workflow due to too big argument passed to an action.\r\nThis is a just a cosmetic change addressing useless changelog generations.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: ci\r\ntype: fix\r\ndescription: Skip automatic PRs in changelog\r\nnote: At least changelog will not participate in changelog action when it is merged\r\nimpact_level: low\r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/786",
+		"number": 786,
+		"title": "[docs] Minor fix «Release channels» page",
+		"body": "Minor fix «Release channels» page",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/785",
+		"number": 785,
+		"title": "[istio] usage doc fix",
+		"body": "## Description\r\nUsage doc fix.\r\n\r\n\r\n## Changelog entries\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: Fix Istio usage documentation.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/784",
+		"number": 784,
+		"title": "[control-plane-manager] Default scheduler config",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\n\r\nSpecify a scheduler config.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\nDefine a scheduler config that spreads Pods between zones with finer granularity than before.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: control-plane-manager\r\ntype: feature\r\ndescription: Define default config that spreads Pods between zones with finer granularity than before.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/783",
+		"number": 783,
+		"title": "[control-plane-manager] Allow enabling additional admission plugins as well as defaulting some of them",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\n\r\nAllow enabling additional admission plugins as well as defaulting some of them\r\n\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\nThere are some useful admission controllers. Some of them are worth force-enabling.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: control-plane-manager\r\ntype: feature\r\ndescription: |\r\n  Allow changing a list of active admission plugins via `controlPlaneManager.apiserver.admissionPlugins` configuration.\r\n  ExtendedResourceToleration and EventRateLimit are always enabled.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/781",
+		"number": 781,
+		"title": "[control-plane-manager] Enabled TTLAfterFinished on older clusters",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\n\r\nEnabled TTLAfterFinished on Kubernetes <1.21\r\n\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\nIt is a useful feature that was a long time in beta. Allows to clean up old jobs automatically.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: control-plane-manager\r\ntype: feature\r\ndescription: | \r\n  Enabled TTLAfterFinished on Kubernetes <1.21\r\n  Allows to clean up old jobs automatically. \r\n  https://kubernetes.io/docs/concepts/workloads/controllers/ttlafterfinished/\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/780",
+		"number": 780,
+		"title": "[ci] fix: save logs for failed e2e tests",
+		"body": "## Description\r\n\r\n- Save bootstrap.log and templates for failed e2e tests.\r\n- Use unique names for artifacts to save logs for each job.\r\n\r\n<img width=\"573\" alt=\"Screenshot 2022-02-04 at 10 11 20\" src=\"https://user-images.githubusercontent.com/1055474/152487512-f68b6994-f25d-4474-a63f-faaeb59e984b.png\">\r\n\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nLogs and templates are useful to reproduce e2e tests later.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: ci\r\ntype: fix\r\ndescription: save e2e logs for failed tests\r\nimpact_level: low\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/778",
+		"number": 778,
+		"title": "[docs] Update the \"Deckhouse vs KaaS\" page on the site",
+		"body": "Minor fixes of the \"Deckhouse vs KaaS\" page on the site.\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/777",
+		"number": 777,
+		"title": "[ci] fix: proper werf build commands with two registries",
+		"body": "## Description\r\n\r\nUse deckhouse registry as second-repo for proper stages caching. The same commands use in modules build.\r\n\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nThese commands keep cache synchronized when dev-registry cleaned.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: ci\r\ntype: fix\r\ndescription: proper werf build commands with two registries\r\nimpact_level: low\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/770",
+		"number": 770,
+		"title": "Update kubernetes patch versions",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\nUpdate Kubernetes components to the latest patch versions.\r\nFix discover new patch versions script.\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\nUsing the latest stable upstream versions helps to avoid debugging bugs that are already fixed.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: global\r\ntype: fix\r\ndescription: Update Kubernetes components to the latest patch versions\r\nnote: Kubernetes control-plane components and kubelet will restart for 1.20, 1.21 and 1.22 minor versions.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/768",
+		"number": 768,
+		"title": "[monitoring-kubernetes] Enable systemd collector in the node-exporter",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\n\r\nEnable systemd collector in the node-exporter.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\nOne of our clients requested this. It is also beneficial to monitor (in the future) various systems services that are created by the bashible.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: monitoring-kubernetes\r\ntype: feature\r\ndescription: Enable systemd collector in the node-exporter\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/766",
+		"number": 766,
+		"title": "[candi] Configurable kubelet log rotation",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\n\r\nAllow users to configure kubelet log rotation.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\nBased on a choice of a log collector and volume of logging it is desirable to configure kubelet log rotation.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: feature\r\ndescription: \"Allows changing kubelet log rotation via new NodeGroup parameters: `containerLogMaxSize` and `containerLogMaxFiles`.\"\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/765",
+		"number": 765,
+		"title": "[control-plane-manager] Define custom external TCP port for Kubernetes API LoadBalancer",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\n\r\nAllows configuring external TCP port for Kubernetes API LoadBalancer.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\nWithout this change, we are forced to always use port 443 for external communication.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: control-plane-manager\r\ntype: feature\r\ndescription: Allows configuring Kubernetes API LoadBalancer external port via `controlPlaneManager.apiserver.loadBalancer.port` config value.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/764",
+		"number": 764,
+		"title": "[user-authn] Kubeconfig: hide the \"connect to api.%s\" button if publish API is not enabled",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Why do we need it, and what problem does it solve?\r\nThere is a bug. If publish API is not enabled, the kubeconfig generator interface still shows the button to use publish API.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: user-authn\r\ntype: fix\r\ndescription: \"Kubeconfig: hide the \\\"connect to api.%s\\\" button if publish API is not enabled\"\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/758",
+		"number": 758,
+		"title": "[docs] Fix CNCF certificate rendering on mobile devices",
+		"body": "Fix CNCF certificate rendering on the site when viewing on mobile devices",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/756",
+		"number": 756,
+		"title": "[log-shipper] Fix vector pods absent alert",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Why do we need it, and what problem does it solve?\r\nAs for now, Deckhouse sends the alert if the log-shipper module is enabled without any CRs in the cluster (basically, this is true for most of the CE clusters).\r\n\r\nThis is a regression caused by https://github.com/deckhouse/deckhouse/pull/638\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: log-shipper\r\ntype: fix\r\ndescription: Fire the alert only if there are more pods absent than allowed by the DaemonSet status.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/750",
+		"number": 750,
+		"title": "[docs] Update 'Supported Kubernetes and OS versions' article",
+		"body": "## Description\r\n\r\nThe \"Supported Kubernetes and OS versions\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'Supported Kubernetes and OS versions' article.\"\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/745",
+		"number": 745,
+		"title": "[docs] Update 'Release channels' article",
+		"body": "## Description\r\n\r\nThe \"Release channels\" article reviewing and fixing.\r\n\r\n## Changelog entries\r\n\r\n```changes\r\nmodule: docs\r\ntype: fix\r\ndescription: \"Review and fix the 'Release channels' article.\"\r\nimpact_level: low\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/741",
+		"number": 741,
+		"title": "Fix alert instruction for apiserver logs",
+		"body": "## Description\n\nFix command recommendation\n\n## Why do we need it, and what problem does it solve?\n\nProper instruction\n\n## Changelog entries\n\n```changes\nmodule: monitoring-kubernetes-control-plane\ntype: fix \ndescription: Proper kubectl command in alert description\n```\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/740",
+		"number": 740,
+		"title": "[ci] fix: proper image tag name for pull_request_target images",
+		"body": "## Description\r\n\r\nAdd pull_request_target event in the 'git_info' job.\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\n- PR #715 brings a bug: images for 'pull_request_target' pushed as main.\r\n\r\nProblem line: `else if (context.eventName === \"pull_request\") {`\r\n\r\n- Restore BASE_SCRATCH in images_versions.yml after double deletion in #711 and #715.\r\n\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: ci\r\ntype: fix\r\ndescription: handle pull_request_target event in git_info job\r\nimpact_level: low\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/731",
+		"number": 731,
+		"title": "[istio] canary usage doc fix",
+		"body": "## Description\r\nCanary usage doc fix.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: istio\r\ntype: fix\r\ndescription: Canary usage doc fix.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/726",
+		"number": 726,
+		"title": "[cert-manager] fix docs about Certificate DNSNames",
+		"body": "Signed-off-by: Yuriy Losev <yuriy.losev@flant.com>\r\n\r\n## Description\r\nFix documentation\r\n\r\n## Why do we need it, and what problem does it solve?\r\nCertificate requirements were changed in a new cert-manager CRD and our documentation doesn't respect it\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: cert-manager\r\ntype: fix\r\ndescription: fix certificate requirements documentation\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/724",
+		"number": 724,
+		"title": "[core][dhctl] Fix potential panic for bashible logs in `dhctl bootstrap` command",
+		"body": "## Description\r\nClose [issue](https://github.com/deckhouse/deckhouse/issues/272) \r\n\r\nAdd all process to stack for pretty process logger for prevent panic from logboek\r\n\r\n## Why do we need it, and what problem does it solve?\r\nCluster bootstrap can not be bootstrapped\r\n## Changelog entries\r\n```changes\r\nmodule: dhctl\r\ntype: fix \r\ndescription: Fix potential panic for bashible logs in `dhctl bootstrap` command\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/718",
+		"number": 718,
+		"title": "[prometheus] Token authentication",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Description\r\nUse bearer token to request metrics\r\n\r\n## Why do we need it, and what problem does it solve?\r\nThere are three problems:\r\n1. We need to issue client certificates for Prometheus (not a big deal, because we already have the code for it).\r\n2. Prometheus reloads client certificates only if targets were changed (or are gone).\r\n3. There is no way to revoke certificates issued by Kubernetes.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: prometheus\r\ntype: feature\r\ndescription: Authenticate using Prometheus service account bearer token.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/716",
+		"number": 716,
+		"title": "[dhctl] Install Deckhouse without node selector and custom API connection config",
+		"body": "Signed-off-by: m.nabokikh <maksim.nabokikh@flant.com>\r\n\r\n## Description\r\n* Add flags\r\n* Set flags implicitly for the bootstrap command\r\n* golint -> revive\r\n* Dev env refactoring\r\n\r\n## Why do we need it, and what problem does it solve?\r\nIt will help us to support the installation of Deckhouse in various environments.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: dhctl\r\ntype: feature\r\ndescription: Add flags to the installation command to deploy Deckhouse without master node selector and tuned connection options.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/706",
+		"number": 706,
+		"title": "[ci] feat: use slash commands to start workflows for release issue",
+		"body": "## Description\r\n\r\nRecognize slash commands in release issue comments to run build, e2e, deploy and suspend workflows.\r\n\r\nDisable auto-build for release-X.Y branches to ease cherry-picking and prevent unnecessary rebuilds.\r\n\r\nSmall fixes:\r\n- Remove concurrency section for deploy, suspend and e2e.\r\n- Do not create release issue for milestones without version in title.\r\n\r\n<img width=\"684\" src=\"https://user-images.githubusercontent.com/1055474/151757370-8ea269ca-3a28-45e2-a1ce-942206065256.png\">\r\n\r\n<img width=\"684\" src=\"https://user-images.githubusercontent.com/1055474/151757403-f5901681-9566-4221-a714-35ff89c36344.png\">\r\n\r\nMore details:\r\n- auto build with commenting only for main branch, test tags and release tags\r\n- auto build for dev-* and pr-* tags\r\n- add commands description to the first comment for newly created release issues\r\n- one workflow for handling comments: dispatch-slash-command\r\n- cleanup: remove check labels for deploy-channel, suspend-channel\r\n\r\n## Why do we need it, and what problem does it solve?\r\n\r\nSupport release process without curl and labels. Slash commands give control over used ref.\r\n\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nsection: ci\r\ntype: feature\r\nsummary: Add slash command for workflow in release issues\r\nimpact_level: low\r\nimpact: |\r\n  - use slash commands in comments on release issue to run deploy, suspend and e2e workflows\r\n  - no auto build for release-X.Y branches\r\n  - support test-v* tags to run tests after cherry-picking\r\n  - auto-build dev-* and pr-* tags for developer needs\r\n```\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/699",
+		"number": 699,
+		"title": "[deckhouse] refactor update mechanism",
+		"body": "## Description\r\nRefactor update mechanism\r\n\r\n## Why do we need it, and what problem does it solve?\r\nThe update mechanism is too complicated, mixing the \"check\" and the \"apply\" logic together. We can split this logic by waves:\r\n1. Prepare releases (patch statuses)\r\n2. Calculate the next possible release\r\n3. Check this release\r\n4. Apply it\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: deckhouse\r\ntype: fix\r\ndescription: More controllable and transparent release process\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/656",
+		"number": 656,
+		"title": "[cloud-provider-vsphere] support of non-drs installations",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\nAdded ability to install deckhouse in vsphere installations with disabled DRS ability.\r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\nWhen DRS in vsphere vcenter is disabled, we cannot create additional resource pools and deckhouse installation fails.\r\n\r\n```changes\r\nmodule: cloud-provider-vsphere\r\ntype: feature\r\ndescription: \"Add ability to install deckhouse in vsphere installations with DRS disabled.\"\r\nnote: \r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/637",
+		"number": 637,
+		"title": "[ingress-ngnix] proper validating webhook configuration for 1.22 k8s",
+		"body": "## Description\r\nProvide proper validating webhook configuration for Ingress Nginx Controller v1.0.\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\n\r\n## Why do we need it, and what problem does it solve?\r\nIngress Nginx Controller supports only modern versions of ingresses and different validation path.\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: ingress-ngnix\r\ntype: fix\r\ndescription: |\r\n  Proper validating webhook configuration for k8s 1.22+.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/627",
+		"number": 627,
+		"title": "[vertical-pod-autoscaler] vpa improvements",
+		"body": "## Description\r\n<!---\r\n  Describe your changes in detail.\r\n\r\n  Please let users know if your feature influences critical cluster components\r\n  (restarts of ingress-controllers, control-plane, Prometheus, etc).\r\n-->\r\nThis PR improves hook max_allowed work.\r\n1. If the new calculated max_allowed values for pods are less than 10% less than the old values, the values are not changed.\r\n2. Hook starts only when Deckhouse pod becomes ready.\r\n\r\nAlso this PR fixes VPA linter and fixes some errors in vpa in istio module.\r\n \r\n## Why do we need it, and what problem does it solve?\r\n<!---\r\n  This is the most important paragraph.\r\n  You have to describe the main goal of your feature.\r\n\r\n  If it fixes an issue, place a link to the issue here.\r\n\r\n  If it fixes an obvious bug, please tell users about the impact and effect of the problem.\r\n-->\r\nVpa hook which set max_allowed values causes to massive pod restart on deckhouse version update.\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: vertical-pod-autoscaler\r\ntype: fix\r\ndescription: |\r\n  1. If the new calculated max_allowed values for pods are less than 10% of old values, the values are not changed.\r\n  2. Hook starts only when Deckhouse pod becomes ready.\r\n```\r\n\r\n<!---\r\nABOUT CHANGES BLOCK\r\n\r\n\"Changes\" block contains a list of YAML documents. It describes a changelog\r\nentry that is collected to a release changelog.\r\n\r\nFields:\r\n\r\nmodule\r\n    Required. Affected module in kebab case, e.g. \"node-manager\".\r\ntype\r\n    Required. The change type: only \"fix\" and \"feature\" supported.\r\ndescription\r\n    Optional. The changelog entry. Omit to use pull request title.\r\nnote\r\n    Optional. Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.\r\n\r\nSince the syntax is YAML, `note` may contain multi-line text.\r\n\r\nThere can be multiple docs in single `changes` block, and multiple `changes`\r\nblocks in the PR body.\r\n\r\nExample:\r\n\r\n```changes\r\nmodule: node-manager\r\ntype: fix\r\ndescription: \"Nodes with outdated manifests are no longer provisioned on *InstanceClass update.\"\r\nnote: |\r\n  Expect nodes of \"Cloud\" type to restart.\r\n\r\n  Node checksum calculation is fixes as well as a race condition during\r\n  the machines (MCM) rendering which caused outdated nodes to spawn.\r\n---\r\nmodule: cloud-provider-aws\r\ntype: feature\r\ndescription: \"Node restarts can be avoided by pinning a checksum to a node group in config values.\"\r\nnote: Recommended to use as a last resort.\r\n```\r\n\r\n-->\r\n",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/433",
+		"number": 433,
+		"title": "[docs] Add instructions for deploying Deckhouse on an existing cluster",
+		"body": "## Description\r\n\r\nAdds instruction on how to install Deckhouse on an existing Kubernetes cluster or Managed Kubernetes service.\r\n\r\nCloses #137\r\n\r\n## Changelog entries\r\n```changes\r\nmodule: docs\r\ntype: feature\r\ndescription: \"Getting started article on how to install Deckhouse on an existing Kubernetes cluster or managed Kubernetes service.\"\r\nimpact_level: low\r\n```",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	},
+	{
+		"url": "https://github.com/deckhouse/deckhouse/pull/353",
+		"number": 353,
+		"title": "[dhctl][deckhouse] Control plane node readiness check before converge node",
+		"body": "## Description\r\nAdd probes for check connection to control plane nodes and control-plane manager pod for node.\r\nAdd hook for terraform runner with 3 methods: before operation action, check ready and before action.\r\nFor control plane nodes we set special label on node and evict deckhouse pod (if need) wait deckhouse is ready, check connect to each node and check ready control-plane manager pod on each node is ready.\r\n\r\nAnother things:\r\n- small refact converge \r\n- heal ssh-host param for control plane nodes\r\n- add additional commands for check\r\n- ssh-agent now started in one instance\r\n- add node affinity for deckhouse for evicting\r\n\r\n## Why we need it and what problem does it solve?\r\nClose [issue](https://github.com/deckhouse/deckhouse/issues/113)\r\n\r\nWe need to make sure that the control plane components are ready and healthy in order to safely update the node.\r\n\r\n## Changelog entries\r\n<!---\r\n  Describe the changes so they will be included in a release changelog.\r\n  Find examples and documentation below.\r\n-->\r\n\r\n```changes\r\nmodule: dhctl\r\ntype: feature\r\ndescription: \"Control plane readiness check before control plane node converging\"\r\n---\r\nmodule: deckhouse\r\ntype: feature\r\ndescription: \"Add node affinity in deckhouse deployment for evicting pod from converging node\"\r\nnote: \"Node with label 'dhctl.deckhouse.io/node-for-converge' exclude from scheduling deckhouse pod\"\r\n```\r\n-->",
+		"state": "closed",
+		"milestone": { "number": 7, "title": "v1.31.0", "state": "open" }
+	}
+]

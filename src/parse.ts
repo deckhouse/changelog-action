@@ -1,3 +1,4 @@
+import { copyFileSync } from "fs"
 import * as yaml from "js-yaml"
 import { marked } from "marked"
 
@@ -26,12 +27,12 @@ export interface ModuleChanges {
 
 export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
 	return pulls
-		.map((pr) => ({ pr, changesYAMLs: extractChanges(pr.body) }))
-		.flatMap(({ pr, changesYAMLs }) => parseChangeEntries(pr, changesYAMLs))
+		.map((pr) => ({ pr, changesBlocks: extractChanges(pr.body) })) // there can be multiple "changes" blocks per PR
+		.flatMap(({ pr, changesBlocks }) => parseChangeEntries(pr, changesBlocks)) // there can be multiple changes per "changes" block
 }
 
 /**
- * changesYAMLs example:
+ * changesBlocks example:
  *
  *   module: module3
  *   type: fix
@@ -43,19 +44,27 @@ export function collectChangelog(pulls: PullRequest[]): ChangeEntry[] {
  *   description: added big thing to enhance security
  *
  */
-export function parseChangeEntries(pr: PullRequest, changesYAMLs: string[]): ChangeEntry[] {
+export function parseChangeEntries(pr: PullRequest, changesBlocks: string[]): ChangeEntry[] {
 	const entries = [] as ChangeEntry[]
-	for (const changeYAML of changesYAMLs) {
+	for (const changesBlock of changesBlocks) {
 		try {
-			const doc = yaml.load(changeYAML, { schema: yaml.FAILSAFE_SCHEMA })
-			if (!doc) {
+			const docs = yaml.loadAll(changesBlock, null, { schema: yaml.FAILSAFE_SCHEMA })
+			// no change block is fine, the PR is just ignored
+			if (docs.length === 0) {
 				const change = createEmptyChange(pr)
 				entries.push(change)
 				continue
 			}
-			const opts = parseInput(doc as ChangeInput, pr)
-			const change = new ChangeEntry(opts)
-			entries.push(change)
+			for (const doc of docs) {
+				if (!doc) {
+					const change = createEmptyChange(pr)
+					entries.push(change)
+					continue
+				}
+				const opts = parseInput(doc as ChangeInput, pr)
+				const change = new ChangeEntry(opts)
+				entries.push(change)
+			}
 		} catch (e) {
 			if (!(e instanceof yaml.YAMLException)) {
 				throw e

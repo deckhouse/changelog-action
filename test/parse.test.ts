@@ -1,6 +1,12 @@
 import * as fs from "fs"
 import * as path from "path"
-import { ChangeEntry, extractChanges, parseChangeEntries, PullRequest } from "./../src/parse"
+import {
+	ChangeEntry,
+	collectChangelog,
+	extractChanges,
+	parseChangeEntries,
+	PullRequest,
+} from "./../src/parse"
 
 describe("extracting raw changes", () => {
 	function block(content: string, type = "") {
@@ -370,7 +376,7 @@ describe("parsing change entries", function () {
 		},
 
 		{
-			title: "parses zero YAML",
+			title: "parses empty YAML",
 			pr,
 			input: [""],
 			want: [
@@ -381,6 +387,13 @@ describe("parsing change entries", function () {
 					pull_request: pr.url,
 				}),
 			],
+		},
+
+		{
+			title: "parses zero input",
+			pr,
+			input: [],
+			want: [],
 		},
 	]
 
@@ -431,19 +444,62 @@ describe("parsing change entries", function () {
 	})
 })
 
+describe("Parsing pulls", () => {
+	const pulls = getPulls()
+	const changes = collectChangelog(pulls)
+
+	it("contains all changes", () => {
+		expect(changes).toHaveLength(57)
+	})
+
+	test.each(changes)("$pull_request", function (c) {
+		expect(c.valid()).toBeTruthy()
+	})
+
+	describe("#353", () => {
+		const expectedBlock = `module: dhctl
+type: feature
+description: "Control plane readiness check before control plane node converging"
+---
+module: deckhouse
+type: feature
+description: "Add node affinity in deckhouse deployment for evicting pod from converging node"
+note: "Node with label 'dhctl.deckhouse.io/node-for-converge' exclude from scheduling deckhouse pod"`
+
+		it("parses the changes from PR body", () => {
+			const p = pulls.find((p) => p.number === 353)
+			const changeBlocks = extractChanges(p.body)
+			expect(changeBlocks).toHaveLength(1)
+			expect(changeBlocks).toStrictEqual([expectedBlock])
+		})
+
+		it("converts block to changes", () => {})
+
+		it("contains all changes", () => {
+			const c353 = changes.filter((c) => c.pull_request.endsWith("/353"))
+			expect(c353).toHaveLength(2)
+		})
+	})
+})
+
+function readFixture(name: string) {
+	return fs.readFileSync(path.join("./test/fixtures", name), { encoding: "utf8" })
+}
+
 function getTwoBlocksBodyFixture() {
-	const dir = "./test/fixtures"
 	const bodyFile = "pr_body_2_blocks.json"
 	const changeFile1 = "pr_body_2_blocks_change_1.yml"
 	const changeFile2 = "pr_body_2_blocks_change_2.yml"
 
-	const read = (name) => fs.readFileSync(path.join(dir, name), { encoding: "utf8" })
-
-	const input = JSON.parse(read(bodyFile)).body
-	const changes1 = read(changeFile1)
-	const changes2 = read(changeFile2)
+	const input = JSON.parse(readFixture(bodyFile)).body
+	const changes1 = readFixture(changeFile1)
+	const changes2 = readFixture(changeFile2)
 
 	const expected = [changes1, changes2]
 
 	return { input, expected }
+}
+
+function getPulls() {
+	return require("./fixtures/pulls-v1.31.0.json")
 }
