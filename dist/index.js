@@ -276,23 +276,30 @@ const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(9017);
 function collectChangelog(pulls) {
     return pulls
-        .map((pr) => ({ pr, changesYAMLs: extractChanges(pr.body) }))
-        .flatMap(({ pr, changesYAMLs }) => parseChangeEntries(pr, changesYAMLs));
+        .map((pr) => ({ pr, changesBlocks: extractChanges(pr.body) }))
+        .flatMap(({ pr, changesBlocks }) => parseChangeEntries(pr, changesBlocks));
 }
 exports.collectChangelog = collectChangelog;
-function parseChangeEntries(pr, changesYAMLs) {
+function parseChangeEntries(pr, changesBlocks) {
     const entries = [];
-    for (const changeYAML of changesYAMLs) {
+    for (const changesBlock of changesBlocks) {
         try {
-            const doc = yaml.load(changeYAML, { schema: yaml.FAILSAFE_SCHEMA });
-            if (!doc) {
+            const docs = yaml.loadAll(changesBlock, null, { schema: yaml.FAILSAFE_SCHEMA });
+            if (docs.length === 0) {
                 const change = createEmptyChange(pr);
                 entries.push(change);
                 continue;
             }
-            const opts = parseInput(doc, pr);
-            const change = new ChangeEntry(opts);
-            entries.push(change);
+            for (const doc of docs) {
+                if (!doc) {
+                    const change = createEmptyChange(pr);
+                    entries.push(change);
+                    continue;
+                }
+                const opts = parseInput(doc, pr);
+                const change = new ChangeEntry(opts);
+                entries.push(change);
+            }
         }
         catch (e) {
             if (!(e instanceof yaml.YAMLException)) {
