@@ -11,6 +11,7 @@ import {
 	TYPE_FIX,
 } from "./parse"
 
+// sorts YAML keys
 function getYAMLSorter() {
 	// don't pollute the scope with globals
 	const yamlFieldSorter = {
@@ -46,7 +47,6 @@ export function formatYaml(changes: ChangeEntry[]): string {
 	// create the map from only valid entries:  module -> fix/feature -> change[]
 	const body = changes
 		.filter((c) => c.valid()) //
-		.filter((c) => c.impact_level !== LEVEL_LOW)
 		.reduce(groupByModuleAndType, {})
 
 	return yaml.dump(body, opts)
@@ -157,9 +157,10 @@ function collectImpact(changes: ChangeEntry[]): string[] {
 		.sort() // sorting to naіvely group potentially similar impacts together
 }
 
+// avoids low impact noise in markdown
 function collectChanges(changes: ChangeEntry[], changeType: string): string[] {
 	return changes
-		.filter((c) => c.valid() && c.type == changeType) //
+		.filter((c) => c.valid() && c.type == changeType && c.impact_level != LEVEL_LOW)
 		.sort((a, b) => (a.section < b.section ? -1 : 1)) // sort by module
 		.map(changeMardown)
 }
