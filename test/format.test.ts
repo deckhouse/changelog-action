@@ -138,9 +138,9 @@ describe("Change validation", () => {
 			expected: [errMissing("summary")],
 		},
 		{
-			title: "err invalid section/module",
+			title: "err invalid section",
 			opts: { ...required, section: "" },
-			expected: [errMissing("section/module")],
+			expected: [errMissing("section")],
 		},
 		{
 			title: "errs sorted",

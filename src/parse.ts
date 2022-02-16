@@ -224,7 +224,7 @@ export class ChangeEntry extends ChangeContent {
 		}
 
 		if (!this.section) {
-			errs.push("missing section/module")
+			errs.push("missing section")
 		}
 
 		if (!knownTypes.has(this.type)) {
