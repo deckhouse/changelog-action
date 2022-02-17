@@ -11,7 +11,7 @@ This action creates changelogs by merged PRs per milestone.
 
     - name: Collect Changelog
       id: changelog
-      uses: deckhouse/changelog-action@cumulative-md
+      uses: deckhouse/changelog-action@v2
       with:
         token: ${{ inputs.token }}
         milestone: ${{ steps.args.outputs.milestone_title }}
@@ -70,7 +70,7 @@ This action creates changelogs by merged PRs per milestone.
 ```yaml
     - name: Collect Changelog
       id: changelog
-      uses: deckhouse/changelog-action@cumulative-md
+      uses: deckhouse/changelog-action@v2
       with:
         token: ${{ inputs.token }}
         milestone: ${{ steps.args.outputs.milestone_title }}
