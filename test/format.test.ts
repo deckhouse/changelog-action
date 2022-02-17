@@ -1,6 +1,6 @@
+import * as fs from "fs"
 import { formatMarkdown, formatYaml } from "../src/format"
 import { ChangeEntry } from "../src/parse"
-import * as fs from "fs"
 
 const changes: ChangeEntry[] = [
 	// missing high impact detail, missing type

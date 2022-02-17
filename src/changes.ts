@@ -1,5 +1,5 @@
-import { Client, Pull } from "./client"
-import { ChangesWithVersion, formatCumulativeMarkdown, formatMarkdown, formatYaml } from "./format"
+import { Client } from "./client"
+import { formatMarkdown, formatYaml } from "./format"
 import { collectChangelog } from "./parse"
 import { getValidator } from "./validator"
 
@@ -22,7 +22,7 @@ export type Outputs = {
 export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 	const { milestone, allowedSections } = inputs
 
-	const version = new Version(milestone)
+	const version = new MilestoneVersion(milestone)
 	if (!version.isValid()) {
 		throw new Error(`unexpected version "${milestone}"`)
 	}
@@ -58,29 +58,33 @@ export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 	return out
 }
 
-class Version {
-	constructor(private ver: string) {}
+class MilestoneVersion {
+	constructor(private value: string) {}
 
 	toMinor(): string {
-		const vs = this.ver.split(".") // v1.39.3 -> ["v1", "39", "3"]
-		return vs[0] + "." + vs[1] // "v1.39"
+		const vs = this.value.split(".") // v1.85.3 -> ["v1", "85", "3"]
+		return vs[0] + "." + vs[1] // "v1.85"
 	}
 
 	patchNum(): number {
-		const vs = this.ver.split(".") // v1.39.3 -> ["v1", "39", "3"]
+		const vs = this.value.split(".") // v1.85.3 -> ["v1", "85", "3"]
 		const p = vs[vs.length - 1] // "3"
 		return parseInt(p, 10)
 	}
 
+	// Iterates down, excludes current version
+	// E.g.
+	//	given v1.85.3 in args,
+	//	yields v1.85.2, v1.85.1, v1.85.0
 	*downToZero(): IterableIterator<string> {
 		const minor = this.toMinor()
 		const maxPatch = this.patchNum()
-		for (let p = maxPatch - 1; maxPatch >= 0; p--) {
-			yield `${minor}.${p}`
+		for (let p = maxPatch - 1; p >= 0; p--) {
+			yield `v${minor}.${p}`
 		}
 	}
 
 	isValid(): boolean {
-		return true
+		return /v\d+\.\d+\.\d+/.test(this.value)
 	}
 }

@@ -130,47 +130,6 @@ export interface ChangesWithVersion {
 	changes: ChangeEntry[]
 }
 
-/**
- * @function formatCumulatieMarkdown returns cumulative changelog in markdown
- */
-export function formatCumulativeMarkdown(minorVersion: string, cwvs: ChangesWithVersion[]): string {
-	const headerTag = "h1"
-	const subheaderTag = "h2"
-
-	const body: DataObject[] = [{ [headerTag]: `Changelog ${minorVersion}` }]
-
-	for (const x of cwvs) {
-		body.push({ [subheaderTag]: x.version })
-		body.push(...collectPartialMarkdown(x.changes))
-	}
-
-	return json2md(body)
-}
-
-/**
- * @function formatPartialMarkdown returns partial changes formatted in markdown for accumulating in
- * single file
- */
-function collectPartialMarkdown(changes: ChangeEntry[]): DataObject[] {
-	const subheaderTag = "h3"
-
-	const body: DataObject[] = []
-
-	const features = collectChanges(changes, TYPE_FEATURE)
-	if (features.length > 0) {
-		body.push({ [subheaderTag]: "Features" })
-		body.push({ ul: features })
-	}
-
-	const fixes = collectChanges(changes, TYPE_FIX)
-	if (fixes.length > 0) {
-		body.push({ [subheaderTag]: "Fixes" })
-		body.push({ ul: fixes })
-	}
-
-	return body
-}
-
 function collectImpact(changes: ChangeEntry[]): string[] {
 	return changes
 		.filter((c) => c.valid() && c.impact_level === LEVEL_HIGH)
