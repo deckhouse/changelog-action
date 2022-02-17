@@ -21,11 +21,11 @@ inputs:
         node-manager
     required: false
 outputs:
-  patch_yaml:
+  release_yaml:
     description: Changelog YAML for the patch release
-  patch_markdown:
+  release_markdown:
     description: Changelog markdown for the patch release
-  minor_markdown:
+  branch_markdown:
     description: Changelog markdown for the minor release branch
   minor_version:
     description: Minor version string, e.g. "v1.39"
