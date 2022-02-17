@@ -1,0 +1,36 @@
+chrony:
+  features:
+    - summary: d12
+      pull_request: https://github.com/ow/re/120
+  fixes:
+    - summary: d11
+      pull_request: https://github.com/ow/re/110
+cloud-provider-yandex:
+  features:
+    - summary: d22
+      pull_request: https://github.com/ow/re/220
+  fixes:
+    - summary: d21
+      pull_request: https://github.com/ow/re/210
+      impact: >-
+        Grafana will be restarted.
+
+        Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached),
+        because direct(browse) datasources type is depreated now. And alerts don't work with direct
+        data sources.
+
+        Provisioning datasources from secret instead configmap. Deckhouse datasources need client
+        certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while
+        terminating.
+    - summary: d29
+      pull_request: https://github.com/ow/re/290
+    - summary: d00029
+      pull_request: https://github.com/ow/re/291
+kube-dns:
+  features:
+    - summary: widlcard domains support
+      pull_request: https://github.com/ow/re/491
+      impact: So good.
+  fixes:
+    - summary: d48
+      pull_request: https://github.com/ow/re/480

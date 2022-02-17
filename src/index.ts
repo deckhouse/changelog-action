@@ -1,26 +1,26 @@
 import * as core from "@actions/core"
-import { collectChanges, Inputs } from "./changes"
-import { PullRequest } from "./parse"
+import { collectReleaseChanges as collectChanges, Inputs } from "./changes"
 
-function run() {
+async function main() {
 	try {
 		const inputs: Inputs = {
 			token: core.getInput("token"),
-			pulls: JSON.parse(core.getInput("pull_requests")) as PullRequest[],
+			repo: core.getInput("repo"),
+			milestone: core.getInput("milestone"),
 			allowedSections: parseList(core.getInput("allowed_sections")),
 		}
+		core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
-		// core.debug(`Inputs: ${inspect(inputs)}`)
+		const o = await collectChanges(inputs)
 
-		const o = collectChanges(inputs)
-
-		core.setOutput("yaml", o.yaml)
-		core.setOutput("markdown", o.markdown)
-		core.setOutput("partial_markdown", o.partialMarkdown)
+		core.setOutput("release_yaml", o.releaseYaml)
+		core.setOutput("release_markdown", o.releaseMarkdown)
+		core.setOutput("branch_markdown", o.branchMarkdown)
+		core.setOutput("minor_version", o.minorVersion)
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	} catch (error: any) {
-		core.setFailed(error.message)
+	} catch (e: any) {
+		core.setFailed(e.message)
 	}
 }
 
@@ -31,4 +31,4 @@ function parseList(s: string): string[] {
 		.filter((s) => s !== "")
 }
 
-run()
+main()

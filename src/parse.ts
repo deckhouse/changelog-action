@@ -1,18 +1,7 @@
 import * as yaml from "js-yaml"
 import { marked } from "marked"
+import { Pull } from "./client"
 import { Validator } from "./validator"
-
-export interface PullRequest {
-	state: string
-	number: number
-	url: string
-	title: string
-	body: string
-	milestone: {
-		title: string
-		number: number
-	}
-}
 
 export interface ChangesByModule {
 	[module: string]: ModuleChanges
@@ -35,7 +24,7 @@ export interface ModuleChanges {
  *   - there can be multiple "changes" blocks per PR
  *   - there can be multiple changes per "changes" block
  */
-export function collectChangelog(pulls: PullRequest[], validator: Validator): ChangeEntry[] {
+export function collectChangelog(pulls: Pull[], validator: Validator): ChangeEntry[] {
 	return pulls
 		.map((pr) => ({ pr, changesBlocks: parseChangesBlocks(pr.body) }))
 		.flatMap(({ pr, changesBlocks }) => parseChangeEntries(pr, changesBlocks))
@@ -55,7 +44,7 @@ export function collectChangelog(pulls: PullRequest[], validator: Validator): Ch
  *   description: added big thing to enhance security
  *
  */
-export function parseChangeEntries(pr: PullRequest, changesBlocks: string[]): ChangeEntry[] {
+export function parseChangeEntries(pr: Pull, changesBlocks: string[]): ChangeEntry[] {
 	const entries = [] as ChangeEntry[]
 	const iter = generateEntries(changesBlocks)
 
@@ -117,7 +106,7 @@ function sanitizeString(x: unknown): string {
 	return ""
 }
 
-function createEmptyChange(pr: PullRequest): ChangeEntry {
+function createEmptyChange(pr: Pull): ChangeEntry {
 	return new ChangeEntry({
 		section: "",
 		type: "",
@@ -278,7 +267,7 @@ interface ChangeInputVersion2 extends ChangeOpts {
  *   "impact": "Network flap is expected, but no longer than 10 seconds",
  * }
  */
-function parseInput(doc: ChangeInput, pr: PullRequest): ChangeEntryOpts {
+function parseInput(doc: ChangeInput, pr: Pull): ChangeEntryOpts {
 	const opts: ChangeEntryOpts = {
 		section: sanitizeString(doc.module) || sanitizeString(doc.section) || "",
 		type: sanitizeString(doc.type) || "",

@@ -9,36 +9,44 @@ This action creates changelogs by merged PRs per milestone.
     #   steps.args.outputs.milestone_title  = "v1.2.3"
     #   steps.args.outputs.milestone_number = 42
 
-    - name: Find Merged Pull Requsts
-      id: merged_milestone
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.token }}
-      run: |
-        prs="$(gh pr list \
-          --repo '${{ github.repository }}' \
-          --search 'milestone:${{ steps.args.outputs.milestone_title }}' \
-          --state merged \
-          --json number,url,title,body,state,milestone)"
-        echo "::set-output name=prs::${prs}"
-
     - name: Collect Changelog
       id: changelog
-      uses: deckhouse/changelog-action@v1
+      uses: deckhouse/changelog-action@v2
       with:
         token: ${{ inputs.token }}
-        pull_requests: ${{ steps.merged_milestone.outputs.prs }}
+        milestone: ${{ steps.args.outputs.milestone_title }}
+        repo: ${{ github.repository }}
+        # section:forced_impact_level
+        allowed_sections: |
+          ci:low
+          tests:low
+          tools:low
+          api
+          db
+          docs
 
-    - name: Write Changelog File
-      id: file
+    # Patch release changelog in YAML
+    - name: Write Changelog YAML
+      id: yaml_file
       shell: bash
       run: |
         mkdir -p ./CHANGELOG
         filename='./CHANGELOG/CHANGELOG-${{ steps.args.outputs.milestone_title }}.yml'
-        cat > "$filename" <<EOBODYINACTION
-        ${{ steps.changelog.outputs.yaml }}
-        EOBODYINACTION
+        cat > "$filename" <<EOF
+        ${{ steps.changelog.outputs.release_yaml }}
+        EOF
 
+    # Cumulative changelog for release branch in markdown
+    - name: Write Changelog Markdown
+      id: md_file
+      shell: bash
+      run: |
+        filename='./CHANGELOG/CHANGELOG-${{ steps.changelog.outputs.minor_version }}.md'
+        cat > "$filename" <<EOF
+        ${{ steps.changelog.outputs.branch_markdown }}
+        EOF
+
+    # Patch-version markdown changelog + malformed and impact digest
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3.10.1
       with:
@@ -47,7 +55,7 @@ This action creates changelogs by merged PRs per milestone.
         branch: changelog/${{ steps.args.outputs.milestone_title }}
         milestone: ${{ steps.args.outputs.milestone_number }}
         title: Changelog ${{ steps.args.outputs.milestone_title }}
-        body: ${{ steps.changelog.outputs.markdown }}
+        body: ${{ steps.changelog.outputs.release_markdown }}
         labels: changelog, auto
         token: ${{ inputs.token }}
         delete-branch: true
@@ -58,17 +66,18 @@ This action creates changelogs by merged PRs per milestone.
 
 ### Using The Action
 
-The action takes JSON array or pull requests. Pull requests objects are expected to have fields
-`number`, `url`, `title`, `body`, `state`, and `milestone`. All the pull requests in the array must
-share the same milestone.
 
 ```yaml
     - name: Collect Changelog
       id: changelog
-      uses: deckhouse/changelog-action@v1
+      uses: deckhouse/changelog-action@v2
       with:
-        token: ${{ Github access token }}
-        pull_requests: ${{ Pull requests JSON }}
+        token: ${{ inputs.token }}
+        milestone: ${{ steps.args.outputs.milestone_title }}
+        repo: ${{ github.repository }}
+        allowed_sections: |
+          one
+          two:low
 ```
 
 ### Describing Changes
@@ -77,33 +86,106 @@ To be mentioned in changelog, a pull request body must contain `changes` block:
 
 ~~~
 ```changes
-module: <name>
+section: <kebab-case of a modules/*> | <1st level dir in the repo>
 type: fix | feature
-description: <what effectively changes>
-note: <what to expect>
+summary: <what effectively changes in a single line>
+impact_level: low | high*
+impact: <what to expect, possibly multi-line>, required if impact_level is high
 ```
 ~~~
 
-Fields:
+# How to add to changelog
 
-- **`module`**: (Required.) Affected module, used for fist-level grouping.
-- **`type`**: (Required.) The change type: only `fix` and `feature` supported. Used for second-level
-  grouping.
-- **`description`**: (Optional.) The changelog entry. Omit to use pull request title.
-- **`note`**: (Optional.) Any notable detail, e.g. expected restarts, downtime, config changes, migrations, etc.
+The "changes" block contains a list of YAML documents. It describes a changelog entry that is automatically collected
+in a release changelog PR. It helps tracking changes, writing release messages, and shipping the changes to clusters!
 
-`changes` block expects a list of YAML documents. Each document describes a changelog entry. These
-changes are collected and grouped by the action. The changes are grouped by module and then by type
-within a module.
 
-Since the syntax is YAML, field values can contain multi-line text which might be useful for `note`. The
-result of the action is YAML and Markdown texts, which can be used to create file and changelog pull
-request body respectively.
+## Block example
 
-There can be multiple docs in single `changes` block, and/or multiple `changes`
-blocks in PR body.
+````
+```changes
+section: cloud-provider-aws
+type: feature
+summary: "Node restarts can be avoided by pinning a checksum to a node group in config values."
+impact: Recommended to use as a last resort.
+---
+section: node-manager
+type: fix
+summary: "Nodes with outdated manifests are no longer provisioned on *InstanceClass update."
+impact_level: high
+impact: |
+  Expect nodes of "Cloud" type to restart.
 
-Consider this example. Let's say, a PR belongs to milestone `v1.39.0` and describes these changes:
+  Node checksum calculation is fixes as well as a race condition during
+  the machines (MCM) rendering which caused outdated nodes to spawn.
+---
+section: ci
+type: fix
+summary: "Improved comments tracking workflow progress"
+impact_level: low
+```
+````
+
+
+## Fields
+
+### `section`
+
+Required.
+
+Affected part of the codebase or product, how you define it for release notes.
+
+Examples:
+
+  - "docs"
+  - "tests"
+  - "tools"
+  - "api"
+  - "ci"
+
+### `type`
+
+Required. "fix" or "feature"
+
+### `summary`
+
+Required.
+
+The changelog summary line. Single sentence that outlines the change. Better not to use line breaks here.
+
+Examples:
+
+-  "Fixed exaggerated values of resource recommendations"
+-  "Added support for Digital Ocean cloud provider"
+
+### `impact`
+
+Required if `impact_level` is "high", optional otherwise.
+
+Contains any notable detail about the influence, e.g. expected restarts, downtime, config changes, migrations, etc. It's fine to contain multiple lines of text here. Also, it can contain just a uselful note, depending on the impact level.
+
+Examples assuming impact level is high:
+
+- "Ingress controller will restart" (assuming impact level is high)
+- "Expect slow downtime due to kube-apiserver restarts" (assuming impact level is high)
+
+Example of a friendly hint for a reader:
+
+- "Update windows are limited to the range of a single day"
+
+### `impact_level`
+
+Optional.
+
+Can be set to "low" or "high".
+
+`high` means the impact will be copied "Release digest" section; hence the impact field is required. It helps creating important things for release messages.
+
+`low` will be omitted in PR body and release branch changelog. It just denotes that the change is not interesting for end user, e.g. "ci"
+
+Unset value just does not imply adding the impact to Release digest section or omitting the change in YAML
+
+
 
 ~~~
 ```changes

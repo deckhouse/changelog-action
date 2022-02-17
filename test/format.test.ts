@@ -1,4 +1,5 @@
-import { formatMarkdown, formatPartialMarkdown, formatYaml } from "../src/format"
+import * as fs from "fs"
+import { formatMarkdown, formatYaml } from "../src/format"
 import { ChangeEntry } from "../src/parse"
 
 const changes: ChangeEntry[] = [
@@ -108,12 +109,12 @@ describe("Change validation", () => {
 			expected: [],
 		},
 		{
-			title: "no errors when valid low with impact",
+			title: "no errors when valid low level with impact",
 			opts: { ...required, impact, impact_level: "low" },
 			expected: [],
 		},
 		{
-			title: "no errors when valid low without impact",
+			title: "no errors when valid low level without impact",
 			opts: { ...required, impact_level: "low" },
 			expected: [],
 		},
@@ -154,45 +155,10 @@ describe("Change validation", () => {
 })
 
 describe("YAML", () => {
-	const expected = `chrony:
-  features:
-    - summary: d12
-      pull_request: https://github.com/ow/re/120
-  fixes:
-    - summary: d11
-      pull_request: https://github.com/ow/re/110
-cloud-provider-yandex:
-  features:
-    - summary: d22
-      pull_request: https://github.com/ow/re/220
-  fixes:
-    - summary: d21
-      pull_request: https://github.com/ow/re/210
-      impact: >-
-        Grafana will be restarted.
+	const expectedYAML = fs.readFileSync("./test/fixtures/formatted/changelog.yml", { encoding: "utf-8" })
 
-        Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached),
-        because direct(browse) datasources type is depreated now. And alerts don't work with direct
-        data sources.
-
-        Provisioning datasources from secret instead configmap. Deckhouse datasources need client
-        certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while
-        terminating.
-    - summary: d29
-      pull_request: https://github.com/ow/re/290
-    - summary: d00029
-      pull_request: https://github.com/ow/re/291
-kube-dns:
-  features:
-    - summary: widlcard domains support
-      pull_request: https://github.com/ow/re/491
-      impact: So good.
-  fixes:
-    - summary: d48
-      pull_request: https://github.com/ow/re/480
-`
 	test("formats right", () => {
-		expect(formatYaml(changes)).toEqual(expected)
+		expect(formatYaml(changes)).toEqual(expectedYAML)
 	})
 })
 
@@ -200,44 +166,8 @@ describe("Markdown", () => {
 	const milestone = "v3.44.555"
 	const md = formatMarkdown(milestone, changes)
 
-	// This markdown formatting is implementation-dependant. The test only check that everything
-	// is in place.
-	const expected = `# Changelog v3.44.555
+	const expectedMarkdown = fs.readFileSync("./test/fixtures/formatted/changelog.md", { encoding: "utf-8" })
 
-## [MALFORMED]
-
-
- - #495 missing high impact detail
- - #510 invalid type "fix | feature"
- - #533 missing high impact detail, missing type
-
-## Release digest
-
-
- - Grafana will be restarted.
-    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
-    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
- - So good.
-
-## Features
-
-
- - **[chrony]** d12 [#120](https://github.com/ow/re/120)
- - **[cloud-provider-yandex]** d22 [#220](https://github.com/ow/re/220)
- - **[kube-dns]** widlcard domains support [#491](https://github.com/ow/re/491)
-    So good.
-
-## Fixes
-
-
- - **[chrony]** d11 [#110](https://github.com/ow/re/110)
- - **[cloud-provider-yandex]** d21 [#210](https://github.com/ow/re/210)
-    Grafana will be restarted.
-    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
-    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
- - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
- - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
-`
 	test("has version title as h1", () => {
 		const firstLine = md.split("\n")[0].trim()
 		expect(firstLine).toBe(`# Changelog v3.44.555`)
@@ -253,54 +183,6 @@ describe("Markdown", () => {
 	})
 
 	test("formats right", () => {
-		expect(md).toStrictEqual(expected)
-	})
-})
-
-describe("Partial Markdown", () => {
-	const md = formatPartialMarkdown(changes)
-
-	// This markdown formatting is implementation-dependant. The test only check that everything
-	// is in place.
-	const expected = `### Features
-
-
- - **[chrony]** d12 [#120](https://github.com/ow/re/120)
- - **[cloud-provider-yandex]** d22 [#220](https://github.com/ow/re/220)
- - **[kube-dns]** widlcard domains support [#491](https://github.com/ow/re/491)
-    So good.
-
-### Fixes
-
-
- - **[chrony]** d11 [#110](https://github.com/ow/re/110)
- - **[cloud-provider-yandex]** d21 [#210](https://github.com/ow/re/210)
-    Grafana will be restarted.
-    Now grafana using direct (proxy) type for deckhouse datasources (main, longterm, uncached), because direct(browse) datasources type is depreated now. And alerts don't work with direct data sources.
-    Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
- - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
- - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
-`
-	test("does not have h1", () => {
-		const headers = md.split("\n").filter((line) => line.startsWith("# "))
-		expect(headers).toHaveLength(0)
-	})
-
-	test("does not have h2", () => {
-		const subheaders = md.split("\n").filter((line) => line.startsWith("## "))
-		expect(subheaders).toHaveLength(0)
-	})
-
-	test("formats sections as h3", () => {
-		const subheaders = md
-			.split("\n")
-			.map((s) => s.trim())
-			.filter((s) => s.startsWith("### "))
-
-		expect(subheaders).toStrictEqual(["### Features", "### Fixes"])
-	})
-
-	test("formats right", () => {
-		expect(md).toStrictEqual(expected)
+		expect(md).toStrictEqual(expectedMarkdown)
 	})
 })

@@ -4,9 +4,11 @@ inputs:
   token:
     description: Github token
     required: true
-  pull_requests:
-    description: |
-      Pull requests JSON Array. Required fields: number, url, milestone, title, body, state.
+  repo:
+    description: Repo to fetch pull requests from. In format "owner/repo".
+    required: true
+  milestone:
+    description: Milestone title. Must be in format vX.Y.Z (e.g. "v1.39.45").
     required: true
   allowed_sections:
     description: |
@@ -19,10 +21,14 @@ inputs:
         node-manager
     required: false
 outputs:
-  yaml:
-    description: Changelog YAML
-  markdown:
-    description: Changelog markdown
+  release_yaml:
+    description: Changelog YAML for the patch release
+  release_markdown:
+    description: Changelog markdown for the patch release
+  branch_markdown:
+    description: Changelog markdown for the minor release branch
+  minor_version:
+    description: Minor version string, e.g. "v1.39"
 runs:
   using: "node12"
   main: "dist/index.js"
