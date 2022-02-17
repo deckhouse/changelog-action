@@ -1,4 +1,4 @@
-import { Client } from "./client"
+import { Client, Pull } from "./client"
 import { ChangesWithVersion, formatCumulativeMarkdown, formatMarkdown, formatYaml } from "./format"
 import { collectChangelog } from "./parse"
 import { getValidator } from "./validator"
@@ -34,28 +34,26 @@ export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 		minorVersion: version.toMinor(),
 	}
 
-	// Get pulls for current patch relese
 	const client = new Client(inputs.repo, inputs.token)
 	const validator = getValidator(allowedSections)
-	const pulls = await client.getMilestonePulls(milestone)
-	if (pulls.length == 0) {
+
+	// Get pulls for current patch relese
+	const patchVersionPulls = await client.getMilestonePulls(milestone)
+	if (patchVersionPulls.length == 0) {
 		return out
 	}
-	const changes = collectChangelog(pulls, validator)
+	const changes = collectChangelog(patchVersionPulls, validator)
 	out.patchYaml = formatYaml(changes)
 	out.patchMarkdown = formatMarkdown(milestone, changes)
 
 	// Get cumulative changelog. Here we define the sorting down to oldest versions.
-	const cumulativeChanges = [] as ChangesWithVersion[]
+	const minorVersionPulls = [...patchVersionPulls]
 	for (const prevPatchVersion of version.downToZero()) {
 		const pulls = await client.getMilestonePulls(prevPatchVersion)
-		const changes = collectChangelog(pulls, validator)
-		cumulativeChanges.push({
-			version: prevPatchVersion,
-			changes,
-		})
+		minorVersionPulls.push(...pulls)
 	}
-	out.minorMarkdown = formatCumulativeMarkdown(version.toMinor(), cumulativeChanges)
+	const allChanges = collectChangelog(patchVersionPulls, validator)
+	out.minorMarkdown = formatMarkdown(version.toMinor(), allChanges)
 
 	return out
 }

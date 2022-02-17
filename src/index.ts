@@ -9,7 +9,7 @@ async function main() {
 			milestone: core.getInput("milestone"),
 			allowedSections: parseList(core.getInput("allowed_sections")),
 		}
-		// core.debug(`Inputs: ${inspect(inputs)}`)
+		core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
 		const o = await collectChanges(inputs)
 
