@@ -1,5 +1,5 @@
 import { Client } from "./client"
-import { ChangesWithVersion, formatCumulatieMarkdown, formatMarkdown, formatYaml } from "./format"
+import { ChangesWithVersion, formatCumulativeMarkdown, formatMarkdown, formatYaml } from "./format"
 import { collectChangelog } from "./parse"
 import { getValidator } from "./validator"
 
@@ -21,8 +21,6 @@ export interface Outputs {
 // This function expects an array of pull requests belonging to single milestone
 export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 	const { milestone, allowedSections } = inputs
-
-	// We assume all PRs have the same milestone
 
 	const version = new Version(milestone)
 	if (!version.isValid()) {
@@ -57,7 +55,7 @@ export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 			changes,
 		})
 	}
-	out.minorMarkdown = formatCumulatieMarkdown(version.toMinor(), cumulativeChanges)
+	out.minorMarkdown = formatCumulativeMarkdown(version.toMinor(), cumulativeChanges)
 
 	return out
 }

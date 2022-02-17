@@ -133,7 +133,7 @@ export interface ChangesWithVersion {
 /**
  * @function formatCumulatieMarkdown returns cumulative changelog in markdown
  */
-export function formatCumulatieMarkdown(minorVersion: string, cwvs: ChangesWithVersion[]): string {
+export function formatCumulativeMarkdown(minorVersion: string, cwvs: ChangesWithVersion[]): string {
 	const headerTag = "h1"
 	const subheaderTag = "h2"
 
