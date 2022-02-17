@@ -22,39 +22,31 @@ export type Outputs = {
 export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 	const { milestone, allowedSections } = inputs
 
-	const version = new MilestoneVersion(milestone)
-	if (!version.isValid()) {
-		throw new Error(`unexpected version "${milestone}"`)
+	const milestoneVersion = new MilestoneVersion(milestone)
+	if (!milestoneVersion.isValid()) {
+		throw new Error(`invalid milestone title "${milestone}", expected version format vX.Y.Z`)
 	}
-
-	const out = {
-		releaseYaml: "",
-		releaseMarkdown: "",
-		branchMarkdown: "",
-		minorVersion: version.toMinor(),
-	}
-
 	const client = new Client(inputs.repo, inputs.token)
 	const validator = getValidator(allowedSections)
 
-	// Get pulls for current patch relese
-	const releasePulls = await client.getMilestonePulls(milestone)
-	if (releasePulls.length == 0) {
-		return out
-	}
-	const changes = collectChangelog(releasePulls, validator)
-	out.releaseYaml = formatYaml(changes)
-	out.releaseMarkdown = formatMarkdown(milestone, changes)
+	// Get pulls for current milestone (patch version).
+	const milestonePulls = await client.getMilestonePulls(milestone)
+	const milestoneChanges = collectChangelog(milestonePulls, validator)
 
 	// Get cumulative changelog for the whole release branch (minor version).
-	const branchPulls = [...releasePulls]
-	for (const prevPatchVersion of version.downToZero()) {
-		const pulls = await client.getMilestonePulls(prevPatchVersion)
+	const branchPulls = [...milestonePulls]
+	for (const prevMilestone of milestoneVersion.downToZero()) {
+		const pulls = await client.getMilestonePulls(prevMilestone)
 		branchPulls.push(...pulls)
 	}
-	const allChanges = collectChangelog(releasePulls, validator)
-	out.branchMarkdown = formatMarkdown(version.toMinor(), allChanges)
+	const branchChanges = collectChangelog(milestonePulls, validator)
 
+	const out = {
+		releaseYaml: formatYaml(milestoneChanges),
+		releaseMarkdown: formatMarkdown(milestone, milestoneChanges),
+		branchMarkdown: formatMarkdown(milestoneVersion.toMinor(), branchChanges),
+		minorVersion: milestoneVersion.toMinor(),
+	}
 	return out
 }
 
@@ -74,7 +66,7 @@ export class MilestoneVersion {
 
 	// Iterates down, excludes current version
 	// E.g.
-	//	given v1.85.3 in args,
+	//	given v1.85.3 in value,
 	//	yields v1.85.2, v1.85.1, v1.85.0
 	*downToZero(): IterableIterator<string> {
 		const minor = this.toMinor()
