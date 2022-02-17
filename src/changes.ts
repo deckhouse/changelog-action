@@ -58,7 +58,7 @@ export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 	return out
 }
 
-class MilestoneVersion {
+export class MilestoneVersion {
 	constructor(private value: string) {}
 
 	toMinor(): string {
@@ -80,7 +80,7 @@ class MilestoneVersion {
 		const minor = this.toMinor()
 		const maxPatch = this.patchNum()
 		for (let p = maxPatch - 1; p >= 0; p--) {
-			yield `v${minor}.${p}`
+			yield `${minor}.${p}`
 		}
 	}
 

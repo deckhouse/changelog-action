@@ -56,7 +56,7 @@ describe("Getting validator", () => {
 
 			expect(validatedUnknown).not.toStrictEqual(unknown)
 			expect(validatedUnknown.validate()).toStrictEqual([`unknown section "${opts.section}"`])
-			expect(unknown.valid()).toBeTruthy
+			expect(unknown.valid()).toBeTruthy()
 			expect(validatedUnknown.valid()).toBeFalsy
 		})
 
@@ -67,7 +67,7 @@ describe("Getting validator", () => {
 
 			expect(validatedHigh).not.toStrictEqual(high)
 			expect(validatedHigh.impact_level).toEqual(LEVEL_HIGH)
-			expect(validatedHigh.valid()).toBeTruthy
+			expect(validatedHigh.valid()).toBeTruthy()
 		})
 
 		test("changes level to low", () => {
@@ -77,7 +77,7 @@ describe("Getting validator", () => {
 
 			expect(validatedLow).not.toStrictEqual(low)
 			expect(validatedLow.impact_level).toEqual(LEVEL_LOW)
-			expect(validatedLow.valid()).toBeTruthy
+			expect(validatedLow.valid()).toBeTruthy()
 		})
 
 		test("does not modify level when not specified", () => {
@@ -90,7 +90,7 @@ describe("Getting validator", () => {
 			const validatedUntouched = val.validate(untouched)
 
 			expect(validatedUntouched).toStrictEqual(untouched)
-			expect(untouched).toBeTruthy
+			expect(untouched).toBeTruthy()
 		})
 	})
 })
