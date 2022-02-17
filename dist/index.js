@@ -16,7 +16,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.collectReleaseChanges = void 0;
+exports.MilestoneVersion = exports.collectReleaseChanges = void 0;
 const client_1 = __nccwpck_require__(1565);
 const format_1 = __nccwpck_require__(6610);
 const parse_1 = __nccwpck_require__(5223);
@@ -24,63 +24,55 @@ const validator_1 = __nccwpck_require__(4618);
 function collectReleaseChanges(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         const { milestone, allowedSections } = inputs;
-        const version = new Version(milestone);
-        if (!version.isValid()) {
-            throw new Error(`unexpected version "${milestone}"`);
+        const milestoneVersion = new MilestoneVersion(milestone);
+        if (!milestoneVersion.isValid()) {
+            throw new Error(`invalid milestone title "${milestone}", expected version format vX.Y.Z`);
         }
-        const out = {
-            patchYaml: "",
-            patchMarkdown: "",
-            minorMarkdown: "",
-            minorVersion: version.toMinor(),
-        };
         const client = new client_1.Client(inputs.repo, inputs.token);
         const validator = (0, validator_1.getValidator)(allowedSections);
-        const pulls = yield client.getMilestonePulls(milestone);
-        if (pulls.length == 0) {
-            return out;
+        const milestonePulls = yield client.getMilestonePulls(milestone);
+        const milestoneChanges = (0, parse_1.collectChangelog)(milestonePulls, validator);
+        const branchPulls = [...milestonePulls];
+        for (const prevMilestone of milestoneVersion.downToZero()) {
+            const pulls = yield client.getMilestonePulls(prevMilestone);
+            branchPulls.push(...pulls);
         }
-        const changes = (0, parse_1.collectChangelog)(pulls, validator);
-        out.patchYaml = (0, format_1.formatYaml)(changes);
-        out.patchMarkdown = (0, format_1.formatMarkdown)(milestone, changes);
-        const cumulativeChanges = [];
-        for (const prevPatchVersion of version.downToZero()) {
-            const pulls = yield client.getMilestonePulls(prevPatchVersion);
-            const changes = (0, parse_1.collectChangelog)(pulls, validator);
-            cumulativeChanges.push({
-                version: prevPatchVersion,
-                changes,
-            });
-        }
-        out.minorMarkdown = (0, format_1.formatCumulatieMarkdown)(version.toMinor(), cumulativeChanges);
+        const branchChanges = (0, parse_1.collectChangelog)(milestonePulls, validator);
+        const out = {
+            releaseYaml: (0, format_1.formatYaml)(milestoneChanges),
+            releaseMarkdown: (0, format_1.formatMarkdown)(milestone, milestoneChanges),
+            branchMarkdown: (0, format_1.formatMarkdown)(milestoneVersion.toMinor(), branchChanges),
+            minorVersion: milestoneVersion.toMinor(),
+        };
         return out;
     });
 }
 exports.collectReleaseChanges = collectReleaseChanges;
-class Version {
-    constructor(ver) {
-        this.ver = ver;
+class MilestoneVersion {
+    constructor(value) {
+        this.value = value;
     }
     toMinor() {
-        const vs = this.ver.split(".");
+        const vs = this.value.split(".");
         return vs[0] + "." + vs[1];
     }
     patchNum() {
-        const vs = this.ver.split(".");
+        const vs = this.value.split(".");
         const p = vs[vs.length - 1];
         return parseInt(p, 10);
     }
     *downToZero() {
         const minor = this.toMinor();
         const maxPatch = this.patchNum();
-        for (let p = maxPatch - 1; maxPatch >= 0; p--) {
+        for (let p = maxPatch - 1; p >= 0; p--) {
             yield `${minor}.${p}`;
         }
     }
     isValid() {
-        return true;
+        return /v\d+\.\d+\.\d+/.test(this.value);
     }
 }
+exports.MilestoneVersion = MilestoneVersion;
 
 
 /***/ }),
@@ -181,7 +173,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.formatCumulatieMarkdown = exports.formatMarkdown = exports.formatYaml = void 0;
+exports.formatMarkdown = exports.formatYaml = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const json2md_1 = __importDefault(__nccwpck_require__(8158));
 const parse_1 = __nccwpck_require__(5223);
@@ -267,32 +259,6 @@ function formatMarkdown(milestone, changes) {
     return (0, json2md_1.default)(body);
 }
 exports.formatMarkdown = formatMarkdown;
-function formatCumulatieMarkdown(minorVersion, cwvs) {
-    const headerTag = "h1";
-    const subheaderTag = "h2";
-    const body = [{ [headerTag]: `Changelog ${minorVersion}` }];
-    for (const x of cwvs) {
-        body.push({ [subheaderTag]: x.version });
-        body.push(...collectPartialMarkdown(x.changes));
-    }
-    return (0, json2md_1.default)(body);
-}
-exports.formatCumulatieMarkdown = formatCumulatieMarkdown;
-function collectPartialMarkdown(changes) {
-    const subheaderTag = "h3";
-    const body = [];
-    const features = collectChanges(changes, parse_1.TYPE_FEATURE);
-    if (features.length > 0) {
-        body.push({ [subheaderTag]: "Features" });
-        body.push({ ul: features });
-    }
-    const fixes = collectChanges(changes, parse_1.TYPE_FIX);
-    if (fixes.length > 0) {
-        body.push({ [subheaderTag]: "Fixes" });
-        body.push({ ul: fixes });
-    }
-    return body;
-}
 function collectImpact(changes) {
     return changes
         .filter((c) => c.valid() && c.impact_level === parse_1.LEVEL_HIGH)
@@ -378,10 +344,11 @@ function main() {
                 milestone: core.getInput("milestone"),
                 allowedSections: parseList(core.getInput("allowed_sections")),
             };
+            core.debug(`Inputs: ${JSON.stringify(inputs)}`);
             const o = yield (0, changes_1.collectReleaseChanges)(inputs);
-            core.setOutput("patch_yaml", o.patchYaml);
-            core.setOutput("patch_markdown", o.patchMarkdown);
-            core.setOutput("minor_markdown", o.minorMarkdown);
+            core.setOutput("release_yaml", o.releaseYaml);
+            core.setOutput("release_markdown", o.releaseMarkdown);
+            core.setOutput("branch_markdown", o.branchMarkdown);
             core.setOutput("minor_version", o.minorVersion);
         }
         catch (e) {
