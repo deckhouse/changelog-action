@@ -109,12 +109,12 @@ describe("Change validation", () => {
 			expected: [],
 		},
 		{
-			title: "no errors when valid low with impact",
+			title: "no errors when valid low level with impact",
 			opts: { ...required, impact, impact_level: "low" },
 			expected: [],
 		},
 		{
-			title: "no errors when valid low without impnact",
+			title: "no errors when valid low level without impact",
 			opts: { ...required, impact_level: "low" },
 			expected: [],
 		},
