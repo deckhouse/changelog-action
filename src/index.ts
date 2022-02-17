@@ -13,9 +13,9 @@ async function main() {
 
 		const o = await collectChanges(inputs)
 
-		core.setOutput("patch_yaml", o.patchYaml)
-		core.setOutput("patch_markdown", o.patchMarkdown)
-		core.setOutput("minor_markdown", o.minorMarkdown)
+		core.setOutput("release_yaml", o.releaseYaml)
+		core.setOutput("release_markdown", o.releaseMarkdown)
+		core.setOutput("branch_markdown", o.branchMarkdown)
 		core.setOutput("minor_version", o.minorVersion)
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any

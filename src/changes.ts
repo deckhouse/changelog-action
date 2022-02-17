@@ -11,10 +11,10 @@ export interface Inputs {
 	allowedSections: string[]
 }
 
-export interface Outputs {
-	patchYaml: string
-	patchMarkdown: string
-	minorMarkdown: string
+export type Outputs = {
+	releaseYaml: string
+	releaseMarkdown: string
+	branchMarkdown: string
 	minorVersion: string
 }
 
@@ -28,9 +28,9 @@ export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 	}
 
 	const out = {
-		patchYaml: "",
-		patchMarkdown: "",
-		minorMarkdown: "",
+		releaseYaml: "",
+		releaseMarkdown: "",
+		branchMarkdown: "",
 		minorVersion: version.toMinor(),
 	}
 
@@ -38,22 +38,22 @@ export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 	const validator = getValidator(allowedSections)
 
 	// Get pulls for current patch relese
-	const patchVersionPulls = await client.getMilestonePulls(milestone)
-	if (patchVersionPulls.length == 0) {
+	const releasePulls = await client.getMilestonePulls(milestone)
+	if (releasePulls.length == 0) {
 		return out
 	}
-	const changes = collectChangelog(patchVersionPulls, validator)
-	out.patchYaml = formatYaml(changes)
-	out.patchMarkdown = formatMarkdown(milestone, changes)
+	const changes = collectChangelog(releasePulls, validator)
+	out.releaseYaml = formatYaml(changes)
+	out.releaseMarkdown = formatMarkdown(milestone, changes)
 
-	// Get cumulative changelog. Here we define the sorting down to oldest versions.
-	const minorVersionPulls = [...patchVersionPulls]
+	// Get cumulative changelog for the whole release branch (minor version).
+	const branchPulls = [...releasePulls]
 	for (const prevPatchVersion of version.downToZero()) {
 		const pulls = await client.getMilestonePulls(prevPatchVersion)
-		minorVersionPulls.push(...pulls)
+		branchPulls.push(...pulls)
 	}
-	const allChanges = collectChangelog(patchVersionPulls, validator)
-	out.minorMarkdown = formatMarkdown(version.toMinor(), allChanges)
+	const allChanges = collectChangelog(releasePulls, validator)
+	out.branchMarkdown = formatMarkdown(version.toMinor(), allChanges)
 
 	return out
 }
