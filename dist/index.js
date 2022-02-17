@@ -37,7 +37,7 @@ function collectReleaseChanges(inputs) {
             const pulls = yield client.getMilestonePulls(prevMilestone);
             branchPulls.push(...pulls);
         }
-        const branchChanges = (0, parse_1.collectChangelog)(milestonePulls, validator);
+        const branchChanges = (0, parse_1.collectChangelog)(branchPulls, validator);
         const out = {
             releaseYaml: (0, format_1.formatYaml)(milestoneChanges),
             releaseMarkdown: (0, format_1.formatMarkdown)(milestone, milestoneChanges),

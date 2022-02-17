@@ -39,7 +39,7 @@ export async function collectReleaseChanges(inputs: Inputs): Promise<Outputs> {
 		const pulls = await client.getMilestonePulls(prevMilestone)
 		branchPulls.push(...pulls)
 	}
-	const branchChanges = collectChangelog(milestonePulls, validator)
+	const branchChanges = collectChangelog(branchPulls, validator)
 
 	const out = {
 		releaseYaml: formatYaml(milestoneChanges),
