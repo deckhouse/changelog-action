@@ -125,7 +125,7 @@ class Client {
             return pulls.map((p) => {
                 var _a, _b, _c;
                 return ({
-                    url: p.url,
+                    url: p.html_url,
                     number: p.number,
                     title: p.title,
                     body: p.body || "",
