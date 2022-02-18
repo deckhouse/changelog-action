@@ -24,9 +24,9 @@ async function main() {
 	}
 }
 
-function parseList(s: string): string[] {
+export function parseList(s: string): string[] {
 	return s
-		.split(/[\n,]+/)
+		.split(/[\n,\s]+/)
 		.map((s) => s.trim())
 		.filter((s) => s !== "")
 }

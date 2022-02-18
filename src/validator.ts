@@ -49,32 +49,44 @@ export class NoopValidator implements Validator {
 	}
 }
 
-function parseConfig(sections: string[]) {
-	const m = new Map()
+export function parseConfig(definitions: string[]): Map<string, string> {
+	const config = new Map()
 	const invalid = new Set<string>()
 	const duplicates = new Set<string>()
 
-	for (const definition of sections) {
+	for (const definition of definitions) {
 		const parts = definition.split(":")
 
+		// Check the definition is valid
 		if (parts.length === 0 || parts.length > 2) {
 			invalid.add(definition)
 			continue
 		}
 
-		const [section, level] = parts
-		if (m.has(section)) {
-			duplicates.add(section)
-			continue
+		// Check we should overwrite or collect an error
+		const [section, level = ""] = parts
+		if (config.has(section)) {
+			// If the level does not change that's duplicate. Otherwise, rewrite the
+			// definition
+			const curLevel = config.get(section)
+			if (curLevel === level) {
+				duplicates.add(section)
+				continue
+			}
+
+			if (level === "") {
+				// Ignore duplicate if it is not more specific than default
+				continue
+			}
 		}
 
 		if (parts.length === 1) {
-			m.set(section, "")
+			config.set(section, "")
 			continue
 		}
 
 		if (parts.length === 2 && level && knownLevels.has(level)) {
-			m.set(section, level)
+			config.set(section, level)
 			continue
 		}
 	}
@@ -84,11 +96,12 @@ function parseConfig(sections: string[]) {
 		err += `invalid section definitions: ${Array.from(invalid).join(", ")}`
 	}
 	if (duplicates.size > 0) {
-		err += `\nduplicated sections in definitions: ${Array.from(duplicates).join(", ")}`
+		if (err != "") err += "\n"
+		err += `duplicated sections in definitions: ${Array.from(duplicates).join(", ")}`
 	}
 	if (err.length > 0) {
 		throw new Error(`invalid allowed_sections:\n${err}`)
 	}
 
-	return m
+	return config
 }
