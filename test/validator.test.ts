@@ -1,5 +1,5 @@
 import { ChangeEntry, LEVEL_HIGH, LEVEL_LOW } from "../src/parse"
-import { getValidator } from "../src/validator"
+import { getValidator, parseConfig } from "../src/validator"
 
 describe("Getting validator", () => {
 	const opts = {
@@ -92,5 +92,51 @@ describe("Getting validator", () => {
 			expect(validatedUntouched).toStrictEqual(untouched)
 			expect(untouched).toBeTruthy()
 		})
+	})
+})
+
+describe("parsing list arg", () => {
+	test("parses different values strings", () => {
+		const input = ["a", "b:low", "c"]
+		const expected = new Map([
+			["a", ""],
+			["b", "low"],
+			["c", ""],
+		])
+		expect(parseConfig(input)).toStrictEqual(expected)
+	})
+
+	test("complains on duplicates", () => {
+		const input = ["a", "b:low", "c", "a"]
+
+		expect(() => parseConfig(input)).toThrow(/duplicate/)
+	})
+
+	test("compains on invalid definition schema", () => {
+		const input = ["a", "b:low:bow", "c", "a"]
+
+		expect(() => parseConfig(input)).toThrow(/invalid/)
+	})
+
+	test("on duplicates with modifier accept more specific definition", () => {
+		const input = ["a", "b:low", "c", "a:low"]
+		const expected = new Map([
+			["a", "low"],
+			["b", "low"],
+			["c", ""],
+		])
+
+		expect(parseConfig(input)).toStrictEqual(expected)
+	})
+
+	test("on duplicates with modifier accepts more specific definition if it comes before less specific", () => {
+		const input = ["a:low", "b:low", "c", "a"]
+		const expected = new Map([
+			["a", "low"],
+			["b", "low"],
+			["c", ""],
+		])
+
+		expect(parseConfig(input)).toStrictEqual(expected)
 	})
 })
