@@ -333,6 +333,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseList = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const changes_1 = __nccwpck_require__(8654);
 function main() {
@@ -358,10 +359,11 @@ function main() {
 }
 function parseList(s) {
     return s
-        .split(/[\n,]+/)
+        .split(/[\n,\s]+/)
         .map((s) => s.trim())
         .filter((s) => s !== "");
 }
+exports.parseList = parseList;
 main();
 
 
@@ -552,7 +554,7 @@ function parseInput(doc, pr) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NoopValidator = exports.ValidatorImpl = exports.getValidator = void 0;
+exports.parseConfig = exports.NoopValidator = exports.ValidatorImpl = exports.getValidator = void 0;
 const parse_1 = __nccwpck_require__(5223);
 function getValidator(allowedSections = []) {
     if (allowedSections.length === 0) {
@@ -595,27 +597,33 @@ class NoopValidator {
     }
 }
 exports.NoopValidator = NoopValidator;
-function parseConfig(sections) {
-    const m = new Map();
+function parseConfig(definitions) {
+    const config = new Map();
     const invalid = new Set();
     const duplicates = new Set();
-    for (const definition of sections) {
+    for (const definition of definitions) {
         const parts = definition.split(":");
         if (parts.length === 0 || parts.length > 2) {
             invalid.add(definition);
             continue;
         }
-        const [section, level] = parts;
-        if (m.has(section)) {
-            duplicates.add(section);
-            continue;
+        const [section, level = ""] = parts;
+        if (config.has(section)) {
+            const curLevel = config.get(section);
+            if (curLevel === level) {
+                duplicates.add(section);
+                continue;
+            }
+            if (level === "") {
+                continue;
+            }
         }
         if (parts.length === 1) {
-            m.set(section, "");
+            config.set(section, "");
             continue;
         }
         if (parts.length === 2 && level && parse_1.knownLevels.has(level)) {
-            m.set(section, level);
+            config.set(section, level);
             continue;
         }
     }
@@ -624,13 +632,16 @@ function parseConfig(sections) {
         err += `invalid section definitions: ${Array.from(invalid).join(", ")}`;
     }
     if (duplicates.size > 0) {
-        err += `\nduplicated sections in definitions: ${Array.from(duplicates).join(", ")}`;
+        if (err != "")
+            err += "\n";
+        err += `duplicated sections in definitions: ${Array.from(duplicates).join(", ")}`;
     }
     if (err.length > 0) {
         throw new Error(`invalid allowed_sections:\n${err}`);
     }
-    return m;
+    return config;
 }
+exports.parseConfig = parseConfig;
 
 
 /***/ }),
