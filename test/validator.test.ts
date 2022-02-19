@@ -112,7 +112,13 @@ describe("parsing list arg", () => {
 		expect(() => parseConfig(input)).toThrow(/duplicate/)
 	})
 
-	test("compains on invalid definition schema", () => {
+	test("complains on duplicates with modifiers", () => {
+		const input = ["a:high", "b:low", "c", "a:high"]
+
+		expect(() => parseConfig(input)).toThrow(/invalid/)
+	})
+
+	test("complains on invalid definition", () => {
 		const input = ["a", "b:low:bow", "c", "a"]
 
 		expect(() => parseConfig(input)).toThrow(/invalid/)
