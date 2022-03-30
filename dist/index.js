@@ -206,28 +206,29 @@ function formatYaml(changes) {
 }
 exports.formatYaml = formatYaml;
 function groupByModuleAndType(acc, change) {
-    acc[change.section] = acc[change.section] || {};
-    const mc = acc[change.section];
-    const getTypeList = (k) => {
-        mc[k] = mc[k] || [];
-        return mc[k];
-    };
-    let list;
+    function listOf(typ) {
+        acc[change.section] = acc[change.section] || {};
+        const mc = acc[change.section];
+        mc[typ] = mc[typ] || [];
+        return mc[typ];
+    }
+    const cc = new parse_1.ChangeContent({
+        summary: change.summary,
+        pull_request: change.pull_request,
+        impact: change.impact,
+    });
     switch (change.type) {
         case parse_1.TYPE_FIX:
-            list = getTypeList("fixes");
+            listOf("fixes").push(cc);
             break;
         case parse_1.TYPE_FEATURE:
-            list = getTypeList("features");
+            listOf("features").push(cc);
+            break;
+        case parse_1.TYPE_CHORE:
             break;
         default:
             throw new Error("invalid type: " + change.type);
     }
-    list.push(new parse_1.ChangeContent({
-        summary: change.summary,
-        pull_request: change.pull_request,
-        impact: change.impact,
-    }));
     return acc;
 }
 function formatMarkdown(milestone, changes) {
@@ -236,26 +237,18 @@ function formatMarkdown(milestone, changes) {
     const body = [
         { [headerTag]: `Changelog ${milestone}` },
     ];
-    const malformed = collectMalformed(changes);
-    if (malformed.length > 0) {
-        body.push({ [subheaderTag]: "[MALFORMED]" });
-        body.push({ ul: malformed });
+    function add(subheader, getLines) {
+        const lines = getLines(changes);
+        if (lines.length > 0) {
+            body.push({ [subheaderTag]: subheader });
+            body.push({ ul: lines });
+        }
     }
-    const impacts = collectImpact(changes);
-    if (impacts.length > 0) {
-        body.push({ [subheaderTag]: "Release digest" });
-        body.push({ ul: impacts });
-    }
-    const features = collectChanges(changes, parse_1.TYPE_FEATURE);
-    if (features.length > 0) {
-        body.push({ [subheaderTag]: "Features" });
-        body.push({ ul: features });
-    }
-    const fixes = collectChanges(changes, parse_1.TYPE_FIX);
-    if (fixes.length > 0) {
-        body.push({ [subheaderTag]: "Fixes" });
-        body.push({ ul: fixes });
-    }
+    add("[MALFORMED]", collectMalformed);
+    add("Know before update", collectImpact);
+    add("Features", (cs) => collectChanges(cs, parse_1.TYPE_FEATURE));
+    add("Fixes", (cs) => collectChanges(cs, parse_1.TYPE_FIX));
+    add("Chore", (cs) => collectChanges(cs, parse_1.TYPE_CHORE));
     return (0, json2md_1.default)(body);
 }
 exports.formatMarkdown = formatMarkdown;
@@ -394,7 +387,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(9017);
 function collectChangelog(pulls, validator) {
@@ -440,7 +433,8 @@ function* generateEntries(changesBlocks) {
 }
 exports.TYPE_FIX = "fix";
 exports.TYPE_FEATURE = "feature";
-const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE]);
+exports.TYPE_CHORE = "chore";
+const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE, exports.TYPE_CHORE]);
 exports.LEVEL_HIGH = "high";
 exports.LEVEL_LOW = "low";
 exports.knownLevels = new Set([exports.LEVEL_LOW, exports.LEVEL_HIGH]);
