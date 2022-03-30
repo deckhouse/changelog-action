@@ -53,6 +53,12 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		pull_request: "https://github.com/ow/re/480",
 	}),
 	new ChangeEntry({
+		section: "upmeter",
+		type: "chore",
+		summary: "Specify user-agent",
+		pull_request: "https://github.com/ow/re/501",
+	}),
+	new ChangeEntry({
 		section: "cloud-provider-yandex",
 		type: "fix",
 		summary: "d29",
@@ -179,7 +185,13 @@ describe("Markdown", () => {
 			.map((s) => s.trim())
 			.filter((s) => s.startsWith("## "))
 
-		expect(subheaders).toStrictEqual(["## [MALFORMED]", "## Release digest", "## Features", "## Fixes"])
+		expect(subheaders).toStrictEqual([
+			"## [MALFORMED]",
+			"## Know before update",
+			"## Features",
+			"## Fixes",
+			"## Chore",
+		])
 	})
 
 	test("formats right", () => {
