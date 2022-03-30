@@ -7,6 +7,7 @@ import {
 	LEVEL_HIGH,
 	LEVEL_LOW,
 	ModuleChanges,
+	TYPE_CHORE,
 	TYPE_FEATURE,
 	TYPE_FIX,
 } from "./parse"
@@ -53,36 +54,33 @@ export function formatYaml(changes: ChangeEntry[]): string {
 }
 
 function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
-	// ensure module key:   { "module": {} }
-	acc[change.section] = acc[change.section] || ({} as ModuleChanges)
-	const mc = acc[change.section]
-	const getTypeList = (k: string) => {
-		mc[k] = mc[k] || []
-		return mc[k]
+	// ensure the section key has its type list:   { "module": { [typ]: [] } }
+	function listOf(typ: string) {
+		acc[change.section] = acc[change.section] || ({} as ModuleChanges)
+		const mc = acc[change.section]
+		mc[typ] = mc[typ] || []
+		return mc[typ]
 	}
 
-	// ensure module change list
-	// e.g. for fixes: { "module": { "fixes": [] } }
-	let list: ChangeContent[]
+	const cc = new ChangeContent({
+		summary: change.summary,
+		pull_request: change.pull_request,
+		impact: change.impact,
+	})
+
 	switch (change.type) {
 		case TYPE_FIX:
-			list = getTypeList("fixes")
+			listOf("fixes").push(cc)
 			break
 		case TYPE_FEATURE:
-			list = getTypeList("features")
+			listOf("features").push(cc)
+			break
+		case TYPE_CHORE:
+			// Noop for yaml
 			break
 		default:
 			throw new Error("invalid type: " + change.type)
 	}
-
-	// add the change
-	list.push(
-		new ChangeContent({
-			summary: change.summary,
-			pull_request: change.pull_request,
-			impact: change.impact,
-		}),
-	)
 
 	return acc
 }
@@ -98,29 +96,19 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 		{ [headerTag]: `Changelog ${milestone}` }, // title
 	]
 
-	const malformed = collectMalformed(changes)
-	if (malformed.length > 0) {
-		body.push({ [subheaderTag]: "[MALFORMED]" })
-		body.push({ ul: malformed })
+	function add(subheader: string, getLines: (changes: ChangeEntry[]) => string[]) {
+		const lines = getLines(changes)
+		if (lines.length > 0) {
+			body.push({ [subheaderTag]: subheader })
+			body.push({ ul: lines })
+		}
 	}
 
-	const impacts = collectImpact(changes)
-	if (impacts.length > 0) {
-		body.push({ [subheaderTag]: "Release digest" })
-		body.push({ ul: impacts })
-	}
-
-	const features = collectChanges(changes, TYPE_FEATURE)
-	if (features.length > 0) {
-		body.push({ [subheaderTag]: "Features" })
-		body.push({ ul: features })
-	}
-
-	const fixes = collectChanges(changes, TYPE_FIX)
-	if (fixes.length > 0) {
-		body.push({ [subheaderTag]: "Fixes" })
-		body.push({ ul: fixes })
-	}
+	add("[MALFORMED]", collectMalformed)
+	add("Know before update", collectImpact)
+	add("Features", (cs) => collectChanges(cs, TYPE_FEATURE))
+	add("Fixes", (cs) => collectChanges(cs, TYPE_FIX))
+	add("Chore", (cs) => collectChanges(cs, TYPE_CHORE))
 
 	return json2md(body)
 }

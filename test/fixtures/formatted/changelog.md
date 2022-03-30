@@ -7,7 +7,7 @@
  - #510 invalid type "fix | feature"
  - #533 missing high impact detail, missing type
 
-## Release digest
+## Know before update
 
 
  - Grafana will be restarted.
@@ -33,3 +33,8 @@
     Provisioning datasources from secret instead configmap. Deckhouse datasources need client certificates to connect to prometheus or trickter. Old cm leave to prevent mount error while terminating.
  - **[cloud-provider-yandex]** d29 [#290](https://github.com/ow/re/290)
  - **[kube-dns]** d48 [#480](https://github.com/ow/re/480)
+
+## Chore
+
+
+ - **[upmeter]** Specify user-agent [#501](https://github.com/ow/re/501)

@@ -34,7 +34,7 @@ export class ValidatorImpl implements Validator {
 
 		const forcedLevel = this.config.get(c.section)
 		if (forcedLevel && forcedLevel != c.impact_level) {
-			const cc = new ChangeEntry(c)
+			const cc = new ChangeEntry(c) // a way to copy the change object
 			cc.impact_level = forcedLevel
 			return cc
 		}
