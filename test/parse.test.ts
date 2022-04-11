@@ -461,6 +461,43 @@ describe("parsing change entries", function () {
 				}),
 			])
 		})
+
+		test(`parses absent impact level as "default"`, () => {
+			const section = "section"
+			const typ = "fix"
+			const summary = "big deal"
+			const impact = "changes much"
+			const impactLevel = "default"
+
+			const input = [
+				doc(
+					// doc 1
+					sectionField(section),
+					type(typ),
+					summaryField(summary),
+					impactField(impact),
+					// omitted impact level
+				),
+				doc(
+					// doc 2
+					sectionField(section),
+					type(typ),
+					summaryField(summary),
+					impactField(impact),
+					impactLevelField(impactLevel), // explicit
+				),
+			]
+			const change = parseChangeEntries(pr, input)
+			const expectedChange = new ChangeEntry({
+				section,
+				type: typ,
+				summary,
+				impact,
+				impact_level: impactLevel,
+				pull_request: pr.url,
+			})
+			expect(change).toStrictEqual([expectedChange, expectedChange])
+		})
 	})
 })
 
