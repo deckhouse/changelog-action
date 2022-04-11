@@ -26,6 +26,7 @@ Provisioning datasources from secret instead configmap. Deckhouse datasources ne
 		type: "feature",
 		summary: "d12",
 		pull_request: "https://github.com/ow/re/120",
+		impact_level: "default",
 	}),
 	new ChangeEntry({
 		section: "cloud-provider-yandex",

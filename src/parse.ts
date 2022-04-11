@@ -91,8 +91,9 @@ export const TYPE_CHORE = "chore"
 const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE, TYPE_CHORE])
 
 export const LEVEL_HIGH = "high"
-export const LEVEL_LOW = "low"
-export const knownLevels = new Set([LEVEL_LOW, LEVEL_HIGH])
+export const LEVEL_LOW = "low" // logically the same as chore, probably
+export const LEVEL_DEFAULT = "default"
+export const knownLevels = new Set([LEVEL_DEFAULT, LEVEL_LOW, LEVEL_HIGH])
 
 function sanitizeString(x: unknown): string {
 	if (typeof x === "string") {
@@ -187,7 +188,7 @@ interface ChangeOpts {
 export class ChangeEntry extends ChangeContent {
 	section = ""
 	type = ""
-	impact_level = ""
+	impact_level = LEVEL_DEFAULT
 
 	constructor(o: ChangeEntryOpts) {
 		super(o)
