@@ -387,7 +387,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_DEFAULT = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(9017);
 function collectChangelog(pulls, validator) {
@@ -437,7 +437,8 @@ exports.TYPE_CHORE = "chore";
 const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE, exports.TYPE_CHORE]);
 exports.LEVEL_HIGH = "high";
 exports.LEVEL_LOW = "low";
-exports.knownLevels = new Set([exports.LEVEL_LOW, exports.LEVEL_HIGH]);
+exports.LEVEL_DEFAULT = "default";
+exports.knownLevels = new Set([exports.LEVEL_DEFAULT, exports.LEVEL_LOW, exports.LEVEL_HIGH]);
 function sanitizeString(x) {
     if (typeof x === "string") {
         return x.trim();
@@ -495,7 +496,7 @@ class ChangeEntry extends ChangeContent {
         super(o);
         this.section = "";
         this.type = "";
-        this.impact_level = "";
+        this.impact_level = exports.LEVEL_DEFAULT;
         this.section = o.section;
         this.type = o.type;
         if (o.impact_level) {
@@ -10317,7 +10318,7 @@ Object.defineProperty(Response.prototype, Symbol.toStringTag, {
 });
 
 const INTERNALS$2 = Symbol('Request internals');
-const URL = whatwgUrl.URL;
+const URL = Url.URL || whatwgUrl.URL;
 
 // fix an issue where "format", "parse" aren't a named export for node <10
 const parse_url = Url.parse;
@@ -10580,9 +10581,17 @@ AbortError.prototype = Object.create(Error.prototype);
 AbortError.prototype.constructor = AbortError;
 AbortError.prototype.name = 'AbortError';
 
+const URL$1 = Url.URL || whatwgUrl.URL;
+
 // fix an issue where "PassThrough", "resolve" aren't a named export for node <10
 const PassThrough$1 = Stream.PassThrough;
-const resolve_url = Url.resolve;
+
+const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) {
+	const orig = new URL$1(original).hostname;
+	const dest = new URL$1(destination).hostname;
+
+	return orig === dest || orig[orig.length - dest.length - 1] === '.' && orig.endsWith(dest);
+};
 
 /**
  * Fetch function
@@ -10670,7 +10679,19 @@ function fetch(url, opts) {
 				const location = headers.get('Location');
 
 				// HTTP fetch step 5.3
-				const locationURL = location === null ? null : resolve_url(request.url, location);
+				let locationURL = null;
+				try {
+					locationURL = location === null ? null : new URL$1(location, request.url).toString();
+				} catch (err) {
+					// error here can only be invalid URL in Location: header
+					// do not throw when options.redirect == manual
+					// let the user extract the errorneous redirect URL
+					if (request.redirect !== 'manual') {
+						reject(new FetchError(`uri requested responds with an invalid redirect URL: ${location}`, 'invalid-redirect'));
+						finalize();
+						return;
+					}
+				}
 
 				// HTTP fetch step 5.5
 				switch (request.redirect) {
@@ -10717,6 +10738,12 @@ function fetch(url, opts) {
 							timeout: request.timeout,
 							size: request.size
 						};
+
+						if (!isDomainOrSubdomain(request.url, locationURL)) {
+							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
+								requestOpts.headers.delete(name);
+							}
+						}
 
 						// HTTP-redirect fetch step 9
 						if (res.statusCode !== 303 && request.body && getTotalBytes(request) === null) {
@@ -13419,7 +13446,7 @@ module.exports = eval("require")("encoding");
 "use strict";
 /**
  * marked - a markdown parser
- * Copyright (c) 2011-2021, Christopher Jeffrey. (MIT Licensed)
+ * Copyright (c) 2011-2022, Christopher Jeffrey. (MIT Licensed)
  * https://github.com/markedjs/marked
  */
 
@@ -13445,6 +13472,9 @@ function _defineProperties(target, props) {
 function _createClass(Constructor, protoProps, staticProps) {
   if (protoProps) _defineProperties(Constructor.prototype, protoProps);
   if (staticProps) _defineProperties(Constructor, staticProps);
+  Object.defineProperty(Constructor, "prototype", {
+    writable: false
+  });
   return Constructor;
 }
 
@@ -13547,6 +13577,10 @@ function escape(html, encode) {
   return html;
 }
 var unescapeTest = /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig;
+/**
+ * @param {string} html
+ */
+
 function unescape(html) {
   // explicitly match decimal, hex, and named HTML entities
   return html.replace(unescapeTest, function (_, n) {
@@ -13561,8 +13595,13 @@ function unescape(html) {
   });
 }
 var caret = /(^|[^\[])\^/g;
+/**
+ * @param {string | RegExp} regex
+ * @param {string} opt
+ */
+
 function edit(regex, opt) {
-  regex = regex.source || regex;
+  regex = typeof regex === 'string' ? regex : regex.source;
   opt = opt || '';
   var obj = {
     replace: function replace(name, val) {
@@ -13579,6 +13618,12 @@ function edit(regex, opt) {
 }
 var nonWordAndColonTest = /[^\w:]/g;
 var originIndependentUrl = /^$|^[a-z][a-z0-9+.-]*:|^[?#]/i;
+/**
+ * @param {boolean} sanitize
+ * @param {string} base
+ * @param {string} href
+ */
+
 function cleanUrl(sanitize, base, href) {
   if (sanitize) {
     var prot;
@@ -13610,6 +13655,11 @@ var baseUrls = {};
 var justDomain = /^[^:]+:\/*[^/]*$/;
 var protocol = /^([^:]+:)[\s\S]*$/;
 var domain = /^([^:]+:\/*[^/]*)[\s\S]*$/;
+/**
+ * @param {string} base
+ * @param {string} href
+ */
+
 function resolveUrl(base, href) {
   if (!baseUrls[' ' + base]) {
     // we can ignore everything in base after the last slash of its path component,
@@ -13688,7 +13738,7 @@ function splitCells(tableRow, count) {
     cells.shift();
   }
 
-  if (!cells[cells.length - 1].trim()) {
+  if (cells.length > 0 && !cells[cells.length - 1].trim()) {
     cells.pop();
   }
 
@@ -13706,9 +13756,15 @@ function splitCells(tableRow, count) {
   }
 
   return cells;
-} // Remove trailing 'c's. Equivalent to str.replace(/c*$/, '').
-// /c*$/ is vulnerable to REDOS.
-// invert: Remove suffix of non-c chars instead. Default falsey.
+}
+/**
+ * Remove trailing 'c's. Equivalent to str.replace(/c*$/, '').
+ * /c*$/ is vulnerable to REDOS.
+ *
+ * @param {string} str
+ * @param {string} c
+ * @param {boolean} invert Remove suffix of non-c chars instead. Default falsey.
+ */
 
 function rtrim(str, c, invert) {
   var l = str.length;
@@ -13732,7 +13788,7 @@ function rtrim(str, c, invert) {
     }
   }
 
-  return str.substr(0, l - suffLen);
+  return str.slice(0, l - suffLen);
 }
 function findClosingBracket(str, b) {
   if (str.indexOf(b[1]) === -1) {
@@ -13764,6 +13820,11 @@ function checkSanitizeDeprecation(opt) {
     console.warn('marked(): sanitize and sanitizer parameters are deprecated since version 0.7.0, should not be used and will be removed in the future. Read more here: https://marked.js.org/#/USING_ADVANCED.md#options');
   }
 } // copied from https://stackoverflow.com/a/5450113/806777
+
+/**
+ * @param {string} pattern
+ * @param {number} count
+ */
 
 function repeatString(pattern, count) {
   if (count < 1) {
@@ -13851,16 +13912,10 @@ var Tokenizer = /*#__PURE__*/function () {
   _proto.space = function space(src) {
     var cap = this.rules.block.newline.exec(src);
 
-    if (cap) {
-      if (cap[0].length > 1) {
-        return {
-          type: 'space',
-          raw: cap[0]
-        };
-      }
-
+    if (cap && cap[0].length > 0) {
       return {
-        raw: '\n'
+        type: 'space',
+        raw: cap[0]
       };
     }
   };
@@ -13938,7 +13993,7 @@ var Tokenizer = /*#__PURE__*/function () {
     var cap = this.rules.block.blockquote.exec(src);
 
     if (cap) {
-      var text = cap[0].replace(/^ *> ?/gm, '');
+      var text = cap[0].replace(/^ *>[ \t]?/gm, '');
       return {
         type: 'blockquote',
         raw: cap[0],
@@ -13952,7 +14007,7 @@ var Tokenizer = /*#__PURE__*/function () {
     var cap = this.rules.block.list.exec(src);
 
     if (cap) {
-      var raw, istask, ischecked, indent, i, blankLine, endsWithBlankLine, line, nextLine, rawLine, itemContents;
+      var raw, istask, ischecked, indent, i, blankLine, endsWithBlankLine, line, nextLine, rawLine, itemContents, endEarly;
       var bull = cap[1].trim();
       var isordered = bull.length > 1;
       var list = {
@@ -13970,9 +14025,11 @@ var Tokenizer = /*#__PURE__*/function () {
       } // Get next list item
 
 
-      var itemRegex = new RegExp("^( {0,3}" + bull + ")((?: [^\\n]*)?(?:\\n|$))"); // Check if current bullet point can start a new List Item
+      var itemRegex = new RegExp("^( {0,3}" + bull + ")((?:[\t ][^\\n]*)?(?:\\n|$))"); // Check if current bullet point can start a new List Item
 
       while (src) {
+        endEarly = false;
+
         if (!(cap = itemRegex.exec(src))) {
           break;
         }
@@ -14005,42 +14062,44 @@ var Tokenizer = /*#__PURE__*/function () {
           // Items begin with at most one blank line
           raw += nextLine + '\n';
           src = src.substring(nextLine.length + 1);
-          list.loose = true;
+          endEarly = true;
         }
 
-        var nextBulletRegex = new RegExp("^ {0," + Math.min(3, indent - 1) + "}(?:[*+-]|\\d{1,9}[.)])"); // Check if following lines should be included in List Item
+        if (!endEarly) {
+          var nextBulletRegex = new RegExp("^ {0," + Math.min(3, indent - 1) + "}(?:[*+-]|\\d{1,9}[.)])"); // Check if following lines should be included in List Item
 
-        while (src && !list.loose) {
-          rawLine = src.split('\n', 1)[0];
-          line = rawLine; // Re-align to follow commonmark nesting rules
+          while (src) {
+            rawLine = src.split('\n', 1)[0];
+            line = rawLine; // Re-align to follow commonmark nesting rules
 
-          if (this.options.pedantic) {
-            line = line.replace(/^ {1,4}(?=( {4})*[^ ])/g, '  ');
-          } // End list item if found start of new bullet
+            if (this.options.pedantic) {
+              line = line.replace(/^ {1,4}(?=( {4})*[^ ])/g, '  ');
+            } // End list item if found start of new bullet
 
 
-          if (nextBulletRegex.test(line)) {
-            break;
+            if (nextBulletRegex.test(line)) {
+              break;
+            }
+
+            if (line.search(/[^ ]/) >= indent || !line.trim()) {
+              // Dedent if possible
+              itemContents += '\n' + line.slice(indent);
+            } else if (!blankLine) {
+              // Until blank line, item doesn't need indentation
+              itemContents += '\n' + line;
+            } else {
+              // Otherwise, improper indentation ends this item
+              break;
+            }
+
+            if (!blankLine && !line.trim()) {
+              // Check if current line is blank
+              blankLine = true;
+            }
+
+            raw += rawLine + '\n';
+            src = src.substring(rawLine.length + 1);
           }
-
-          if (line.search(/[^ ]/) >= indent || !line.trim()) {
-            // Dedent if possible
-            itemContents += '\n' + line.slice(indent);
-          } else if (!blankLine) {
-            // Until blank line, item doesn't need indentation
-            itemContents += '\n' + line;
-          } else {
-            // Otherwise, improper indentation ends this item
-            break;
-          }
-
-          if (!blankLine && !line.trim()) {
-            // Check if current line is blank
-            blankLine = true;
-          }
-
-          raw += rawLine + '\n';
-          src = src.substring(rawLine.length + 1);
         }
 
         if (!list.loose) {
@@ -14082,10 +14141,30 @@ var Tokenizer = /*#__PURE__*/function () {
       for (i = 0; i < l; i++) {
         this.lexer.state.top = false;
         list.items[i].tokens = this.lexer.blockTokens(list.items[i].text, []);
-
-        if (!list.loose && list.items[i].tokens.some(function (t) {
+        var spacers = list.items[i].tokens.filter(function (t) {
           return t.type === 'space';
-        })) {
+        });
+        var hasMultipleLineBreaks = spacers.every(function (t) {
+          var chars = t.raw.split('');
+          var lineBreaks = 0;
+
+          for (var _iterator = _createForOfIteratorHelperLoose(chars), _step; !(_step = _iterator()).done;) {
+            var _char = _step.value;
+
+            if (_char === '\n') {
+              lineBreaks += 1;
+            }
+
+            if (lineBreaks > 1) {
+              return true;
+            }
+          }
+
+          return false;
+        });
+
+        if (!list.loose && spacers.length && hasMultipleLineBreaks) {
+          // Having a single line break doesn't mean a list is loose. A single line break is terminating the last list item
           list.loose = true;
           list.items[i].loose = true;
         }
@@ -14145,7 +14224,7 @@ var Tokenizer = /*#__PURE__*/function () {
           };
         }),
         align: cap[2].replace(/^ *|\| *$/g, '').split(/ *\| */),
-        rows: cap[3] ? cap[3].replace(/\n$/, '').split('\n') : []
+        rows: cap[3] && cap[3].trim() ? cap[3].replace(/\n[ \t]*$/, '').split('\n') : []
       };
 
       if (item.header.length === item.align.length) {
@@ -14583,10 +14662,10 @@ var block = {
   newline: /^(?: *(?:\n|$))+/,
   code: /^( {4}[^\n]+(?:\n(?: *(?:\n|$))*)?)+/,
   fences: /^ {0,3}(`{3,}(?=[^`\n]*\n)|~{3,})([^\n]*)\n(?:|([\s\S]*?)\n)(?: {0,3}\1[~`]* *(?=\n|$)|$)/,
-  hr: /^ {0,3}((?:- *){3,}|(?:_ *){3,}|(?:\* *){3,})(?:\n+|$)/,
+  hr: /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/,
   heading: /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/,
   blockquote: /^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/,
-  list: /^( {0,3}bull)( [^\n]+?)?(?:\n|$)/,
+  list: /^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/,
   html: '^ {0,3}(?:' // optional indentation
   + '<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)' // (1)
   + '|comment[^\\n]*(\\n+|$)' // (2)
@@ -14597,7 +14676,7 @@ var block = {
   + '|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n *)+\\n|$)' // (7) open tag
   + '|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n *)+\\n|$)' // (7) closing tag
   + ')',
-  def: /^ {0,3}\[(label)\]: *\n? *<?([^\s>]+)>?(?:(?: +\n? *| *\n *)(title))? *(?:\n+|$)/,
+  def: /^ {0,3}\[(label)\]: *(?:\n *)?<?([^\s>]+)>?(?:(?: +(?:\n *)?| *\n *)(title))? *(?:\n+|$)/,
   table: noopTest,
   lheading: /^([^\n]+)\n {0,3}(=+|-+) *(?:\n+|$)/,
   // regex template, placeholders will be replaced according to different paragraph
@@ -14605,7 +14684,7 @@ var block = {
   _paragraph: /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/,
   text: /^[^\n]+/
 };
-block._label = /(?!\s*\])(?:\\[\[\]]|[^\[\]])+/;
+block._label = /(?!\s*\])(?:\\.|[^\[\]\\])+/;
 block._title = /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/;
 block.def = edit(block.def).replace('label', block._label).replace('title', block._title).getRegex();
 block.bullet = /(?:[*+-]|\d{1,9}[.)])/;
@@ -14670,15 +14749,15 @@ var inline = {
   + '|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>',
   // CDATA section
   link: /^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/,
-  reflink: /^!?\[(label)\]\[(?!\s*\])((?:\\[\[\]]?|[^\[\]\\])+)\]/,
-  nolink: /^!?\[(?!\s*\])((?:\[[^\[\]]*\]|\\[\[\]]|[^\[\]])*)\](?:\[\])?/,
+  reflink: /^!?\[(label)\]\[(ref)\]/,
+  nolink: /^!?\[(ref)\](?:\[\])?/,
   reflinkSearch: 'reflink|nolink(?!\\()',
   emStrong: {
     lDelim: /^(?:\*+(?:([punct_])|[^\s*]))|^_+(?:([punct*])|([^\s_]))/,
     //        (1) and (2) can only be a Right Delimiter. (3) and (4) can only be Left.  (5) and (6) can be either Left or Right.
-    //        () Skip orphan delim inside strong    (1) #***                (2) a***#, a***                   (3) #***a, ***a                 (4) ***#              (5) #***#                 (6) a***a
-    rDelimAst: /^[^_*]*?\_\_[^_*]*?\*[^_*]*?(?=\_\_)|[punct_](\*+)(?=[\s]|$)|[^punct*_\s](\*+)(?=[punct_\s]|$)|[punct_\s](\*+)(?=[^punct*_\s])|[\s](\*+)(?=[punct_])|[punct_](\*+)(?=[punct_])|[^punct*_\s](\*+)(?=[^punct*_\s])/,
-    rDelimUnd: /^[^_*]*?\*\*[^_*]*?\_[^_*]*?(?=\*\*)|[punct*](\_+)(?=[\s]|$)|[^punct*_\s](\_+)(?=[punct*\s]|$)|[punct*\s](\_+)(?=[^punct*_\s])|[\s](\_+)(?=[punct*])|[punct*](\_+)(?=[punct*])/ // ^- Not allowed for _
+    //          () Skip orphan inside strong  () Consume to delim (1) #***                (2) a***#, a***                   (3) #***a, ***a                 (4) ***#              (5) #***#                 (6) a***a
+    rDelimAst: /^[^_*]*?\_\_[^_*]*?\*[^_*]*?(?=\_\_)|[^*]+(?=[^*])|[punct_](\*+)(?=[\s]|$)|[^punct*_\s](\*+)(?=[punct_\s]|$)|[punct_\s](\*+)(?=[^punct*_\s])|[\s](\*+)(?=[punct_])|[punct_](\*+)(?=[punct_])|[^punct*_\s](\*+)(?=[^punct*_\s])/,
+    rDelimUnd: /^[^_*]*?\*\*[^_*]*?\_[^_*]*?(?=\*\*)|[^_]+(?=[^_])|[punct*](\_+)(?=[\s]|$)|[^punct*_\s](\_+)(?=[punct*\s]|$)|[punct*\s](\_+)(?=[^punct*_\s])|[\s](\_+)(?=[punct*])|[punct*](\_+)(?=[punct*])/ // ^- Not allowed for _
 
   },
   code: /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/,
@@ -14708,7 +14787,8 @@ inline._label = /(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?/;
 inline._href = /<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*/;
 inline._title = /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/;
 inline.link = edit(inline.link).replace('label', inline._label).replace('href', inline._href).replace('title', inline._title).getRegex();
-inline.reflink = edit(inline.reflink).replace('label', inline._label).getRegex();
+inline.reflink = edit(inline.reflink).replace('label', inline._label).replace('ref', block._label).getRegex();
+inline.nolink = edit(inline.nolink).replace('ref', block._label).getRegex();
 inline.reflinkSearch = edit(inline.reflinkSearch, 'g').replace('reflink', inline.reflink).replace('nolink', inline.nolink).getRegex();
 /**
  * Normal Inline Grammar
@@ -14759,6 +14839,7 @@ inline.breaks = merge({}, inline.gfm, {
 
 /**
  * smartypants text replacement
+ * @param {string} text
  */
 
 function smartypants(text) {
@@ -14773,6 +14854,7 @@ function smartypants(text) {
 }
 /**
  * mangle email addresses
+ * @param {string} text
  */
 
 
@@ -14863,7 +14945,7 @@ var Lexer = /*#__PURE__*/function () {
   var _proto = Lexer.prototype;
 
   _proto.lex = function lex(src) {
-    src = src.replace(/\r\n|\r/g, '\n').replace(/\t/g, '    ');
+    src = src.replace(/\r\n|\r/g, '\n');
     this.blockTokens(src, this.tokens);
     var next;
 
@@ -14886,7 +14968,11 @@ var Lexer = /*#__PURE__*/function () {
     }
 
     if (this.options.pedantic) {
-      src = src.replace(/^ +$/gm, '');
+      src = src.replace(/\t/g, '    ').replace(/^ +$/gm, '');
+    } else {
+      src = src.replace(/^( *)(\t+)/gm, function (_, leading, tabs) {
+        return leading + '    '.repeat(tabs.length);
+      });
     }
 
     var token, lastToken, cutSrc, lastParagraphClipped;
@@ -14910,7 +14996,11 @@ var Lexer = /*#__PURE__*/function () {
       if (token = this.tokenizer.space(src)) {
         src = src.substring(token.raw.length);
 
-        if (token.type) {
+        if (token.raw.length === 1 && tokens.length > 0) {
+          // if there's a single \n as a spacer, it's terminating the last line,
+          // so move it there so that we don't get unecessary paragraph tags
+          tokens[tokens.length - 1].raw += '\n';
+        } else {
           tokens.push(token);
         }
 
@@ -15342,23 +15432,35 @@ var Renderer = /*#__PURE__*/function () {
     }
 
     return '<pre><code class="' + this.options.langPrefix + escape(lang, true) + '">' + (escaped ? _code : escape(_code, true)) + '</code></pre>\n';
-  };
+  }
+  /**
+   * @param {string} quote
+   */
+  ;
 
   _proto.blockquote = function blockquote(quote) {
-    return '<blockquote>\n' + quote + '</blockquote>\n';
+    return "<blockquote>\n" + quote + "</blockquote>\n";
   };
 
   _proto.html = function html(_html) {
     return _html;
-  };
+  }
+  /**
+   * @param {string} text
+   * @param {string} level
+   * @param {string} raw
+   * @param {any} slugger
+   */
+  ;
 
   _proto.heading = function heading(text, level, raw, slugger) {
     if (this.options.headerIds) {
-      return '<h' + level + ' id="' + this.options.headerPrefix + slugger.slug(raw) + '">' + text + '</h' + level + '>\n';
+      var id = this.options.headerPrefix + slugger.slug(raw);
+      return "<h" + level + " id=\"" + id + "\">" + text + "</h" + level + ">\n";
     } // ignore IDs
 
 
-    return '<h' + level + '>' + text + '</h' + level + '>\n';
+    return "<h" + level + ">" + text + "</h" + level + ">\n";
   };
 
   _proto.hr = function hr() {
@@ -15369,55 +15471,94 @@ var Renderer = /*#__PURE__*/function () {
     var type = ordered ? 'ol' : 'ul',
         startatt = ordered && start !== 1 ? ' start="' + start + '"' : '';
     return '<' + type + startatt + '>\n' + body + '</' + type + '>\n';
-  };
+  }
+  /**
+   * @param {string} text
+   */
+  ;
 
   _proto.listitem = function listitem(text) {
-    return '<li>' + text + '</li>\n';
+    return "<li>" + text + "</li>\n";
   };
 
   _proto.checkbox = function checkbox(checked) {
     return '<input ' + (checked ? 'checked="" ' : '') + 'disabled="" type="checkbox"' + (this.options.xhtml ? ' /' : '') + '> ';
-  };
+  }
+  /**
+   * @param {string} text
+   */
+  ;
 
   _proto.paragraph = function paragraph(text) {
-    return '<p>' + text + '</p>\n';
-  };
+    return "<p>" + text + "</p>\n";
+  }
+  /**
+   * @param {string} header
+   * @param {string} body
+   */
+  ;
 
   _proto.table = function table(header, body) {
-    if (body) body = '<tbody>' + body + '</tbody>';
+    if (body) body = "<tbody>" + body + "</tbody>";
     return '<table>\n' + '<thead>\n' + header + '</thead>\n' + body + '</table>\n';
-  };
+  }
+  /**
+   * @param {string} content
+   */
+  ;
 
   _proto.tablerow = function tablerow(content) {
-    return '<tr>\n' + content + '</tr>\n';
+    return "<tr>\n" + content + "</tr>\n";
   };
 
   _proto.tablecell = function tablecell(content, flags) {
     var type = flags.header ? 'th' : 'td';
-    var tag = flags.align ? '<' + type + ' align="' + flags.align + '">' : '<' + type + '>';
-    return tag + content + '</' + type + '>\n';
-  } // span level renderer
+    var tag = flags.align ? "<" + type + " align=\"" + flags.align + "\">" : "<" + type + ">";
+    return tag + content + ("</" + type + ">\n");
+  }
+  /**
+   * span level renderer
+   * @param {string} text
+   */
   ;
 
   _proto.strong = function strong(text) {
-    return '<strong>' + text + '</strong>';
-  };
+    return "<strong>" + text + "</strong>";
+  }
+  /**
+   * @param {string} text
+   */
+  ;
 
   _proto.em = function em(text) {
-    return '<em>' + text + '</em>';
-  };
+    return "<em>" + text + "</em>";
+  }
+  /**
+   * @param {string} text
+   */
+  ;
 
   _proto.codespan = function codespan(text) {
-    return '<code>' + text + '</code>';
+    return "<code>" + text + "</code>";
   };
 
   _proto.br = function br() {
     return this.options.xhtml ? '<br/>' : '<br>';
-  };
+  }
+  /**
+   * @param {string} text
+   */
+  ;
 
   _proto.del = function del(text) {
-    return '<del>' + text + '</del>';
-  };
+    return "<del>" + text + "</del>";
+  }
+  /**
+   * @param {string} href
+   * @param {string} title
+   * @param {string} text
+   */
+  ;
 
   _proto.link = function link(href, title, text) {
     href = cleanUrl(this.options.sanitize, this.options.baseUrl, href);
@@ -15434,7 +15575,13 @@ var Renderer = /*#__PURE__*/function () {
 
     out += '>' + text + '</a>';
     return out;
-  };
+  }
+  /**
+   * @param {string} href
+   * @param {string} title
+   * @param {string} text
+   */
+  ;
 
   _proto.image = function image(href, title, text) {
     href = cleanUrl(this.options.sanitize, this.options.baseUrl, href);
@@ -15443,10 +15590,10 @@ var Renderer = /*#__PURE__*/function () {
       return text;
     }
 
-    var out = '<img src="' + href + '" alt="' + text + '"';
+    var out = "<img src=\"" + href + "\" alt=\"" + text + "\"";
 
     if (title) {
-      out += ' title="' + title + '"';
+      out += " title=\"" + title + "\"";
     }
 
     out += this.options.xhtml ? '/>' : '>';
@@ -15516,6 +15663,10 @@ var Slugger = /*#__PURE__*/function () {
   function Slugger() {
     this.seen = {};
   }
+  /**
+   * @param {string} value
+   */
+
 
   var _proto = Slugger.prototype;
 
@@ -15526,6 +15677,8 @@ var Slugger = /*#__PURE__*/function () {
   }
   /**
    * Finds the next safe (unique) slug to use
+   * @param {string} originalSlug
+   * @param {boolean} isDryRun
    */
   ;
 
@@ -15551,8 +15704,9 @@ var Slugger = /*#__PURE__*/function () {
   }
   /**
    * Convert string to unique id
-   * @param {object} options
-   * @param {boolean} options.dryrun Generates the next unique slug without updating the internal accumulator.
+   * @param {object} [options]
+   * @param {boolean} [options.dryrun] Generates the next unique slug without
+   * updating the internal accumulator.
    */
   ;
 
@@ -16249,6 +16403,7 @@ marked.walkTokens = function (tokens, callback) {
 };
 /**
  * Parse Inline
+ * @param {string} src
  */
 
 
