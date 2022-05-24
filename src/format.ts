@@ -11,6 +11,7 @@ import {
 	TYPE_FEATURE,
 	TYPE_FIX,
 } from "./parse"
+import { MilestoneVersion } from "./changes"
 
 // sorts YAML keys
 function getYAMLSorter() {
@@ -91,6 +92,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 export function formatMarkdown(milestone: string, changes: ChangeEntry[]): string {
 	const headerTag = "h1"
 	const subheaderTag = "h2"
+	const milestoneVersion = new MilestoneVersion(milestone)
 
 	const body: DataObject[] = [
 		{ [headerTag]: `Changelog ${milestone}` }, // title
@@ -109,6 +111,11 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	add("Features", (cs) => collectChanges(cs, TYPE_FEATURE))
 	add("Fixes", (cs) => collectChanges(cs, TYPE_FIX))
 	add("Chore", (cs) => collectChanges(cs, TYPE_CHORE))
+
+	// Add the last line with the URL of MAJ.MIN changelog.
+	body.push({
+		p: `See [the CHANGELOG ${milestoneVersion.toMinor()}](../main/CHANGELOG/CHANGELOG-${milestoneVersion.toMinor()}.md) for more details.`,
+	})
 
 	return json2md(body)
 }
