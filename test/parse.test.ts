@@ -498,6 +498,44 @@ describe("parsing change entries", function () {
 			})
 			expect(change).toStrictEqual([expectedChange, expectedChange])
 		})
+
+		test("parses section with two items", () => {
+			const section = "section, section2"
+			const typ = "fix"
+			const summary = "big deal"
+			const impact = "changes much"
+			const impactLevel = "high"
+
+			const input = [
+				doc(
+					//
+					sectionField(section),
+					type(typ),
+					summaryField(summary),
+					impactField(impact),
+					impactLevelField(impactLevel),
+				),
+			]
+			const change = parseChangeEntries(pr, input)
+			expect(change).toStrictEqual([
+				new ChangeEntry({
+					section: "section",
+					type: typ,
+					summary,
+					impact,
+					impact_level: impactLevel,
+					pull_request: pr.url,
+				}),
+				new ChangeEntry({
+					section: "section2",
+					type: typ,
+					summary,
+					impact,
+					impact_level: impactLevel,
+					pull_request: pr.url,
+				}),
+			])
+		})
 	})
 })
 

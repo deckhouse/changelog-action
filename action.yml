@@ -30,5 +30,5 @@ outputs:
   minor_version:
     description: Minor version string, e.g. "v1.39"
 runs:
-  using: "node12"
+  using: "node20"
   main: "dist/index.js"

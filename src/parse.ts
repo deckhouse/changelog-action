@@ -55,8 +55,10 @@ export function parseChangeEntries(pr: Pull, changesBlocks: string[]): ChangeEnt
 			continue
 		}
 
-		const opts = parseInput(doc as ChangeInput, pr)
-		entries.push(new ChangeEntry(opts))
+		const changeEntryOpts = parseInput(doc as ChangeInput, pr)
+		for (const opts of changeEntryOpts) {
+			entries.push(new ChangeEntry(opts))
+		}
 	}
 	return entries
 }
@@ -268,24 +270,46 @@ interface ChangeInputVersion2 extends ChangeOpts {
  *   "summary": "what was fixed in 151",
  *   "impact": "Network flap is expected, but no longer than 10 seconds",
  * }
+ *
+ * // with several sections, comma-separated.
+ * {
+ *   "section": "module3, module4",
+ *   "type": "fix",
+ *   "summary": "what was fixed in 151",
+ *   "impact": "Network flap is expected, but no longer than 10 seconds",
+ * }
  */
-function parseInput(doc: ChangeInput, pr: Pull): ChangeEntryOpts {
-	const opts: ChangeEntryOpts = {
-		section: sanitizeString(doc.module) || sanitizeString(doc.section) || "",
-		type: sanitizeString(doc.type) || "",
-		summary: sanitizeString(doc.description) || sanitizeString(doc.summary) || "",
-		pull_request: pr.url,
+function parseInput(doc: ChangeInput, pr: Pull): ChangeEntryOpts[] {
+	if (!doc || !pr) {
+		throw new Error("Invalid arguments")
 	}
 
+	const changeEntryOpts: ChangeEntryOpts[] = []
+
+	const section = sanitizeString(doc.module) || sanitizeString(doc.section) || ""
 	const impact = sanitizeString(doc.note) || sanitizeString(doc.impact)
-	if (impact) {
-		opts.impact = impact
-	}
-
 	const impactLevel = sanitizeString(doc.impact_level)
-	if (impactLevel) {
-		opts.impact_level = impactLevel
-	}
+	const type = sanitizeString(doc.type) || ""
+	const summary = sanitizeString(doc.description) || sanitizeString(doc.summary) || ""
 
-	return opts
+	section.split(",").forEach((s) => {
+		const opts: ChangeEntryOpts = {
+			section: s.trim(),
+			type: type,
+			summary: summary,
+			pull_request: pr.url,
+		}
+
+		if (impact) {
+			opts.impact = impact
+		}
+
+		if (impactLevel) {
+			opts.impact_level = impactLevel
+		}
+
+		changeEntryOpts.push(opts)
+	})
+
+	return changeEntryOpts
 }
