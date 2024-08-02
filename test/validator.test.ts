@@ -46,6 +46,15 @@ describe("Getting validator", () => {
 		expect(val.validate(c)).toStrictEqual(shrinked)
 	})
 
+	test("forcing impact with two sections", () => {
+		const val = getValidator(["big-mod, low-mod:low"])
+		const c = new ChangeEntry(opts)
+
+		const shrinked = new ChangeEntry({ ...opts, impact_level: LEVEL_LOW })
+
+		expect(val.validate(c)).toStrictEqual(shrinked)
+	})
+
 	describe("Accepting multiple sections", () => {
 		const val = getValidator(["coolmodule:high", "basicmodule", "dummy-mod:low"])
 

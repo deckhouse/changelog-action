@@ -14,7 +14,10 @@ export interface Validator {
 }
 
 class InvalidChangeEntry extends ChangeEntry {
-	constructor(opts: ChangeEntryOpts, private extraErrors: string[]) {
+	constructor(
+		opts: ChangeEntryOpts,
+		private extraErrors: string[],
+	) {
 		super(opts)
 	}
 
@@ -31,7 +34,6 @@ export class ValidatorImpl implements Validator {
 		if (!this.config.has(c.section)) {
 			return new InvalidChangeEntry(c, [`unknown section "${c.section}"`])
 		}
-
 		const forcedLevel = this.config.get(c.section)
 		if (forcedLevel && forcedLevel != c.impact_level) {
 			const cc = new ChangeEntry(c) // a way to copy the change object
@@ -65,30 +67,33 @@ export function parseConfig(definitions: string[]): Map<string, string> {
 
 		// Check we should overwrite or collect an error
 		const [section, level = ""] = parts
-		if (config.has(section)) {
-			// If the level does not change that's duplicate. Otherwise, rewrite the
-			// definition
-			const curLevel = config.get(section)
-			if (curLevel === level) {
-				duplicates.add(section)
-				continue
+		section.split(",").forEach((s) => {
+			s = s.trim()
+			if (config.has(s)) {
+				// If the level does not change that's duplicate. Otherwise, rewrite the
+				// definition
+				const curLevel = config.get(s)
+				if (curLevel === level) {
+					duplicates.add(s)
+					return
+				}
+
+				if (level === "") {
+					// Ignore duplicate if it is not more specific than default
+					return
+				}
 			}
 
-			if (level === "") {
-				// Ignore duplicate if it is not more specific than default
-				continue
+			if (parts.length === 1) {
+				config.set(s, "")
+				return
 			}
-		}
 
-		if (parts.length === 1) {
-			config.set(section, "")
-			continue
-		}
-
-		if (parts.length === 2 && level && knownLevels.has(level)) {
-			config.set(section, level)
-			continue
-		}
+			if (parts.length === 2 && level && knownLevels.has(level)) {
+				config.set(s, level)
+				return
+			}
+		})
 	}
 
 	let err = ""

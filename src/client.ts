@@ -44,7 +44,7 @@ export class Client {
 						title: p.milestone?.title,
 						state: p.milestone?.state,
 					},
-				} as Pull),
+				}) as Pull,
 		)
 	}
 }
