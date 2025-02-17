@@ -5,7 +5,7 @@ import { checkPREntry } from "./check";
 
 async function main() {
 	try {
-		core.info("Starting action")
+		core.debug("Starting action")
 		const inputs: Inputs = {
 			token: core.getInput("token"),
 			repo: core.getInput("repo"),
@@ -16,7 +16,7 @@ async function main() {
 		const check = core.getInput("check");
 		const checkMode = check.toLowerCase() === "true"
 		if (checkMode) {
-			core.info("Entering check mode")
+			core.debug("Entering check mode")
 			const pr = github.context.payload.pull_request
 			if (!pr) {
 				core.setFailed("No pull request found in the GitHub context.")
