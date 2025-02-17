@@ -5,6 +5,7 @@ import { checkPREntry } from "./check";
 
 async function main() {
 	try {
+		core.info("Starting action")
 		const inputs: Inputs = {
 			token: core.getInput("token"),
 			repo: core.getInput("repo"),
