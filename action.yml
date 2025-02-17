@@ -9,7 +9,7 @@ inputs:
     required: true
   milestone:
     description: Milestone title. Must be in format vX.Y.Z (e.g. "v1.39.45").
-    required: true
+    required: false
   check:
     description: "If 'true', only validate changes (no PR creation)."
     required: false
