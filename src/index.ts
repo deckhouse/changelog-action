@@ -1,5 +1,7 @@
 import * as core from "@actions/core"
+import * as github from "@actions/github"
 import { collectReleaseChanges as collectChanges, Inputs } from "./changes"
+import { checkPREntry } from "./check";
 
 async function main() {
 	try {
@@ -9,6 +11,18 @@ async function main() {
 			milestone: core.getInput("milestone"),
 			allowedSections: parseList(core.getInput("allowed_sections")),
 		}
+
+		const check = core.getInput("check");
+		const checkMode = check.toLowerCase() === "true"
+		if (checkMode) {
+			const pr = github.context.payload.pull_request
+			if (!pr) {
+				core.setFailed("No pull request found in the GitHub context.")
+				return
+			}
+			return checkPREntry(pr, inputs)
+		}
+
 		core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
 		const o = await collectChanges(inputs)

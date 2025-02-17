@@ -10,6 +10,10 @@ inputs:
   milestone:
     description: Milestone title. Must be in format vX.Y.Z (e.g. "v1.39.45").
     required: true
+  check:
+    description: "If 'true', only validate changes (no PR creation)."
+    required: false
+    default: "false"
   allowed_sections:
     description: |
       Sections config for the validation of possible values. Optional. Accepts comma-separated or newline-sepatated strings.
