@@ -15,12 +15,14 @@ async function main() {
 		const check = core.getInput("check");
 		const checkMode = check.toLowerCase() === "true"
 		if (checkMode) {
+			core.info("Entering check mode")
 			const pr = github.context.payload.pull_request
 			if (!pr) {
 				core.setFailed("No pull request found in the GitHub context.")
 				return
 			}
-			return checkPREntry(pr, inputs)
+			await checkPREntry(pr, inputs)
+			return
 		}
 
 		core.debug(`Inputs: ${JSON.stringify(inputs)}`)
