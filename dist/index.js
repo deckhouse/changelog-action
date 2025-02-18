@@ -128,12 +128,7 @@ function checkPREntry(pr, inputs) {
             core.info(`Changeblocks: ${changeBlocks.join("\n")}`);
             const changes = (0, parse_1.parseChangeEntries)(pr, changeBlocks);
             core.info(`Changes: ${JSON.stringify(changes)}`);
-            const allowedSections = inputs.allowedSections
-                .split(/[\n,\s]+/)
-                .map((s) => s.trim())
-                .filter((s) => s !== "");
-            core.info(`Allowed sections: ${JSON.stringify(allowedSections)}`);
-            const validator = (0, validator_1.getValidator)(allowedSections);
+            const validator = (0, validator_1.getValidator)(inputs.allowedSections);
             const validatedChanges = changes.map((c) => validator.validate(c));
             core.info(`Validated changes: ${JSON.stringify(validatedChanges)}`);
             const invalid = validatedChanges.filter((c) => !c.valid());
