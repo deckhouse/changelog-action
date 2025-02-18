@@ -15,13 +15,13 @@ export async function checkPREntry(pr, inputs) {
         const changes = parseChangeEntries(pr, changeBlocks)
         core.info(`Changes: ${JSON.stringify(changes)}`)
     
-        const allowedSections = inputs.allowedSections
-        .split(/[\n,\s]+/)
-        .map((s) => s.trim())
-        .filter((s) => s !== "")
-        core.info(`Allowed sections: ${JSON.stringify(allowedSections)}`)
+        // const allowedSections = inputs.allowedSections
+        // .split(/[\n,\s]+/)
+        // .map((s) => s.trim())
+        // .filter((s) => s !== "")
+        // core.info(`Allowed sections: ${JSON.stringify(allowedSections)}`)
     
-        const validator = getValidator(allowedSections)
+        const validator = getValidator(inputs.allowedSections)
     
         const validatedChanges = changes.map((c) => validator.validate(c))
         core.info(`Validated changes: ${JSON.stringify(validatedChanges)}`)
