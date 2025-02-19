@@ -119,18 +119,18 @@ exports.checkPREntry = void 0;
 const parse_1 = __nccwpck_require__(5223);
 const validator_1 = __nccwpck_require__(4618);
 const core = __importStar(__nccwpck_require__(2186));
-function checkPREntry(pr, inputs) {
+function checkPREntry(checkInput) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const body = pr.body || "";
-            core.info(`PR #${pr.number}: ${body}`);
+            const body = checkInput.pr.body || "";
+            core.debug(`PR #${checkInput.pr.number}: ${body}`);
             const changeBlocks = (0, parse_1.parseChangesBlocks)(body);
-            core.info(`Changeblocks: ${changeBlocks.join("\n")}`);
-            const changes = (0, parse_1.parseChangeEntries)(pr, changeBlocks);
-            core.info(`Changes: ${JSON.stringify(changes)}`);
-            const validator = (0, validator_1.getValidator)(inputs.allowedSections);
+            core.debug(`Changeblocks: ${changeBlocks.join("\n")}`);
+            const changes = (0, parse_1.parseChangeEntries)(checkInput.pr, changeBlocks);
+            core.debug(`Changes: ${JSON.stringify(changes)}`);
+            const validator = (0, validator_1.getValidator)(checkInput.allowedSections);
             const validatedChanges = changes.map((c) => validator.validate(c));
-            core.info(`Validated changes: ${JSON.stringify(validatedChanges)}`);
+            core.debug(`Validated changes: ${JSON.stringify(validatedChanges)}`);
             const invalid = validatedChanges.filter((c) => !c.valid());
             if (invalid.length > 0) {
                 const msgs = invalid.map((c) => {
@@ -139,7 +139,7 @@ function checkPREntry(pr, inputs) {
                 core.setFailed("Invalid changes found:\n" + msgs.join("\n"));
                 return;
             }
-            core.info("All changes are valid!");
+            core.debug("All changes are valid!");
         }
         catch (err) {
             if (err instanceof Error) {
@@ -425,25 +425,28 @@ const check_1 = __nccwpck_require__(7657);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.debug("Starting action");
+            const check = core.getInput("check");
+            const checkMode = check.toLowerCase() === "true";
+            if (checkMode) {
+                core.info("Running in check mode");
+                const pr = github.context.payload.pull_request;
+                if (!pr) {
+                    core.setFailed("No pull request found in the GitHub context.");
+                    return;
+                }
+                const checkInputs = {
+                    pr: pr,
+                    allowedSections: parseList(core.getInput("allowed_sections")),
+                };
+                yield (0, check_1.checkPREntry)(checkInputs);
+                return;
+            }
             const inputs = {
                 token: core.getInput("token"),
                 repo: core.getInput("repo"),
                 milestone: core.getInput("milestone"),
                 allowedSections: parseList(core.getInput("allowed_sections")),
             };
-            const check = core.getInput("check");
-            const checkMode = check.toLowerCase() === "true";
-            if (checkMode) {
-                core.debug("Entering check mode");
-                const pr = github.context.payload.pull_request;
-                if (!pr) {
-                    core.setFailed("No pull request found in the GitHub context.");
-                    return;
-                }
-                yield (0, check_1.checkPREntry)(pr, inputs);
-                return;
-            }
             core.debug(`Inputs: ${JSON.stringify(inputs)}`);
             const o = yield (0, changes_1.collectReleaseChanges)(inputs);
             core.setOutput("release_yaml", o.releaseYaml);

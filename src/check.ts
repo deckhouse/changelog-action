@@ -1,30 +1,30 @@
 import { parseChangeEntries, parseChangesBlocks } from "./parse";
+import { Pull } from "./client"
 import { getValidator } from "./validator";
 import * as core from "@actions/core"
 
-export async function checkPREntry(pr, inputs) {
+export interface CheckInput {
+	pr: any
+    allowedSections: string[]
+}
+
+export async function checkPREntry(checkInput: CheckInput) {
     try {
-        const body = pr.body || ""
-        core.info(`PR #${pr.number}: ${body}`)
+        const body = checkInput.pr.body || ""
+        core.debug(`PR #${checkInput.pr.number}: ${body}`)
     
       // 3. Parse the code blocks with `lang: changes`
         const changeBlocks = parseChangesBlocks(body)
-        core.info(`Changeblocks: ${changeBlocks.join("\n")}`)
+        core.debug(`Changeblocks: ${changeBlocks.join("\n")}`)
     
       // 4. Convert each block into ChangeEntry objects
-        const changes = parseChangeEntries(pr, changeBlocks)
-        core.info(`Changes: ${JSON.stringify(changes)}`)
+        const changes = parseChangeEntries(checkInput.pr, changeBlocks)
+        core.debug(`Changes: ${JSON.stringify(changes)}`)
     
-        // const allowedSections = inputs.allowedSections
-        // .split(/[\n,\s]+/)
-        // .map((s) => s.trim())
-        // .filter((s) => s !== "")
-        // core.info(`Allowed sections: ${JSON.stringify(allowedSections)}`)
-    
-        const validator = getValidator(inputs.allowedSections)
+        const validator = getValidator(checkInput.allowedSections)
     
         const validatedChanges = changes.map((c) => validator.validate(c))
-        core.info(`Validated changes: ${JSON.stringify(validatedChanges)}`)
+        core.debug(`Validated changes: ${JSON.stringify(validatedChanges)}`)
     
         const invalid = validatedChanges.filter((c) => !c.valid())
         if (invalid.length > 0) {
@@ -35,7 +35,7 @@ export async function checkPREntry(pr, inputs) {
             return
         }
     
-        core.info("All changes are valid!")
+        core.debug("All changes are valid!")
     
     } catch (err) {
         if (err instanceof Error) {
