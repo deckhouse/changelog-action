@@ -31,7 +31,7 @@ export async function validatePREntry(validateInput: ValidateInput): Promise<boo
             const msgs = invalid.map((c) => {
                 return `PR #${c.pull_request.split("/").pop()}: ${c.validate().join(", ")}`
             })
-            core.setFailed("Invalid changes found:\n" + msgs.join("\n"))
+            core.setFailed("Fix issues in changes entry for valid changelog render:\n" + msgs.join("\n"))
             return false
         }
     
