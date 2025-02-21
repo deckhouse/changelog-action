@@ -3,25 +3,25 @@ import { Pull } from "./client"
 import { getValidator } from "./validator";
 import * as core from "@actions/core"
 
-export interface CheckInput {
+export interface ValidateInput {
 	pr: any
     allowedSections: string[]
 }
 
-export async function checkPREntry(checkInput: CheckInput) {
+export async function validatePREntry(validateInput: ValidateInput): Promise<boolean> {
     try {
-        const body = checkInput.pr.body || ""
-        core.debug(`PR #${checkInput.pr.number}: ${body}`)
+        const body = validateInput.pr.body || ""
+        core.debug(`PR #${validateInput.pr.number}: ${body}`)
     
       // 3. Parse the code blocks with `lang: changes`
         const changeBlocks = parseChangesBlocks(body)
         core.debug(`Changeblocks: ${changeBlocks.join("\n")}`)
     
       // 4. Convert each block into ChangeEntry objects
-        const changes = parseChangeEntries(checkInput.pr, changeBlocks)
+        const changes = parseChangeEntries(validateInput.pr, changeBlocks)
         core.debug(`Changes: ${JSON.stringify(changes)}`)
     
-        const validator = getValidator(checkInput.allowedSections)
+        const validator = getValidator(validateInput.allowedSections)
     
         const validatedChanges = changes.map((c) => validator.validate(c))
         core.debug(`Validated changes: ${JSON.stringify(validatedChanges)}`)
@@ -32,10 +32,11 @@ export async function checkPREntry(checkInput: CheckInput) {
                 return `PR #${c.pull_request.split("/").pop()}: ${c.validate().join(", ")}`
             })
             core.setFailed("Invalid changes found:\n" + msgs.join("\n"))
-            return
+            return false
         }
     
         core.debug("All changes are valid!")
+        return true
     
     } catch (err) {
         if (err instanceof Error) {
@@ -43,5 +44,6 @@ export async function checkPREntry(checkInput: CheckInput) {
         } else {
             core.setFailed(String(err))
         }
+        return false
     }
 }

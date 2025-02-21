@@ -1,24 +1,25 @@
 import * as core from "@actions/core"
 import * as github from "@actions/github"
 import { collectReleaseChanges as collectChanges, Inputs } from "./changes"
-import { CheckInput, checkPREntry } from "./check";
+import { ValidateInput, validatePREntry } from "./check";
 
 async function main() {
 	try {
-		const check = core.getInput("check")
-		const checkMode = check.toLowerCase() === "true"
-		if (checkMode) {
-			core.info("Running in check mode")
+		const validate = core.getInput("validateOnly")
+		const validateMode = validate.toLowerCase() === "true"
+		if (validateMode) {
+			core.info("Running in validate mode")
 			const pr = github.context.payload.pull_request
 			if (!pr) {
 				core.setFailed("No pull request found in the GitHub context.")
 				return
 			}
-			const checkInputs: CheckInput = {
+			const validateInputs: ValidateInput = {
 				pr: pr,
 				allowedSections: parseList(core.getInput("allowed_sections")),
 			}
-			await checkPREntry(checkInputs)
+			const isValid = await validatePREntry(validateInputs)
+			core.setOutput("isValidChangelogEntry", isValid)
 			return
 		}
 		const inputs: Inputs = {
