@@ -1,5 +1,4 @@
 import { parseChangeEntries, parseChangesBlocks } from "./parse";
-import { Pull } from "./client"
 import { getValidator } from "./validator";
 import * as core from "@actions/core"
 

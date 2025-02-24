@@ -115,20 +115,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.checkPREntry = void 0;
+exports.validatePREntry = void 0;
 const parse_1 = __nccwpck_require__(5223);
 const validator_1 = __nccwpck_require__(4618);
 const core = __importStar(__nccwpck_require__(2186));
-function checkPREntry(checkInput) {
+function validatePREntry(validateInput) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const body = checkInput.pr.body || "";
-            core.debug(`PR #${checkInput.pr.number}: ${body}`);
+            const body = validateInput.pr.body || "";
+            core.debug(`PR #${validateInput.pr.number}: ${body}`);
             const changeBlocks = (0, parse_1.parseChangesBlocks)(body);
             core.debug(`Changeblocks: ${changeBlocks.join("\n")}`);
-            const changes = (0, parse_1.parseChangeEntries)(checkInput.pr, changeBlocks);
+            const changes = (0, parse_1.parseChangeEntries)(validateInput.pr, changeBlocks);
             core.debug(`Changes: ${JSON.stringify(changes)}`);
-            const validator = (0, validator_1.getValidator)(checkInput.allowedSections);
+            const validator = (0, validator_1.getValidator)(validateInput.allowedSections);
             const validatedChanges = changes.map((c) => validator.validate(c));
             core.debug(`Validated changes: ${JSON.stringify(validatedChanges)}`);
             const invalid = validatedChanges.filter((c) => !c.valid());
@@ -136,10 +136,11 @@ function checkPREntry(checkInput) {
                 const msgs = invalid.map((c) => {
                     return `PR #${c.pull_request.split("/").pop()}: ${c.validate().join(", ")}`;
                 });
-                core.setFailed("Invalid changes found:\n" + msgs.join("\n"));
-                return;
+                core.setFailed("Fix issues in changes entry for valid changelog render:\n" + msgs.join("\n"));
+                return false;
             }
             core.debug("All changes are valid!");
+            return true;
         }
         catch (err) {
             if (err instanceof Error) {
@@ -148,10 +149,11 @@ function checkPREntry(checkInput) {
             else {
                 core.setFailed(String(err));
             }
+            return false;
         }
     });
 }
-exports.checkPREntry = checkPREntry;
+exports.validatePREntry = validatePREntry;
 
 
 /***/ }),
@@ -425,20 +427,21 @@ const check_1 = __nccwpck_require__(7657);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const check = core.getInput("check");
-            const checkMode = check.toLowerCase() === "true";
-            if (checkMode) {
-                core.info("Running in check mode");
+            const validate = core.getInput("validateOnly");
+            const validateMode = validate.toLowerCase() === "true";
+            if (validateMode) {
+                core.info("Running in validate mode");
                 const pr = github.context.payload.pull_request;
                 if (!pr) {
                     core.setFailed("No pull request found in the GitHub context.");
                     return;
                 }
-                const checkInputs = {
+                const validateInputs = {
                     pr: pr,
                     allowedSections: parseList(core.getInput("allowed_sections")),
                 };
-                yield (0, check_1.checkPREntry)(checkInputs);
+                const isValid = yield (0, check_1.validatePREntry)(validateInputs);
+                core.setOutput("isValidChangelogEntry", isValid);
                 return;
             }
             const inputs = {
