@@ -64,7 +64,7 @@ This action creates changelogs by merged PRs per milestone, and can also check f
       id: changelog-entry-check
       uses: deckhouse/changelog-action@v2-check
       with:
-        check: true
+        validate_only: true
         allowed_sections: |
           ci:low
           tests:low
@@ -95,7 +95,9 @@ This action creates changelogs by merged PRs per milestone, and can also check f
 ```
 ### Validating changes
 
-To use this action as a check in a pipeline, `check` parameter must be set to `true`. In the check mode, action would parse the changelog section in PR that triggered it, and validate it.
+To use this action as a validator in a pipeline, `validateOnly` parameter must be set to `true`. In the validation mode, action would parse the changelog section in PR that triggered it, and validate it.
+
+Output 'is_valid_changelog_entry' can be used to get validation result in further steps.
 
 ### Describing Changes
 

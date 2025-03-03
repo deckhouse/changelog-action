@@ -427,7 +427,7 @@ const check_1 = __nccwpck_require__(7657);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const validate = core.getInput("validateOnly");
+            const validate = core.getInput("validate_only");
             const validateMode = validate.toLowerCase() === "true";
             if (validateMode) {
                 core.info("Running in validate mode");
@@ -441,7 +441,7 @@ function main() {
                     allowedSections: parseList(core.getInput("allowed_sections")),
                 };
                 const isValid = yield (0, check_1.validatePREntry)(validateInputs);
-                core.setOutput("isValidChangelogEntry", isValid);
+                core.setOutput("is_valid_changelog_entry", isValid);
                 return;
             }
             const inputs = {

@@ -3,7 +3,7 @@ import { getValidator } from "./validator";
 import * as core from "@actions/core"
 
 export interface ValidateInput {
-	pr: any
+    pr: any
     allowedSections: string[]
 }
 

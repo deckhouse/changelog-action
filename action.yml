@@ -10,7 +10,7 @@ inputs:
   milestone:
     description: Milestone title. Must be in format vX.Y.Z (e.g. "v1.39.45").
     required: false
-  validateOnly:
+  validate_only:
     description: "If 'true', only validate changes (no PR creation)."
     required: false
     default: "false"
@@ -33,7 +33,7 @@ outputs:
     description: Changelog markdown for the minor release branch
   minor_version:
     description: Minor version string, e.g. "v1.39"
-  isValidChangelogEntry:
+  is_valid_changelog_entry:
     description: Boolean whether changelog entry in PR is valid or not
 runs:
   using: "node20"

@@ -5,7 +5,7 @@ import { ValidateInput, validatePREntry } from "./check";
 
 async function main() {
 	try {
-		const validate = core.getInput("validateOnly")
+		const validate = core.getInput("validate_only")
 		const validateMode = validate.toLowerCase() === "true"
 		if (validateMode) {
 			core.info("Running in validate mode")
@@ -19,7 +19,7 @@ async function main() {
 				allowedSections: parseList(core.getInput("allowed_sections")),
 			}
 			const isValid = await validatePREntry(validateInputs)
-			core.setOutput("isValidChangelogEntry", isValid)
+			core.setOutput("is_valid_changelog_entry", isValid)
 			return
 		}
 		const inputs: Inputs = {
