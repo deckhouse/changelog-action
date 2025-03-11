@@ -1,7 +1,7 @@
 import * as core from "@actions/core"
 import * as github from "@actions/github"
 import { collectReleaseChanges as collectChanges, Inputs } from "./changes"
-import { ValidateInput, validatePREntry } from "./check";
+import { ValidateInput, validatePREntry } from "./check"
 
 async function main() {
 	try {
