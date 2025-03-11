@@ -1,6 +1,6 @@
 # Changelog Action
 
-This action creates changelogs by merged PRs per milestone.
+This action creates changelogs by merged PRs per milestone, and can also check for validity of changelog entry messages.
 
 ## How to use
 
@@ -59,6 +59,20 @@ This action creates changelogs by merged PRs per milestone.
         labels: changelog, auto
         token: ${{ inputs.token }}
         delete-branch: true
+
+    - name: Validate changelog entry
+      id: changelog-entry-check
+      uses: deckhouse/changelog-action@v2-check
+      with:
+        validate_only: true
+        allowed_sections: |
+          ci:low
+          tests:low
+          tools:low
+          api
+          db
+          docs
+
 ```
 
 ## Usage
@@ -79,6 +93,11 @@ This action creates changelogs by merged PRs per milestone.
           one
           two:low
 ```
+### Validating changes
+
+To use this action as a validator in a pipeline, `validateOnly` parameter must be set to `true`. In the validation mode, action would parse the changelog section in PR that triggered it, and validate it.
+
+Output 'is_valid_changelog_entry' can be used to get validation result in further steps.
 
 ### Describing Changes
 

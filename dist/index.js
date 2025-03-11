@@ -77,6 +77,87 @@ exports.MilestoneVersion = MilestoneVersion;
 
 /***/ }),
 
+/***/ 7657:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.validatePREntry = void 0;
+const parse_1 = __nccwpck_require__(5223);
+const validator_1 = __nccwpck_require__(4618);
+const core = __importStar(__nccwpck_require__(2186));
+function validatePREntry(validateInput) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const body = validateInput.pr.body || "";
+            core.debug(`PR #${validateInput.pr.number}: ${body}`);
+            const changeBlocks = (0, parse_1.parseChangesBlocks)(body);
+            core.debug(`Changeblocks: ${changeBlocks.join("\n")}`);
+            const changes = (0, parse_1.parseChangeEntries)(validateInput.pr, changeBlocks);
+            core.debug(`Changes: ${JSON.stringify(changes)}`);
+            const validator = (0, validator_1.getValidator)(validateInput.allowedSections);
+            const validatedChanges = changes.map((c) => validator.validate(c));
+            core.debug(`Validated changes: ${JSON.stringify(validatedChanges)}`);
+            const invalid = validatedChanges.filter((c) => !c.valid());
+            if (invalid.length > 0) {
+                const msgs = invalid.map((c) => {
+                    return `PR #${c.pull_request.split("/").pop()}: ${c.validate().join(", ")}`;
+                });
+                core.setFailed("Fix issues in changes entry for valid changelog render:\n" + msgs.join("\n"));
+                return false;
+            }
+            core.debug("All changes are valid!");
+            return true;
+        }
+        catch (err) {
+            if (err instanceof Error) {
+                core.setFailed(err.message);
+            }
+            else {
+                core.setFailed(String(err));
+            }
+            return false;
+        }
+    });
+}
+exports.validatePREntry = validatePREntry;
+
+
+/***/ }),
+
 /***/ 1565:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -340,10 +421,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseList = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
 const changes_1 = __nccwpck_require__(8654);
+const check_1 = __nccwpck_require__(7657);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const validate = core.getInput("validate_only");
+            const validateMode = validate.toLowerCase() === "true";
+            if (validateMode) {
+                core.info("Running in validate mode");
+                const pr = github.context.payload.pull_request;
+                if (!pr) {
+                    core.setFailed("No pull request found in the GitHub context.");
+                    return;
+                }
+                const validateInputs = {
+                    pr: pr,
+                    allowedSections: parseList(core.getInput("allowed_sections")),
+                };
+                const isValid = yield (0, check_1.validatePREntry)(validateInputs);
+                core.setOutput("is_valid_changelog_entry", isValid);
+                return;
+            }
             const inputs = {
                 token: core.getInput("token"),
                 repo: core.getInput("repo"),
