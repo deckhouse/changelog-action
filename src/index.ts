@@ -14,6 +14,13 @@ async function main() {
 				core.setFailed("No pull request found in the GitHub context.")
 				return
 			}
+
+			// skip validation if impact level is low
+			const impact_level = core.getInput("impact_level")
+			if (impact_level.toLowerCase() === "low") {
+				return
+			}
+
 			const validateInputs: ValidateInput = {
 				pr: pr,
 				allowedSections: parseList(core.getInput("allowed_sections")),
