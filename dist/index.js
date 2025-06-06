@@ -436,6 +436,10 @@ function main() {
                     core.setFailed("No pull request found in the GitHub context.");
                     return;
                 }
+                const impact_level = core.getInput("impact_level");
+                if (impact_level.toLowerCase() === "low") {
+                    return;
+                }
                 const validateInputs = {
                     pr: pr,
                     allowedSections: parseList(core.getInput("allowed_sections")),
