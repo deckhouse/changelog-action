@@ -206,6 +206,11 @@ export class ChangeEntry extends ChangeContent {
 
 		errs.push(...super.validate())
 
+		// skip validation if impact level is low
+		if (this.impact_level === LEVEL_LOW) {
+			return errs
+		}
+
 		// validate level
 		if (!!this.impact_level && !knownLevels.has(this.impact_level)) {
 			errs.push(`invalid impact level "${this.impact_level}"`)

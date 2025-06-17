@@ -436,10 +436,6 @@ function main() {
                     core.setFailed("No pull request found in the GitHub context.");
                     return;
                 }
-                const impact_level = core.getInput("impact_level");
-                if (impact_level.toLowerCase() === "low") {
-                    return;
-                }
                 const validateInputs = {
                     pr: pr,
                     allowedSections: parseList(core.getInput("allowed_sections")),
@@ -628,6 +624,9 @@ class ChangeEntry extends ChangeContent {
     validate() {
         const errs = [];
         errs.push(...super.validate());
+        if (this.impact_level === exports.LEVEL_LOW) {
+            return errs;
+        }
         if (!!this.impact_level && !exports.knownLevels.has(this.impact_level)) {
             errs.push(`invalid impact level "${this.impact_level}"`);
         }
