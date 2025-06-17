@@ -204,11 +204,6 @@ export class ChangeEntry extends ChangeContent {
 	validate(): string[] {
 		const errs: string[] = []
 
-		// skip validation if impact level is low
-		if (this.impact_level === LEVEL_LOW) {
-			return errs
-		}
-
 		errs.push(...super.validate())
 
 		// validate level
