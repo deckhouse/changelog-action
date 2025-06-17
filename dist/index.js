@@ -623,6 +623,9 @@ class ChangeEntry extends ChangeContent {
     }
     validate() {
         const errs = [];
+        if (this.impact_level === exports.LEVEL_LOW) {
+            return errs;
+        }
         errs.push(...super.validate());
         if (!!this.impact_level && !exports.knownLevels.has(this.impact_level)) {
             errs.push(`invalid impact level "${this.impact_level}"`);
