@@ -704,11 +704,11 @@ class ValidatorImpl {
         this.config = config;
     }
     validate(c) {
-        if (!this.config.has(c.section)) {
-            return new InvalidChangeEntry(c, [`unknown section "${c.section}"`]);
-        }
         if (c.impact_level === parse_1.LEVEL_LOW) {
             return c;
+        }
+        if (!this.config.has(c.section)) {
+            return new InvalidChangeEntry(c, [`unknown section "${c.section}"`]);
         }
         const forcedLevel = this.config.get(c.section);
         if (forcedLevel && forcedLevel != c.impact_level) {

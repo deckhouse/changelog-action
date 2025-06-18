@@ -32,15 +32,14 @@ export class ValidatorImpl implements Validator {
 
 	validate(c: ChangeEntry): ChangeEntry {
 
-		if (!this.config.has(c.section)) {
-			return new InvalidChangeEntry(c, [`unknown section "${c.section}"`])
-		}
-
 		// skip validation if impact level is low
 		if (c.impact_level === LEVEL_LOW) {
 			return c
 		}
 
+		if (!this.config.has(c.section)) {
+			return new InvalidChangeEntry(c, [`unknown section "${c.section}"`])
+		}
 		const forcedLevel = this.config.get(c.section)
 		if (forcedLevel && forcedLevel != c.impact_level) {
 			const cc = new ChangeEntry(c) // a way to copy the change object
