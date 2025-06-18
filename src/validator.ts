@@ -31,7 +31,6 @@ export class ValidatorImpl implements Validator {
 	constructor(private config: Map<string, string>) {}
 
 	validate(c: ChangeEntry): ChangeEntry {
-
 		// skip validation if impact level is low
 		if (c.impact_level === LEVEL_LOW) {
 			return c
