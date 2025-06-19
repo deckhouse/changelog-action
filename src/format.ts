@@ -10,6 +10,7 @@ import {
 	TYPE_CHORE,
 	TYPE_FEATURE,
 	TYPE_FIX,
+	TYPE_DOCS,
 } from "./parse"
 
 // sorts YAML keys
@@ -18,6 +19,7 @@ function getYAMLSorter() {
 	const yamlFieldSorter = {
 		features: 1,
 		fixes: 2,
+		docs: 3,
 
 		summary: 1,
 		pull_request: 2,
@@ -75,6 +77,9 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 		case TYPE_FEATURE:
 			listOf("features").push(cc)
 			break
+		case TYPE_DOCS:
+			listOf("docs").push(cc)
+			break
 		case TYPE_CHORE:
 			// Noop for yaml
 			break
@@ -108,6 +113,7 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	add("Know before update", collectImpact)
 	add("Features", (cs) => collectChanges(cs, TYPE_FEATURE))
 	add("Fixes", (cs) => collectChanges(cs, TYPE_FIX))
+	add("Docs", (cs) => collectChanges(cs, TYPE_DOCS))
 	add("Chore", (cs) => collectChanges(cs, TYPE_CHORE))
 
 	return json2md(body)
