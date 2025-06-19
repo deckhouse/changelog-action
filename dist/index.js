@@ -339,7 +339,6 @@ function formatMarkdown(milestone, changes) {
     add("Know before update", collectImpact);
     add("Features", (cs) => collectChanges(cs, parse_1.TYPE_FEATURE));
     add("Fixes", (cs) => collectChanges(cs, parse_1.TYPE_FIX));
-    add("Docs", (cs) => collectChanges(cs, parse_1.TYPE_DOCS));
     add("Chore", (cs) => collectChanges(cs, parse_1.TYPE_CHORE));
     return (0, json2md_1.default)(body);
 }

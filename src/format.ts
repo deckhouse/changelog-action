@@ -112,7 +112,6 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	add("Know before update", collectImpact)
 	add("Features", (cs) => collectChanges(cs, TYPE_FEATURE))
 	add("Fixes", (cs) => collectChanges(cs, TYPE_FIX))
-	add("Docs", (cs) => collectChanges(cs, TYPE_DOCS))
 	add("Chore", (cs) => collectChanges(cs, TYPE_CHORE))
 
 	return json2md(body)
