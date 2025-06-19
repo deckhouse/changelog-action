@@ -90,7 +90,9 @@ function* generateEntries(changesBlocks: string[]): Generator<unknown> {
 export const TYPE_FIX = "fix"
 export const TYPE_FEATURE = "feature"
 export const TYPE_CHORE = "chore"
-const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE, TYPE_CHORE])
+export const TYPE_DOCS = "docs"
+
+const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE, TYPE_CHORE, TYPE_DOCS])
 
 export const LEVEL_HIGH = "high"
 export const LEVEL_LOW = "low" // logically the same as chore, probably

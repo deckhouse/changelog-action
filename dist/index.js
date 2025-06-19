@@ -313,6 +313,8 @@ function groupByModuleAndType(acc, change) {
         case parse_1.TYPE_FEATURE:
             listOf("features").push(cc);
             break;
+        case parse_1.TYPE_DOCS:
+            break;
         case parse_1.TYPE_CHORE:
             break;
         default:
@@ -503,7 +505,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_DEFAULT = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_DEFAULT = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_DOCS = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(5741);
 function collectChangelog(pulls, validator) {
@@ -552,7 +554,8 @@ function* generateEntries(changesBlocks) {
 exports.TYPE_FIX = "fix";
 exports.TYPE_FEATURE = "feature";
 exports.TYPE_CHORE = "chore";
-const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE, exports.TYPE_CHORE]);
+exports.TYPE_DOCS = "docs";
+const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE, exports.TYPE_CHORE, exports.TYPE_DOCS]);
 exports.LEVEL_HIGH = "high";
 exports.LEVEL_LOW = "low";
 exports.LEVEL_DEFAULT = "default";

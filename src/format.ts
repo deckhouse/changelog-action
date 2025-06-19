@@ -10,6 +10,7 @@ import {
 	TYPE_CHORE,
 	TYPE_FEATURE,
 	TYPE_FIX,
+	TYPE_DOCS,
 } from "./parse"
 
 // sorts YAML keys
@@ -74,6 +75,9 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 			break
 		case TYPE_FEATURE:
 			listOf("features").push(cc)
+			break
+		case TYPE_DOCS:
+			// Noop for yaml
 			break
 		case TYPE_CHORE:
 			// Noop for yaml
