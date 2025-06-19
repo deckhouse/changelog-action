@@ -19,7 +19,6 @@ function getYAMLSorter() {
 	const yamlFieldSorter = {
 		features: 1,
 		fixes: 2,
-		docs: 3,
 
 		summary: 1,
 		pull_request: 2,
@@ -78,7 +77,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 			listOf("features").push(cc)
 			break
 		case TYPE_DOCS:
-			listOf("docs").push(cc)
+			// Noop for yaml
 			break
 		case TYPE_CHORE:
 			// Noop for yaml

@@ -270,7 +270,6 @@ function getYAMLSorter() {
     const yamlFieldSorter = {
         features: 1,
         fixes: 2,
-        docs: 3,
         summary: 1,
         pull_request: 2,
         impact: 3,
@@ -315,7 +314,6 @@ function groupByModuleAndType(acc, change) {
             listOf("features").push(cc);
             break;
         case parse_1.TYPE_DOCS:
-            listOf("docs").push(cc);
             break;
         case parse_1.TYPE_CHORE:
             break;

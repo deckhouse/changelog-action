@@ -12,7 +12,6 @@ export interface ChangesByModule {
 export interface ModuleChanges {
 	fixes?: ChangeContent[]
 	features?: ChangeContent[]
-	docs?: ChangeContent[]
 }
 
 /**
