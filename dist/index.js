@@ -312,6 +312,7 @@ function groupByModuleAndType(acc, change) {
             break;
         case parse_1.TYPE_FEATURE:
             listOf("features").push(cc);
+            listOf("feats").push(cc);
             break;
         case parse_1.TYPE_DOCS:
             break;
@@ -337,7 +338,7 @@ function formatMarkdown(milestone, changes) {
     }
     add("[MALFORMED]", collectMalformed);
     add("Know before update", collectImpact);
-    add("Features", (cs) => collectChanges(cs, parse_1.TYPE_FEATURE));
+    add("Features", (cs) => [...collectChanges(cs, parse_1.TYPE_FEATURE), ...collectChanges(cs, parse_1.TYPE_FEAT)]);
     add("Fixes", (cs) => collectChanges(cs, parse_1.TYPE_FIX));
     add("Chore", (cs) => collectChanges(cs, parse_1.TYPE_CHORE));
     return (0, json2md_1.default)(body);
@@ -505,7 +506,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_DEFAULT = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_DOCS = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_DEFAULT = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_DOCS = exports.TYPE_CHORE = exports.TYPE_FEAT = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(5741);
 function collectChangelog(pulls, validator) {
@@ -553,9 +554,10 @@ function* generateEntries(changesBlocks) {
 }
 exports.TYPE_FIX = "fix";
 exports.TYPE_FEATURE = "feature";
+exports.TYPE_FEAT = "feat";
 exports.TYPE_CHORE = "chore";
 exports.TYPE_DOCS = "docs";
-const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE, exports.TYPE_CHORE, exports.TYPE_DOCS]);
+const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE, exports.TYPE_FEAT, exports.TYPE_CHORE, exports.TYPE_DOCS]);
 exports.LEVEL_HIGH = "high";
 exports.LEVEL_LOW = "low";
 exports.LEVEL_DEFAULT = "default";
