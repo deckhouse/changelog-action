@@ -9,6 +9,7 @@ import {
 	ModuleChanges,
 	TYPE_CHORE,
 	TYPE_FEATURE,
+	TYPE_FEAT,
 	TYPE_FIX,
 	TYPE_DOCS,
 } from "./parse"
@@ -75,6 +76,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 			break
 		case TYPE_FEATURE:
 			listOf("features").push(cc)
+			listOf("feats").push(cc)
 			break
 		case TYPE_DOCS:
 			// Noop for yaml
@@ -110,7 +112,7 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 
 	add("[MALFORMED]", collectMalformed)
 	add("Know before update", collectImpact)
-	add("Features", (cs) => collectChanges(cs, TYPE_FEATURE))
+	add("Features", (cs) => [...collectChanges(cs, TYPE_FEATURE), ...collectChanges(cs, TYPE_FEAT)])
 	add("Fixes", (cs) => collectChanges(cs, TYPE_FIX))
 	add("Chore", (cs) => collectChanges(cs, TYPE_CHORE))
 
