@@ -69,6 +69,9 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 		impact: change.impact,
 	})
 
+	if (change.impact_level === LEVEL_LOW) {
+		return acc
+	}
 	switch (change.type) {
 		case TYPE_FIX:
 			listOf("fixes").push(cc)
