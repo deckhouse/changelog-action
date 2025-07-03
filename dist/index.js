@@ -306,6 +306,9 @@ function groupByModuleAndType(acc, change) {
         pull_request: change.pull_request,
         impact: change.impact,
     });
+    if (change.impact_level === parse_1.LEVEL_LOW) {
+        return acc;
+    }
     switch (change.type) {
         case parse_1.TYPE_FIX:
             listOf("fixes").push(cc);
