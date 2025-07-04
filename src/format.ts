@@ -137,7 +137,13 @@ function collectImpact(changes: ChangeEntry[]): string[] {
 // avoids low impact noise in markdown
 function collectChanges(changes: ChangeEntry[], changeType: string): string[] {
 	return changes
-		.filter((c) => c.valid() && c.type == changeType && c.impact_level != LEVEL_LOW && c.impact_level != LEVEL_NONE)
+		.filter(
+			(c) =>
+				c.valid() &&
+				c.type == changeType &&
+				c.impact_level != LEVEL_LOW &&
+				c.impact_level != LEVEL_NONE,
+		)
 		.sort((a, b) => (a.section < b.section ? -1 : 1)) // sort by module
 		.map(changeMardown)
 }
