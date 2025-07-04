@@ -355,7 +355,7 @@ function collectImpact(changes) {
 }
 function collectChanges(changes, changeType) {
     return changes
-        .filter((c) => c.valid() && c.type == changeType && c.impact_level != parse_1.LEVEL_LOW)
+        .filter((c) => c.valid() && c.type == changeType && c.impact_level != parse_1.LEVEL_LOW && c.impact_level != parse_1.LEVEL_NONE)
         .sort((a, b) => (a.section < b.section ? -1 : 1))
         .map(changeMardown);
 }
