@@ -97,7 +97,8 @@ const knownTypes = new Set([TYPE_FIX, TYPE_FEATURE, TYPE_CHORE, TYPE_DOCS])
 export const LEVEL_HIGH = "high"
 export const LEVEL_LOW = "low" // logically the same as chore, probably
 export const LEVEL_DEFAULT = "default"
-export const knownLevels = new Set([LEVEL_DEFAULT, LEVEL_LOW, LEVEL_HIGH])
+export const LEVEL_NONE = "none" // skip validation and changelog
+export const knownLevels = new Set([LEVEL_DEFAULT, LEVEL_LOW, LEVEL_HIGH, LEVEL_NONE])
 
 function sanitizeString(x: unknown): string {
 	if (typeof x === "string") {
@@ -206,8 +207,8 @@ export class ChangeEntry extends ChangeContent {
 	validate(): string[] {
 		const errs: string[] = []
 
-		// skip validation if impact level is low
-		if (this.impact_level === LEVEL_LOW) {
+		// skip validation if impact level is none
+		if (this.impact_level === LEVEL_NONE) {
 			return errs
 		}
 

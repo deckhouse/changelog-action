@@ -306,7 +306,7 @@ function groupByModuleAndType(acc, change) {
         pull_request: change.pull_request,
         impact: change.impact,
     });
-    if (change.impact_level === parse_1.LEVEL_LOW) {
+    if (change.impact_level === parse_1.LEVEL_NONE) {
         return acc;
     }
     switch (change.type) {
@@ -508,7 +508,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_DEFAULT = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_DOCS = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
+exports.ChangeEntry = exports.ChangeContent = exports.parseChangesBlocks = exports.knownLevels = exports.LEVEL_NONE = exports.LEVEL_DEFAULT = exports.LEVEL_LOW = exports.LEVEL_HIGH = exports.TYPE_DOCS = exports.TYPE_CHORE = exports.TYPE_FEATURE = exports.TYPE_FIX = exports.parseChangeEntries = exports.collectChangelog = void 0;
 const yaml = __importStar(__nccwpck_require__(1917));
 const marked_1 = __nccwpck_require__(5741);
 function collectChangelog(pulls, validator) {
@@ -562,7 +562,8 @@ const knownTypes = new Set([exports.TYPE_FIX, exports.TYPE_FEATURE, exports.TYPE
 exports.LEVEL_HIGH = "high";
 exports.LEVEL_LOW = "low";
 exports.LEVEL_DEFAULT = "default";
-exports.knownLevels = new Set([exports.LEVEL_DEFAULT, exports.LEVEL_LOW, exports.LEVEL_HIGH]);
+exports.LEVEL_NONE = "none";
+exports.knownLevels = new Set([exports.LEVEL_DEFAULT, exports.LEVEL_LOW, exports.LEVEL_HIGH, exports.LEVEL_NONE]);
 function sanitizeString(x) {
     if (typeof x === "string") {
         return x.trim();
@@ -629,7 +630,7 @@ class ChangeEntry extends ChangeContent {
     }
     validate() {
         const errs = [];
-        if (this.impact_level === exports.LEVEL_LOW) {
+        if (this.impact_level === exports.LEVEL_NONE) {
             return errs;
         }
         errs.push(...super.validate());
@@ -710,7 +711,7 @@ class ValidatorImpl {
         this.config = config;
     }
     validate(c) {
-        if (c.impact_level === parse_1.LEVEL_LOW) {
+        if (c.impact_level === parse_1.LEVEL_NONE) {
             return c;
         }
         if (!this.config.has(c.section)) {

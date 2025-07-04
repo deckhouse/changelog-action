@@ -6,6 +6,7 @@ import {
 	ChangesByModule,
 	LEVEL_HIGH,
 	LEVEL_LOW,
+	LEVEL_NONE,
 	ModuleChanges,
 	TYPE_CHORE,
 	TYPE_FEATURE,
@@ -69,7 +70,7 @@ function groupByModuleAndType(acc: ChangesByModule, change: ChangeEntry) {
 		impact: change.impact,
 	})
 
-	if (change.impact_level === LEVEL_LOW) {
+	if (change.impact_level === LEVEL_NONE) {
 		return acc
 	}
 	switch (change.type) {
