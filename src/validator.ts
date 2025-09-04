@@ -1,4 +1,4 @@
-import { ChangeEntry, ChangeEntryOpts, knownLevels, LEVEL_LOW } from "./parse"
+import { ChangeEntry, ChangeEntryOpts, knownLevels } from "./parse"
 
 export function getValidator(allowedSections: string[] = []): ValidatorImpl | NoopValidator {
 	if (allowedSections.length === 0) {
@@ -31,11 +31,6 @@ export class ValidatorImpl implements Validator {
 	constructor(private config: Map<string, string>) {}
 
 	validate(c: ChangeEntry): ChangeEntry {
-		// skip validation if impact level is low
-		if (c.impact_level === LEVEL_LOW) {
-			return c
-		}
-
 		if (!this.config.has(c.section)) {
 			return new InvalidChangeEntry(c, [`unknown section "${c.section}"`])
 		}

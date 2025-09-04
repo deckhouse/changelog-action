@@ -626,9 +626,6 @@ class ChangeEntry extends ChangeContent {
     }
     validate() {
         const errs = [];
-        if (this.impact_level === exports.LEVEL_LOW) {
-            return errs;
-        }
         errs.push(...super.validate());
         if (!!this.impact_level && !exports.knownLevels.has(this.impact_level)) {
             errs.push(`invalid impact level "${this.impact_level}"`);
@@ -707,9 +704,6 @@ class ValidatorImpl {
         this.config = config;
     }
     validate(c) {
-        if (c.impact_level === parse_1.LEVEL_LOW) {
-            return c;
-        }
         if (!this.config.has(c.section)) {
             return new InvalidChangeEntry(c, [`unknown section "${c.section}"`]);
         }
