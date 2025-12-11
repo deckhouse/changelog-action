@@ -8,9 +8,9 @@ import {
 	LEVEL_LOW,
 	ModuleChanges,
 	TYPE_CHORE,
+	TYPE_DOCS,
 	TYPE_FEATURE,
 	TYPE_FIX,
-	TYPE_DOCS,
 } from "./parse"
 
 // sorts YAML keys
