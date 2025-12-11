@@ -1,6 +1,6 @@
+import * as core from "@actions/core"
 import { parseChangeEntries, parseChangesBlocks } from "./parse"
 import { getValidator } from "./validator"
-import * as core from "@actions/core"
 
 export interface ValidateInput {
 	pr: any

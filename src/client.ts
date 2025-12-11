@@ -1,8 +1,8 @@
+import { getOctokitOptions, GitHub } from "@actions/github/lib/utils"
 import { Octokit } from "@octokit/core"
 import { PaginateInterface } from "@octokit/plugin-paginate-rest"
-import { throttling } from "@octokit/plugin-throttling"
 import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types"
-import { getOctokitOptions, GitHub } from "@actions/github/lib/utils"
+import { throttling } from "@octokit/plugin-throttling"
 
 export type Pull = {
 	url: string
@@ -24,31 +24,33 @@ export class Client {
 	constructor(repo: string, token: string) {
 		this.repo = repo
 		const octokit = GitHub.plugin(throttling)
-		this.octokit = new octokit(getOctokitOptions(token, {
-			throttle: {
-				onRateLimit: (retryAfter, options, octokit, retryCount) => {
-					octokit.log.warn(
-						`Request quota exhausted for request ${options.method} ${options.url}`,
-					);
+		this.octokit = new octokit(
+			getOctokitOptions(token, {
+				throttle: {
+					onRateLimit: (retryAfter, options, octokit, retryCount) => {
+						octokit.log.warn(
+							`Request quota exhausted for request ${options.method} ${options.url}`,
+						)
 
-					if (retryCount < 3) {
-						octokit.log.info(`Retrying after ${retryAfter} seconds!`);
-						return true;
-					}
-				},
-				onSecondaryRateLimit: (retryAfter, options, octokit, retryCount) => {
-					// does not retry, only logs a warning
-					octokit.log.warn(
-						`SecondaryRateLimit detected for request ${options.method} ${options.url}`,
-					);
+						if (retryCount < 3) {
+							octokit.log.info(`Retrying after ${retryAfter} seconds!`)
+							return true
+						}
+					},
+					onSecondaryRateLimit: (retryAfter, options, octokit, retryCount) => {
+						// does not retry, only logs a warning
+						octokit.log.warn(
+							`SecondaryRateLimit detected for request ${options.method} ${options.url}`,
+						)
 
-					if (retryCount < 3) {
-						octokit.log.info(`Retrying after ${retryAfter} seconds!`);
-						return true;
-					}
+						if (retryCount < 3) {
+							octokit.log.info(`Retrying after ${retryAfter} seconds!`)
+							return true
+						}
+					},
 				},
-			},
-		}))
+			}),
+		)
 	}
 
 	async getMilestonePulls(milestone: string): Promise<Pull[]> {
