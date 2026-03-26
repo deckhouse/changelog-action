@@ -116,9 +116,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.validatePREntry = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const parse_1 = __nccwpck_require__(5223);
 const validator_1 = __nccwpck_require__(4618);
-const core = __importStar(__nccwpck_require__(2186));
 function validatePREntry(validateInput) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -174,8 +174,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Client = void 0;
-const plugin_throttling_1 = __nccwpck_require__(9968);
 const utils_1 = __nccwpck_require__(3030);
+const plugin_throttling_1 = __nccwpck_require__(9968);
 class Client {
     constructor(repo, token) {
         this.repo = repo;
@@ -325,7 +325,7 @@ function formatMarkdown(milestone, changes) {
         { [headerTag]: `Changelog ${milestone}` },
     ];
     function add(subheader, getLines) {
-        const lines = getLines(changes);
+        const lines = [...new Set(getLines(changes))];
         if (lines.length > 0) {
             body.push({ [subheaderTag]: subheader });
             body.push({ ul: lines });
@@ -346,11 +346,50 @@ function collectImpact(changes) {
         .filter((x) => !!x)
         .sort();
 }
+const BACKPORT_SUMMARY_PREFIX = /^\s*backport:\s*/i;
+function normalizeSummaryForMarkdownDedup(summary) {
+    return summary.replace(BACKPORT_SUMMARY_PREFIX, "").trim();
+}
+function isBackportSummary(summary) {
+    return BACKPORT_SUMMARY_PREFIX.test(summary);
+}
+function markdownChangeDedupKey(c) {
+    var _a;
+    return `${c.section}\0${normalizeSummaryForMarkdownDedup(c.summary)}\0${(_a = c.impact) !== null && _a !== void 0 ? _a : ""}`;
+}
+function pickPreferredChangeEntry(a, b) {
+    const aBack = isBackportSummary(a.summary);
+    const bBack = isBackportSummary(b.summary);
+    if (aBack !== bBack) {
+        return aBack ? b : a;
+    }
+    const na = parseInt(parsePullNumberFromURL(a.pull_request), 10);
+    const nb = parseInt(parsePullNumberFromURL(b.pull_request), 10);
+    if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) {
+        return na < nb ? a : b;
+    }
+    return a;
+}
+function dedupeChangesForMarkdown(sorted) {
+    const order = [];
+    const byKey = new Map();
+    for (const c of sorted) {
+        const k = markdownChangeDedupKey(c);
+        const existing = byKey.get(k);
+        if (!existing) {
+            order.push(k);
+            byKey.set(k, c);
+        }
+        else {
+            byKey.set(k, pickPreferredChangeEntry(existing, c));
+        }
+    }
+    return order.map((k) => byKey.get(k));
+}
 function collectChanges(changes, changeType) {
-    return changes
+    return dedupeChangesForMarkdown(changes
         .filter((c) => c.valid() && c.type == changeType && c.impact_level != parse_1.LEVEL_LOW)
-        .sort((a, b) => (a.section < b.section ? -1 : 1))
-        .map(changeMardown);
+        .sort((a, b) => (a.section < b.section ? -1 : 1))).map(changeMardown);
 }
 function collectMalformed(changes) {
     return changes

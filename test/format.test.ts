@@ -199,3 +199,116 @@ describe("Markdown", () => {
 		expect(md).toStrictEqual(expectedMarkdown)
 	})
 })
+
+function markdownSection(md: string, heading: string): string {
+	const marker = `## ${heading}\n`
+	const start = md.indexOf(marker)
+	if (start === -1) {
+		throw new Error(`missing section ## ${heading}`)
+	}
+	const from = start + marker.length
+	const tail = md.slice(from)
+	const nextH2 = tail.search(/\n## /)
+	return nextH2 === -1 ? tail : tail.slice(0, nextH2)
+}
+
+/** Top-level list rows in changelog markdown (module/PR lines), not continuation indentation. */
+function moduleBulletLines(section: string): string[] {
+	return section.split("\n").filter((l) => /^\s*-\s+\*\*\[/.test(l))
+}
+
+describe("Markdown deduplication", () => {
+	const milestone = "v9.9.9"
+
+	test("collapses duplicate fix rows when rendered line is identical", () => {
+		const pr = "https://github.com/ow/re/18446"
+		const dup = [
+			new ChangeEntry({
+				section: "cloud-provider-dvp",
+				type: "fix",
+				summary: "fix CVEs in cloud-provider-dvp",
+				pull_request: pr,
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "cloud-provider-dvp",
+				type: "fix",
+				summary: "fix CVEs in cloud-provider-dvp",
+				pull_request: pr,
+				impact_level: "default",
+			}),
+		]
+		const md = formatMarkdown(milestone, dup)
+		const fixes = markdownSection(md, "Fixes")
+		const bullets = moduleBulletLines(fixes)
+		expect(bullets).toHaveLength(1)
+		expect(bullets[0]).toContain("cloud-provider-dvp")
+		expect(bullets[0]).toContain("#18446")
+	})
+
+	test("collapses Backport and mainline when normalized summary matches", () => {
+		const entries = [
+			new ChangeEntry({
+				section: "cloud-provider-dvp",
+				type: "fix",
+				summary: "Backport: fix CVEs in cloud-provider-dvp",
+				pull_request: "https://github.com/ow/re/18446",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "cloud-provider-dvp",
+				type: "fix",
+				summary: "fix CVEs in cloud-provider-dvp",
+				pull_request: "https://github.com/ow/re/18258",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "cloud-provider-zvirt",
+				type: "feature",
+				summary: "Backport: add customNetworkConfig",
+				pull_request: "https://github.com/ow/re/18227",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "cloud-provider-zvirt",
+				type: "feature",
+				summary: "add customNetworkConfig",
+				pull_request: "https://github.com/ow/re/17879",
+				impact_level: "default",
+			}),
+		]
+		const md = formatMarkdown(milestone, entries)
+		const fixes = moduleBulletLines(markdownSection(md, "Fixes"))
+		const features = moduleBulletLines(markdownSection(md, "Features"))
+		expect(fixes).toHaveLength(1)
+		expect(features).toHaveLength(1)
+		// Prefer non-Backport summary and lower PR when choosing the kept row
+		expect(fixes[0]).toContain("fix CVEs in cloud-provider-dvp")
+		expect(fixes[0]).not.toMatch(/Backport:/i)
+		expect(fixes[0]).toContain("#18258")
+		expect(features[0]).toContain("add customNetworkConfig")
+		expect(features[0]).not.toMatch(/Backport:/i)
+		expect(features[0]).toContain("#17879")
+	})
+
+	test("keeps separate rows when normalized summary text differs", () => {
+		const entries = [
+			new ChangeEntry({
+				section: "cloud-provider-dvp",
+				type: "fix",
+				summary: "fix CVEs in cloud-provider-dvp",
+				pull_request: "https://github.com/ow/re/18258",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "cloud-provider-dvp",
+				type: "fix",
+				summary: "fix unrelated bug in cloud-provider-dvp",
+				pull_request: "https://github.com/ow/re/18259",
+				impact_level: "default",
+			}),
+		]
+		const md = formatMarkdown(milestone, entries)
+		expect(moduleBulletLines(markdownSection(md, "Fixes"))).toHaveLength(2)
+	})
+})
