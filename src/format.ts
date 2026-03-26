@@ -101,7 +101,7 @@ export function formatMarkdown(milestone: string, changes: ChangeEntry[]): strin
 	]
 
 	function add(subheader: string, getLines: (changes: ChangeEntry[]) => string[]) {
-		const lines = getLines(changes)
+		const lines = [...new Set(getLines(changes))]
 		if (lines.length > 0) {
 			body.push({ [subheaderTag]: subheader })
 			body.push({ ul: lines })
@@ -130,12 +130,59 @@ function collectImpact(changes: ChangeEntry[]): string[] {
 		.sort() // sorting to naіvely group potentially similar impacts together
 }
 
+/** Leading "Backport:" (any case) is ignored when merging duplicate changelog lines. */
+const BACKPORT_SUMMARY_PREFIX = /^\s*backport:\s*/i
+
+function normalizeSummaryForMarkdownDedup(summary: string): string {
+	return summary.replace(BACKPORT_SUMMARY_PREFIX, "").trim()
+}
+
+function isBackportSummary(summary: string): boolean {
+	return BACKPORT_SUMMARY_PREFIX.test(summary)
+}
+
+/** Same section + normalized summary + impact text → one markdown bullet. */
+function markdownChangeDedupKey(c: ChangeEntry): string {
+	return `${c.section}\0${normalizeSummaryForMarkdownDedup(c.summary)}\0${c.impact ?? ""}`
+}
+
+function pickPreferredChangeEntry(a: ChangeEntry, b: ChangeEntry): ChangeEntry {
+	const aBack = isBackportSummary(a.summary)
+	const bBack = isBackportSummary(b.summary)
+	if (aBack !== bBack) {
+		return aBack ? b : a
+	}
+	const na = parseInt(parsePullNumberFromURL(a.pull_request), 10)
+	const nb = parseInt(parsePullNumberFromURL(b.pull_request), 10)
+	if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) {
+		return na < nb ? a : b
+	}
+	return a
+}
+
+function dedupeChangesForMarkdown(sorted: ChangeEntry[]): ChangeEntry[] {
+	const order: string[] = []
+	const byKey = new Map<string, ChangeEntry>()
+	for (const c of sorted) {
+		const k = markdownChangeDedupKey(c)
+		const existing = byKey.get(k)
+		if (!existing) {
+			order.push(k)
+			byKey.set(k, c)
+		} else {
+			byKey.set(k, pickPreferredChangeEntry(existing, c))
+		}
+	}
+	return order.map((k) => byKey.get(k)!)
+}
+
 // avoids low impact noise in markdown
 function collectChanges(changes: ChangeEntry[], changeType: string): string[] {
-	return changes
-		.filter((c) => c.valid() && c.type == changeType && c.impact_level != LEVEL_LOW)
-		.sort((a, b) => (a.section < b.section ? -1 : 1)) // sort by module
-		.map(changeMardown)
+	return dedupeChangesForMarkdown(
+		changes
+			.filter((c) => c.valid() && c.type == changeType && c.impact_level != LEVEL_LOW)
+			.sort((a, b) => (a.section < b.section ? -1 : 1)), // sort by module
+	).map(changeMardown)
 }
 
 function collectMalformed(changes: ChangeEntry[]): string[] {
