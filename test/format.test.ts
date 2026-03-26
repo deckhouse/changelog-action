@@ -285,10 +285,53 @@ describe("Markdown deduplication", () => {
 		// Prefer non-Backport summary and lower PR when choosing the kept row
 		expect(fixes[0]).toContain("fix CVEs in cloud-provider-dvp")
 		expect(fixes[0]).not.toMatch(/Backport:/i)
-		expect(fixes[0]).toContain("#18258")
+		expect(fixes[0]).toContain("[#18258](https://github.com/ow/re/18258)")
+		expect(fixes[0]).not.toContain("18446")
 		expect(features[0]).toContain("add customNetworkConfig")
 		expect(features[0]).not.toMatch(/Backport:/i)
-		expect(features[0]).toContain("#17879")
+		expect(features[0]).toContain("[#17879](https://github.com/ow/re/17879)")
+		expect(features[0]).not.toContain("18227")
+	})
+
+	test("merged duplicate descriptions link the smallest PR number", () => {
+		const summary = "same change text"
+		const entries = [
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18349",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18350",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18355",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18348",
+				impact_level: "default",
+			}),
+		]
+		const md = formatMarkdown(milestone, entries)
+		const fixes = moduleBulletLines(markdownSection(md, "Fixes"))
+		expect(fixes).toHaveLength(1)
+		expect(fixes[0]).toContain("[#18348](https://github.com/ow/re/18348)")
+		expect(fixes[0]).not.toContain("18349")
+		expect(fixes[0]).not.toContain("18350")
+		expect(fixes[0]).not.toContain("18355")
 	})
 
 	test("keeps separate rows when normalized summary text differs", () => {
