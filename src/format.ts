@@ -46,10 +46,18 @@ export function formatYaml(changes: ChangeEntry[]): string {
 		quotingType: "'",
 	} as yaml.DumpOptions
 
-	// create the map from only valid entries:  module -> fix/feature -> change[]
-	const body = changes
-		.filter((c) => c.valid()) //
-		.reduce(groupByModuleAndType, {})
+	const valid = changes.filter((c) => c.valid())
+	const bySection = (a: ChangeEntry, b: ChangeEntry) => (a.section < b.section ? -1 : 1)
+	const fixes = dedupeChangesForYaml(valid.filter((c) => c.type === TYPE_FIX).sort(bySection))
+	const features = dedupeChangesForYaml(valid.filter((c) => c.type === TYPE_FEATURE).sort(bySection))
+
+	const body: ChangesByModule = {}
+	for (const c of fixes) {
+		groupByModuleAndType(body, c)
+	}
+	for (const c of features) {
+		groupByModuleAndType(body, c)
+	}
 
 	return yaml.dump(body, opts)
 }
@@ -160,20 +168,81 @@ function pickPreferredChangeEntry(a: ChangeEntry, b: ChangeEntry): ChangeEntry {
 	return a
 }
 
-function dedupeChangesForMarkdown(sorted: ChangeEntry[]): ChangeEntry[] {
+interface MergedChangeForMarkdown {
+	primary: ChangeEntry
+	/** Unique PR numbers in this group */
+	prNumbers: number[]
+	prUrlByNumber: Map<number, string>
+}
+
+function dedupeChangesForMarkdown(sorted: ChangeEntry[]): MergedChangeForMarkdown[] {
 	const order: string[] = []
-	const byKey = new Map<string, ChangeEntry>()
+	const byKey = new Map<string, { primary: ChangeEntry; nums: Set<number>; urls: Map<number, string> }>()
 	for (const c of sorted) {
 		const k = markdownChangeDedupKey(c)
+		const n = parseInt(parsePullNumberFromURL(c.pull_request), 10)
 		const existing = byKey.get(k)
 		if (!existing) {
 			order.push(k)
-			byKey.set(k, c)
+			const urls = new Map<number, string>()
+			if (Number.isFinite(n)) {
+				urls.set(n, c.pull_request)
+			}
+			byKey.set(k, {
+				primary: c,
+				nums: new Set(Number.isFinite(n) ? [n] : []),
+				urls,
+			})
 		} else {
-			byKey.set(k, pickPreferredChangeEntry(existing, c))
+			if (Number.isFinite(n)) {
+				existing.nums.add(n)
+				existing.urls.set(n, c.pull_request)
+			}
+			existing.primary = pickPreferredChangeEntry(existing.primary, c)
 		}
 	}
-	return order.map((k) => byKey.get(k)!)
+	return order.map((k) => {
+		const { primary, nums, urls } = byKey.get(k)!
+		let prNumbers = [...nums]
+		if (prNumbers.length === 0) {
+			const fallback = parseInt(parsePullNumberFromURL(primary.pull_request), 10)
+			if (Number.isFinite(fallback)) {
+				prNumbers = [fallback]
+				if (!urls.has(fallback)) {
+					urls.set(fallback, primary.pull_request)
+				}
+			}
+		}
+		return { primary, prNumbers, prUrlByNumber: urls }
+	})
+}
+
+/** Same key as markdown: section + normalized summary + impact; prefers non-backport, lower PR #. */
+function dedupeChangesForYaml(sorted: ChangeEntry[]): ChangeEntry[] {
+	return dedupeChangesForMarkdown(sorted).map((m) => m.primary)
+}
+
+/** When several PRs match the same line, link the one with the smallest PR number */
+function formatChangeMarkdownLine(
+	primary: ChangeEntry,
+	prNumbers: number[],
+	prUrlByNumber: Map<number, string>,
+): string {
+	let prlink: string
+	if (prNumbers.length === 0) {
+		const prNum = parsePullNumberFromURL(primary.pull_request)
+		prlink = `[#${prNum}](${primary.pull_request})`
+	} else {
+		const chosen = Math.min(...prNumbers)
+		const prUrl = prUrlByNumber.get(chosen) ?? primary.pull_request
+		prlink = `[#${chosen}](${prUrl})`
+	}
+	const line = `**[${primary.section}]** ${primary.summary} ${prlink}`
+
+	if (primary.impact) {
+		return line + "\n" + primary.impact
+	}
+	return line
 }
 
 // avoids low impact noise in markdown
@@ -182,7 +251,9 @@ function collectChanges(changes: ChangeEntry[], changeType: string): string[] {
 		changes
 			.filter((c) => c.valid() && c.type == changeType && c.impact_level != LEVEL_LOW)
 			.sort((a, b) => (a.section < b.section ? -1 : 1)), // sort by module
-	).map(changeMardown)
+	).map(({ primary, prNumbers, prUrlByNumber }) =>
+		formatChangeMarkdownLine(primary, prNumbers, prUrlByNumber),
+	)
 }
 
 function collectMalformed(changes: ChangeEntry[]): string[] {
@@ -199,16 +270,4 @@ function collectMalformed(changes: ChangeEntry[]): string[] {
 function parsePullNumberFromURL(prUrl: string): string {
 	const parts = prUrl.split("/")
 	return parts[parts.length - 1]
-}
-
-function changeMardown(c: ChangeEntry): string {
-	const prNum = parsePullNumberFromURL(c.pull_request)
-
-	const prlink = `[#${prNum}](${c.pull_request})`
-	const line = `**[${c.section}]** ${c.summary} ${prlink}`
-
-	if (c.impact) {
-		return line + "\n" + c.impact
-	}
-	return line
 }

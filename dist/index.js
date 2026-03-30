@@ -284,9 +284,17 @@ function formatYaml(changes) {
         forceQuotes: false,
         quotingType: "'",
     };
-    const body = changes
-        .filter((c) => c.valid())
-        .reduce(groupByModuleAndType, {});
+    const valid = changes.filter((c) => c.valid());
+    const bySection = (a, b) => (a.section < b.section ? -1 : 1);
+    const fixes = dedupeChangesForYaml(valid.filter((c) => c.type === parse_1.TYPE_FIX).sort(bySection));
+    const features = dedupeChangesForYaml(valid.filter((c) => c.type === parse_1.TYPE_FEATURE).sort(bySection));
+    const body = {};
+    for (const c of fixes) {
+        groupByModuleAndType(body, c);
+    }
+    for (const c of features) {
+        groupByModuleAndType(body, c);
+    }
     return yaml.dump(body, opts);
 }
 exports.formatYaml = formatYaml;
@@ -375,21 +383,68 @@ function dedupeChangesForMarkdown(sorted) {
     const byKey = new Map();
     for (const c of sorted) {
         const k = markdownChangeDedupKey(c);
+        const n = parseInt(parsePullNumberFromURL(c.pull_request), 10);
         const existing = byKey.get(k);
         if (!existing) {
             order.push(k);
-            byKey.set(k, c);
+            const urls = new Map();
+            if (Number.isFinite(n)) {
+                urls.set(n, c.pull_request);
+            }
+            byKey.set(k, {
+                primary: c,
+                nums: new Set(Number.isFinite(n) ? [n] : []),
+                urls,
+            });
         }
         else {
-            byKey.set(k, pickPreferredChangeEntry(existing, c));
+            if (Number.isFinite(n)) {
+                existing.nums.add(n);
+                existing.urls.set(n, c.pull_request);
+            }
+            existing.primary = pickPreferredChangeEntry(existing.primary, c);
         }
     }
-    return order.map((k) => byKey.get(k));
+    return order.map((k) => {
+        const { primary, nums, urls } = byKey.get(k);
+        let prNumbers = [...nums];
+        if (prNumbers.length === 0) {
+            const fallback = parseInt(parsePullNumberFromURL(primary.pull_request), 10);
+            if (Number.isFinite(fallback)) {
+                prNumbers = [fallback];
+                if (!urls.has(fallback)) {
+                    urls.set(fallback, primary.pull_request);
+                }
+            }
+        }
+        return { primary, prNumbers, prUrlByNumber: urls };
+    });
+}
+function dedupeChangesForYaml(sorted) {
+    return dedupeChangesForMarkdown(sorted).map((m) => m.primary);
+}
+function formatChangeMarkdownLine(primary, prNumbers, prUrlByNumber) {
+    var _a;
+    let prlink;
+    if (prNumbers.length === 0) {
+        const prNum = parsePullNumberFromURL(primary.pull_request);
+        prlink = `[#${prNum}](${primary.pull_request})`;
+    }
+    else {
+        const chosen = Math.min(...prNumbers);
+        const prUrl = (_a = prUrlByNumber.get(chosen)) !== null && _a !== void 0 ? _a : primary.pull_request;
+        prlink = `[#${chosen}](${prUrl})`;
+    }
+    const line = `**[${primary.section}]** ${primary.summary} ${prlink}`;
+    if (primary.impact) {
+        return line + "\n" + primary.impact;
+    }
+    return line;
 }
 function collectChanges(changes, changeType) {
     return dedupeChangesForMarkdown(changes
         .filter((c) => c.valid() && c.type == changeType && c.impact_level != parse_1.LEVEL_LOW)
-        .sort((a, b) => (a.section < b.section ? -1 : 1))).map(changeMardown);
+        .sort((a, b) => (a.section < b.section ? -1 : 1))).map(({ primary, prNumbers, prUrlByNumber }) => formatChangeMarkdownLine(primary, prNumbers, prUrlByNumber));
 }
 function collectMalformed(changes) {
     return changes
@@ -404,15 +459,6 @@ function collectMalformed(changes) {
 function parsePullNumberFromURL(prUrl) {
     const parts = prUrl.split("/");
     return parts[parts.length - 1];
-}
-function changeMardown(c) {
-    const prNum = parsePullNumberFromURL(c.pull_request);
-    const prlink = `[#${prNum}](${c.pull_request})`;
-    const line = `**[${c.section}]** ${c.summary} ${prlink}`;
-    if (c.impact) {
-        return line + "\n" + c.impact;
-    }
-    return line;
 }
 
 

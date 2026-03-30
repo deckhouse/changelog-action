@@ -1,4 +1,5 @@
 import * as fs from "fs"
+import * as yaml from "js-yaml"
 import { formatMarkdown, formatYaml } from "../src/format"
 import { ChangeEntry } from "../src/parse"
 
@@ -169,6 +170,149 @@ describe("YAML", () => {
 	})
 })
 
+type YamlModule = {
+	features?: Array<{ summary: string; pull_request: string; impact?: string }>
+	fixes?: Array<{ summary: string; pull_request: string; impact?: string }>
+}
+
+describe("YAML deduplication", () => {
+	test("merges duplicate fixes with same section, summary, and impact; keeps smaller PR number", () => {
+		const list = [
+			new ChangeEntry({
+				section: "alpha",
+				type: "fix",
+				summary: "duplicate fix text",
+				pull_request: "https://github.com/ow/re/900",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "alpha",
+				type: "fix",
+				summary: "duplicate fix text",
+				pull_request: "https://github.com/ow/re/100",
+				impact_level: "low",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.alpha.fixes).toHaveLength(1)
+		expect(doc.alpha.fixes![0].pull_request).toBe("https://github.com/ow/re/100")
+		expect(doc.alpha.fixes![0].summary).toBe("duplicate fix text")
+	})
+
+	test("merges duplicate features the same way", () => {
+		const list = [
+			new ChangeEntry({
+				section: "beta",
+				type: "feature",
+				summary: "same feature",
+				pull_request: "https://github.com/ow/re/50",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "beta",
+				type: "feature",
+				summary: "same feature",
+				pull_request: "https://github.com/ow/re/10",
+				impact_level: "default",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.beta.features).toHaveLength(1)
+		expect(doc.beta.features![0].pull_request).toBe("https://github.com/ow/re/10")
+	})
+
+	test("prefers non-backport summary over Backport: … for the same normalized text", () => {
+		const list = [
+			new ChangeEntry({
+				section: "gamma",
+				type: "fix",
+				summary: "Backport: shared description",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "gamma",
+				type: "fix",
+				summary: "shared description",
+				pull_request: "https://github.com/ow/re/999",
+				impact_level: "low",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.gamma.fixes).toHaveLength(1)
+		expect(doc.gamma.fixes![0].summary).toBe("shared description")
+		expect(doc.gamma.fixes![0].pull_request).toBe("https://github.com/ow/re/999")
+	})
+
+	test("does not merge same summary in different sections", () => {
+		const list = [
+			new ChangeEntry({
+				section: "m-a",
+				type: "fix",
+				summary: "shared",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "m-b",
+				type: "fix",
+				summary: "shared",
+				pull_request: "https://github.com/ow/re/2",
+				impact_level: "low",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc["m-a"].fixes).toHaveLength(1)
+		expect(doc["m-b"].fixes).toHaveLength(1)
+		expect(doc["m-a"].fixes![0].pull_request).not.toBe(doc["m-b"].fixes![0].pull_request)
+	})
+
+	test("does not merge fix and feature with the same summary in one section", () => {
+		const list = [
+			new ChangeEntry({
+				section: "delta",
+				type: "fix",
+				summary: "same line",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "delta",
+				type: "feature",
+				summary: "same line",
+				pull_request: "https://github.com/ow/re/2",
+				impact_level: "default",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.delta.fixes).toHaveLength(1)
+		expect(doc.delta.features).toHaveLength(1)
+	})
+
+	test("does not merge when impact text differs", () => {
+		const list = [
+			new ChangeEntry({
+				section: "eps",
+				type: "fix",
+				summary: "same summary",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "high",
+				impact: "first impact",
+			}),
+			new ChangeEntry({
+				section: "eps",
+				type: "fix",
+				summary: "same summary",
+				pull_request: "https://github.com/ow/re/2",
+				impact_level: "high",
+				impact: "second impact",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.eps.fixes).toHaveLength(2)
+	})
+})
+
 describe("Markdown", () => {
 	const milestone = "v3.44.555"
 	const md = formatMarkdown(milestone, changes)
@@ -285,10 +429,53 @@ describe("Markdown deduplication", () => {
 		// Prefer non-Backport summary and lower PR when choosing the kept row
 		expect(fixes[0]).toContain("fix CVEs in cloud-provider-dvp")
 		expect(fixes[0]).not.toMatch(/Backport:/i)
-		expect(fixes[0]).toContain("#18258")
+		expect(fixes[0]).toContain("[#18258](https://github.com/ow/re/18258)")
+		expect(fixes[0]).not.toContain("18446")
 		expect(features[0]).toContain("add customNetworkConfig")
 		expect(features[0]).not.toMatch(/Backport:/i)
-		expect(features[0]).toContain("#17879")
+		expect(features[0]).toContain("[#17879](https://github.com/ow/re/17879)")
+		expect(features[0]).not.toContain("18227")
+	})
+
+	test("merged duplicate descriptions link the smallest PR number", () => {
+		const summary = "same change text"
+		const entries = [
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18349",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18350",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18355",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "mod",
+				type: "fix",
+				summary,
+				pull_request: "https://github.com/ow/re/18348",
+				impact_level: "default",
+			}),
+		]
+		const md = formatMarkdown(milestone, entries)
+		const fixes = moduleBulletLines(markdownSection(md, "Fixes"))
+		expect(fixes).toHaveLength(1)
+		expect(fixes[0]).toContain("[#18348](https://github.com/ow/re/18348)")
+		expect(fixes[0]).not.toContain("18349")
+		expect(fixes[0]).not.toContain("18350")
+		expect(fixes[0]).not.toContain("18355")
 	})
 
 	test("keeps separate rows when normalized summary text differs", () => {
