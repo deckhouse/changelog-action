@@ -46,10 +46,18 @@ export function formatYaml(changes: ChangeEntry[]): string {
 		quotingType: "'",
 	} as yaml.DumpOptions
 
-	// create the map from only valid entries:  module -> fix/feature -> change[]
-	const body = changes
-		.filter((c) => c.valid()) //
-		.reduce(groupByModuleAndType, {})
+	const valid = changes.filter((c) => c.valid())
+	const bySection = (a: ChangeEntry, b: ChangeEntry) => (a.section < b.section ? -1 : 1)
+	const fixes = dedupeChangesForYaml(valid.filter((c) => c.type === TYPE_FIX).sort(bySection))
+	const features = dedupeChangesForYaml(valid.filter((c) => c.type === TYPE_FEATURE).sort(bySection))
+
+	const body: ChangesByModule = {}
+	for (const c of fixes) {
+		groupByModuleAndType(body, c)
+	}
+	for (const c of features) {
+		groupByModuleAndType(body, c)
+	}
 
 	return yaml.dump(body, opts)
 }
@@ -169,10 +177,7 @@ interface MergedChangeForMarkdown {
 
 function dedupeChangesForMarkdown(sorted: ChangeEntry[]): MergedChangeForMarkdown[] {
 	const order: string[] = []
-	const byKey = new Map<
-		string,
-		{ primary: ChangeEntry; nums: Set<number>; urls: Map<number, string> }
-	>()
+	const byKey = new Map<string, { primary: ChangeEntry; nums: Set<number>; urls: Map<number, string> }>()
 	for (const c of sorted) {
 		const k = markdownChangeDedupKey(c)
 		const n = parseInt(parsePullNumberFromURL(c.pull_request), 10)
@@ -210,6 +215,11 @@ function dedupeChangesForMarkdown(sorted: ChangeEntry[]): MergedChangeForMarkdow
 		}
 		return { primary, prNumbers, prUrlByNumber: urls }
 	})
+}
+
+/** Same key as markdown: section + normalized summary + impact; prefers non-backport, lower PR #. */
+function dedupeChangesForYaml(sorted: ChangeEntry[]): ChangeEntry[] {
+	return dedupeChangesForMarkdown(sorted).map((m) => m.primary)
 }
 
 /** When several PRs match the same line, link the one with the smallest PR number */

@@ -1,4 +1,5 @@
 import * as fs from "fs"
+import * as yaml from "js-yaml"
 import { formatMarkdown, formatYaml } from "../src/format"
 import { ChangeEntry } from "../src/parse"
 
@@ -166,6 +167,149 @@ describe("YAML", () => {
 
 	test("formats right", () => {
 		expect(formatYaml(changes)).toEqual(expectedYAML)
+	})
+})
+
+type YamlModule = {
+	features?: Array<{ summary: string; pull_request: string; impact?: string }>
+	fixes?: Array<{ summary: string; pull_request: string; impact?: string }>
+}
+
+describe("YAML deduplication", () => {
+	test("merges duplicate fixes with same section, summary, and impact; keeps smaller PR number", () => {
+		const list = [
+			new ChangeEntry({
+				section: "alpha",
+				type: "fix",
+				summary: "duplicate fix text",
+				pull_request: "https://github.com/ow/re/900",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "alpha",
+				type: "fix",
+				summary: "duplicate fix text",
+				pull_request: "https://github.com/ow/re/100",
+				impact_level: "low",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.alpha.fixes).toHaveLength(1)
+		expect(doc.alpha.fixes![0].pull_request).toBe("https://github.com/ow/re/100")
+		expect(doc.alpha.fixes![0].summary).toBe("duplicate fix text")
+	})
+
+	test("merges duplicate features the same way", () => {
+		const list = [
+			new ChangeEntry({
+				section: "beta",
+				type: "feature",
+				summary: "same feature",
+				pull_request: "https://github.com/ow/re/50",
+				impact_level: "default",
+			}),
+			new ChangeEntry({
+				section: "beta",
+				type: "feature",
+				summary: "same feature",
+				pull_request: "https://github.com/ow/re/10",
+				impact_level: "default",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.beta.features).toHaveLength(1)
+		expect(doc.beta.features![0].pull_request).toBe("https://github.com/ow/re/10")
+	})
+
+	test("prefers non-backport summary over Backport: … for the same normalized text", () => {
+		const list = [
+			new ChangeEntry({
+				section: "gamma",
+				type: "fix",
+				summary: "Backport: shared description",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "gamma",
+				type: "fix",
+				summary: "shared description",
+				pull_request: "https://github.com/ow/re/999",
+				impact_level: "low",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.gamma.fixes).toHaveLength(1)
+		expect(doc.gamma.fixes![0].summary).toBe("shared description")
+		expect(doc.gamma.fixes![0].pull_request).toBe("https://github.com/ow/re/999")
+	})
+
+	test("does not merge same summary in different sections", () => {
+		const list = [
+			new ChangeEntry({
+				section: "m-a",
+				type: "fix",
+				summary: "shared",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "m-b",
+				type: "fix",
+				summary: "shared",
+				pull_request: "https://github.com/ow/re/2",
+				impact_level: "low",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc["m-a"].fixes).toHaveLength(1)
+		expect(doc["m-b"].fixes).toHaveLength(1)
+		expect(doc["m-a"].fixes![0].pull_request).not.toBe(doc["m-b"].fixes![0].pull_request)
+	})
+
+	test("does not merge fix and feature with the same summary in one section", () => {
+		const list = [
+			new ChangeEntry({
+				section: "delta",
+				type: "fix",
+				summary: "same line",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "low",
+			}),
+			new ChangeEntry({
+				section: "delta",
+				type: "feature",
+				summary: "same line",
+				pull_request: "https://github.com/ow/re/2",
+				impact_level: "default",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.delta.fixes).toHaveLength(1)
+		expect(doc.delta.features).toHaveLength(1)
+	})
+
+	test("does not merge when impact text differs", () => {
+		const list = [
+			new ChangeEntry({
+				section: "eps",
+				type: "fix",
+				summary: "same summary",
+				pull_request: "https://github.com/ow/re/1",
+				impact_level: "high",
+				impact: "first impact",
+			}),
+			new ChangeEntry({
+				section: "eps",
+				type: "fix",
+				summary: "same summary",
+				pull_request: "https://github.com/ow/re/2",
+				impact_level: "high",
+				impact: "second impact",
+			}),
+		]
+		const doc = yaml.load(formatYaml(list)) as Record<string, YamlModule>
+		expect(doc.eps.fixes).toHaveLength(2)
 	})
 })
 

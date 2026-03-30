@@ -284,9 +284,17 @@ function formatYaml(changes) {
         forceQuotes: false,
         quotingType: "'",
     };
-    const body = changes
-        .filter((c) => c.valid())
-        .reduce(groupByModuleAndType, {});
+    const valid = changes.filter((c) => c.valid());
+    const bySection = (a, b) => (a.section < b.section ? -1 : 1);
+    const fixes = dedupeChangesForYaml(valid.filter((c) => c.type === parse_1.TYPE_FIX).sort(bySection));
+    const features = dedupeChangesForYaml(valid.filter((c) => c.type === parse_1.TYPE_FEATURE).sort(bySection));
+    const body = {};
+    for (const c of fixes) {
+        groupByModuleAndType(body, c);
+    }
+    for (const c of features) {
+        groupByModuleAndType(body, c);
+    }
     return yaml.dump(body, opts);
 }
 exports.formatYaml = formatYaml;
@@ -411,6 +419,9 @@ function dedupeChangesForMarkdown(sorted) {
         }
         return { primary, prNumbers, prUrlByNumber: urls };
     });
+}
+function dedupeChangesForYaml(sorted) {
+    return dedupeChangesForMarkdown(sorted).map((m) => m.primary);
 }
 function formatChangeMarkdownLine(primary, prNumbers, prUrlByNumber) {
     var _a;
